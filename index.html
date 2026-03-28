@@ -1867,7 +1867,11 @@ const sl=document.getElementById('streakLive');
     }
   } else sl.style.display='none';
 
-  startHintTimer(q);
+startHintTimer(q);
+  const inp2 = document.getElementById('ansInp');
+  if(inp2){ inp2.disabled=false; }
+  const submitBtn2 = document.querySelector('.bsubmit');
+  if(submitBtn2) submitBtn2.disabled=false;
   setTimeout(()=>document.getElementById('ansInp').focus(),200);
 }
 
@@ -2134,6 +2138,11 @@ function showFb(type,title,txt){
 
 function endQ(){
   qs.done=true; // lock submitAns from Enter spam
+  // Physically disable the input and button so Enter does nothing
+  const inp = document.getElementById('ansInp');
+  if(inp){ inp.disabled=true; inp.blur(); }
+  const submitBtn = document.querySelector('.bsubmit');
+  if(submitBtn) submitBtn.disabled=true;
   document.getElementById('qBtns').style.display='none';
   document.getElementById('nextBtns').style.display='flex';
   if(qs.hintInterval){clearInterval(qs.hintInterval);qs.hintInterval=null;}
@@ -2183,8 +2192,9 @@ function handleStreak(correct){
       document.getElementById('sfLbl').textContent=msg;
       sf.classList.add('show');setTimeout(()=>sf.classList.remove('show'),2000);
     }
-    document.getElementById('streakLive').style.display='inline-flex';
-    document.getElementById('streakLiveCnt').textContent=st.streak;
+document.getElementById('streakLive').style.display='inline-flex';
+    const streakLiveCntEl = document.getElementById('streakLiveCnt');
+    if(streakLiveCntEl) streakLiveCntEl.textContent=st.streak;
   } else {
     st.streak=0;
     document.getElementById('streakLive').style.display='none';
