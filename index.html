@@ -2015,7 +2015,9 @@ ${b} = ${bT} + ${bU}
 // ══════════════ SUBMIT ══════════════
 function submitAns(){
   const q=qs.current;if(!q)return;
-  if(qs.done)return; // prevent Enter-key spam after question is finished
+  if(qs.done)return;
+  const ansInpEl=document.getElementById('ansInp');
+  if(ansInpEl && ansInpEl.disabled)return;
   const userAns=parseInt(document.getElementById('ansInp').value);
   if(isNaN(userAns)){showToast('✏️ הכנס מספר!');return;}
   const ok=userAns===q.answer;
@@ -2192,9 +2194,16 @@ function handleStreak(correct){
       document.getElementById('sfLbl').textContent=msg;
       sf.classList.add('show');setTimeout(()=>sf.classList.remove('show'),2000);
     }
-document.getElementById('streakLive').style.display='inline-flex';
-    const streakLiveCntEl = document.getElementById('streakLiveCnt');
-    if(streakLiveCntEl) streakLiveCntEl.textContent=st.streak;
+const slEl = document.getElementById('streakLive');
+    if(slEl) slEl.style.display='inline-flex';
+    const unameLiveS=(window._username||'').toLowerCase();
+    const specialLiveS=SPECIAL_USERS[unameLiveS];
+    if(specialLiveS?.streakDisplay){
+      if(slEl) slEl.innerHTML = specialLiveS.streakDisplay(st.streak);
+    } else {
+      const streakLiveCntEl = document.getElementById('streakLiveCnt');
+      if(streakLiveCntEl) streakLiveCntEl.textContent=st.streak;
+    }
   } else {
     st.streak=0;
     document.getElementById('streakLive').style.display='none';
@@ -2459,8 +2468,9 @@ function loadExamQ(){
 
 function submitExamAns(){
   const q=qs.current;if(!q)return;
-  if(qs.done)return; // prevent Enter-key spam
+  if(qs.done)return;
   const inp=document.getElementById('eInp');
+  if(inp && inp.disabled)return;
   const ua=parseInt(inp.value);if(isNaN(ua))return;
   const ok=ua===q.answer;
   if(ok){
@@ -2468,6 +2478,7 @@ function submitExamAns(){
     qs.examScore+=q.pts;recordHistory(q,ua,true);
     const fb=document.getElementById('eFb');fb.className='fb-box on fb-ok';fb.innerHTML='<div class="fb-title">🎉 נכון!</div>';
     qs.done=true;
+    if(inp){inp.disabled=true;inp.blur();}
     document.getElementById('eBtns').style.display='none';document.getElementById('eNext').style.display='flex';
   } else {
     qs.attempts++;document.getElementById('ead'+(qs.attempts-1)).classList.add('used');
@@ -2476,6 +2487,7 @@ function submitExamAns(){
       recordHistory(q,ua,false);
       const fb=document.getElementById('eFb');fb.className='fb-box on fb-bad';fb.innerHTML=`<div class="fb-title">❌ לא הצלחת</div><div>תשובה: <strong>${q.answer}</strong></div>`;
       qs.done=true;
+      if(inp){inp.disabled=true;inp.blur();}
       document.getElementById('eBtns').style.display='none';document.getElementById('eNext').style.display='flex';
     }
   }
