@@ -160,12 +160,21 @@ window.fbLogin = async function() {
   const pass = document.getElementById('loginPass').value;
   const err = document.getElementById('loginErr');
   err.style.display='none';
-  const clean = username.trim().toLowerCase().replace(/[^\u05d0-\u05eaa-z0-9]/g,'');
-  const fakeEmail = Array.from(clean).map(c=>c.charCodeAt(0).toString(36)).join('') + '@brainspark.local';
   try {
     document.getElementById('loginBtn').disabled=true;
     document.getElementById('loginBtn').textContent='נכנס...';
-    await signInWithEmailAndPassword(auth,fakeEmail,pass);
+    // Look up the user's email by username
+    const { collection:col, getDocs:gd, query:qr, where:wh, db:dbInst } = window._fb;
+    const clean = username.trim().toLowerCase().replace(/[^\u05d0-\u05eaa-z0-9]/g,'');
+    const snap = await gd(qr(col(dbInst,'users'), wh('username','==',clean)));
+    let loginEmail;
+    if (!snap.empty) {
+      const d = snap.docs[0].data();
+      loginEmail = d.contactEmail || (Array.from(clean).map(c=>c.charCodeAt(0).toString(36)).join('') + '@brainspark.local');
+    } else {
+      loginEmail = Array.from(clean).map(c=>c.charCodeAt(0).toString(36)).join('') + '@brainspark.local';
+    }
+    await signInWithEmailAndPassword(auth, loginEmail, pass);
   } catch(e) {
     document.getElementById('loginBtn').disabled=false;
     document.getElementById('loginBtn').textContent='🚀 כניסה';
