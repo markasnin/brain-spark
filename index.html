@@ -1025,15 +1025,14 @@ function updateHome(){
   if(special){const glowColor=st.specialGlowColor||special.glowColor||'#00d362';const badgeColor=st.specialBadgeColor||special.badgeColor||special.color;document.getElementById('playerName').innerHTML=`<span class="name-glow-blue" style="color:${glowColor};animation:none;text-shadow:0 0 8px ${glowColor},0 0 20px ${glowColor}99,0 0 40px ${glowColor}66">${playerDisplayName}</span><span class="special-badge" style="--sc:${badgeColor}">${special.badge} ${special.title}</span>`;document.getElementById('levelDisplay').textContent=`${special.badge} ${special.title}`;}
   else{document.getElementById('playerName').innerHTML=`⭐ ${playerDisplayName}${st.level>0?`<span class="nickname-badge">${lv.n}</span>`:''}`;document.getElementById('levelDisplay').textContent=`${lv.e} רמה ${st.level+1} — ${lv.n}`;}
   const gbw=document.getElementById('gradeBadgeWrap');
-  if(special?.allUnlocked||special?.defaultGradeLabel){
-    // Special user grade label — use custom saved label or default, styled with their glow color
+  if(special){
+    // Special user — always show their custom label, never the regular grade chip
     const glowColor=st.specialGlowColor||special.glowColor||'#00d362';
-    const gradeLabel=st.specialGradeLabel||special.defaultGradeLabel||'';
-    if(gradeLabel){
-      gbw.innerHTML=`<div class="grade-chip" style="color:${glowColor};border-color:${glowColor}40;background:${glowColor}15;font-family:'Fredoka',sans-serif;">${gradeLabel}</div>`;
-    } else {
-      gbw.innerHTML='';
-    }
+    // Priority: 1) saved custom label  2) hardcoded default  3) nothing
+    const gradeLabel=st.specialGradeLabel!=null?st.specialGradeLabel:(special.defaultGradeLabel||'');
+    gbw.innerHTML=gradeLabel
+      ?`<div class="grade-chip" style="color:${glowColor};border-color:${glowColor}40;background:${glowColor}15;font-family:'Fredoka',sans-serif;">${gradeLabel}</div>`
+      :'';
   } else if(gc){
     gbw.innerHTML=`<div class="grade-chip" style="color:${gc.gradeColor};border-color:${gc.gradeColor}40;background:${gc.gradeColor}15;">${gc.gradeEmoji} ${gc.gradeName}</div>${gc.tip?`<div style="font-size:.78rem;color:var(--txt2);margin-top:5px;">${gc.tip}</div>`:''}`;
   } else {
@@ -1205,8 +1204,8 @@ function pickBadgeColor(color){st.specialBadgeColor=color;document.getElementByI
 function updateGlowPreview(color){const el=document.getElementById('glowPreview');if(!el)return;el.textContent=window._displayName||'השם שלך';el.style.color=color;el.style.animation='none';el.style.textShadow=`0 0 8px ${color},0 0 20px ${color}99,0 0 40px ${color}66,0 0 60px ${color}33`;}
 function updateBadgePreview(color){const el=document.getElementById('badgePreview');if(!el)return;const uname=(window._username||'').toLowerCase();const special=SPECIAL_USERS[uname];el.textContent=(special?.badge||'⚡')+' '+(special?.title||'מיוחד');el.style.setProperty('--sc',color);el.style.color=color;el.style.borderColor=color;el.style.boxShadow=`0 0 12px ${color}40`;}
 function updateGradeLabelPreview(text){const el=document.getElementById('gradeLabelPreview');if(!el)return;const glowColor=st.specialGlowColor||'#00d362';el.textContent=text||'(ריק — יוסתר)';el.style.color=glowColor;el.style.borderColor=glowColor+'40';el.style.background=glowColor+'15';}
-function saveAdminSettings(){const inp=document.getElementById('gradeLabelInp');if(inp)st.specialGradeLabel=inp.value.trim()||null;save();updateHome();showToast('✨ המראה שלך עודכן!');}
-function resetAdminSettings(){const uname=(window._username||'').toLowerCase();const special=SPECIAL_USERS[uname];if(special){st.specialGlowColor=special.glowColor||'#00d362';st.specialBadgeColor=special.badgeColor||special.color;st.specialGradeLabel=special.defaultGradeLabel||null;save();updateHome();switchSettingsTab('admin');showToast('↩️ אופס לברירת מחדל!');}}
+function saveAdminSettings(){const inp=document.getElementById('gradeLabelInp');if(inp)st.specialGradeLabel=inp.value.trim();save();updateHome();showToast('✨ המראה שלך עודכן!');}
+function resetAdminSettings(){const uname=(window._username||'').toLowerCase();const special=SPECIAL_USERS[uname];if(special){st.specialGlowColor=special.glowColor||'#00d362';st.specialBadgeColor=special.badgeColor||special.color;st.specialGradeLabel=null;save();updateHome();switchSettingsTab('admin');showToast('↩️ אופס לברירת מחדל!');}}
 
 // ══ INIT ══
 load();createStars();
