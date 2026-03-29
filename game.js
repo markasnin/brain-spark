@@ -114,9 +114,142 @@ function updateHintLbl(){const m=Math.floor(qs.hintSecs/60),s=qs.hintSecs%60;doc
 function useHint(){if(qs.hintUsed)return;qs.hintUsed=true;addPts(-cfg.ptsHint);const q=qs.current;const h=q.hint||{};const hb=document.getElementById('hintBox');const hc=document.getElementById('hintContent');let html='';if(h.type==='cubes'){html+=`<p style="margin-bottom:7px">🧊 ${h.total} קוביות, מסיר ${h.remove}...</p><div class="cubes-row">`;for(let i=1;i<=Math.min(h.total,30);i++)html+=`<div class="cube ${i>h.total-h.remove?'cr':'cf'}">${i}</div>`;if(h.total>30)html+=`<span style="color:var(--txt2);font-size:.75rem">...עד ${h.total}</span>`;html+=`</div><p>${h.total} - ${h.remove} = <strong style="color:var(--a3)">${h.total-h.remove}</strong></p>`;}else if(h.type==='groups'){html+=`<p style="margin-bottom:7px">👉 ${h.a} קבוצות של ${h.b} ${h.emoji}</p><div class="mulvis-row">`;for(let i=0;i<Math.min(h.a,6);i++){html+='<div class="mg">';for(let j=0;j<Math.min(h.b,8);j++)html+=`<div class="mi">${h.emoji}</div>`;html+='</div>';}html+=`</div><p style="font-size:.82rem;direction:ltr">${h.a} × ${h.b} = <strong style="color:var(--a3)">${h.a*h.b}</strong></p>`;}else if(h.type==='decompose'){const{a,b}=h;const aT=Math.floor(a/10)*10,aU=a%10,bT=Math.floor(b/10)*10,bU=b%10;html+=`<p style="white-space:pre-line">📦 פרק לעשרות:\n${a}=${aT}+${aU}\n${b}=${bT}+${bU}\nעשרות: ${aT+bT}\nאחדות: ${aU+bU}\nסה"כ: <strong style="color:var(--a3)">${a+b}</strong></p>`;}else if(h.type==='word'){const steps=h.steps||[];html+=`<p>"ביחד"→➕ | "נשארו"→➖ | "לכל אחד"→✖️ | "חלוקה"→➗</p>`;if(h.hint)html+=`<p style="margin-top:6px;color:var(--a2)">💡 ${h.hint}</p>`;if(steps.length){html+=`<p style="margin-top:8px;font-weight:700;color:var(--a4)">📋 שלבים:</p>`;steps.forEach(s=>html+=`<p>→ ${s}</p>`);}}else html+=`<p>${h.msg||'💡 חשוב טוב!'}</p>`;hc.innerHTML=html;hb.classList.add('on');document.getElementById('hintBtn').disabled=true;}
 
 // ── Submit ──
-function submitAns(){const q=qs.current;if(!q||qs.done)return;const ansInpEl=document.getElementById('ansInp');if(ansInpEl?.disabled)return;const userAns=parseInt(ansInpEl.value);if(isNaN(userAns)){showToast('✏️ הכנס מספר!');return;}const ok=userAns===q.answer;const inp=ansInpEl;if(ok){inp.classList.add('ok');inp.classList.remove('bad');document.getElementById('ad'+qs.attempts).classList.add('ok');const pts=Math.max(q.pts-(qs.hintUsed?cfg.ptsHint:0)-qs.attempts*2,1);addPts(pts);showPtsPop(pts);handleStreak(true);if(q.type==='word'){showWordFb(document.getElementById('wordInp').value.trim(),q,userAns);}else{showFb('ok',`🎉 ${pick(['מדהים!','אלוף!','גאון!','נפלא!','💯'])}`,`${q.answer} — נכון מאוד!`);}recordHistory(q,userAns,true);spawnConf();endQ();}else{qs.attempts++;inp.classList.add('bad');document.getElementById('ad'+(qs.attempts-1)).classList.add('used');addPts(-cfg.ptsWrong);inp.value='';setTimeout(()=>inp.classList.remove('bad'),400);handleStreak(false);if(qs.attempts>=cfg.maxAttempts){showFb('bad','❌ הפעם לא...',buildExpl(q));recordHistory(q,userAns,false);endQ();}else{showFb('bad',`😅 לא נכון! עוד ${cfg.maxAttempts-qs.attempts} ניסיון/ות`,'');setTimeout(()=>{document.getElementById('fbBox').classList.remove('on');inp.focus();},1600);}}}
+function submitAns() {
+  const q = qs.current;
+  if (!q || qs.done) return;
+  const ansInpEl = document.getElementById('ansInp');
+  if (ansInpEl?.disabled) return;
 
-function showWordFb(wt,q,num){const example=q.exampleAnswer||`${q.answer}`;if(!wt){addPts(-3);showFb('part','✅ נכון מספרית אך...',`📝 לא כתבת משפט!\n\n🌟 דוגמה: "${example}"`);return;}let score=0,issues=[],praises=[];if(wt.includes(String(q.answer))){score+=40;praises.push('כוללת את המספר הנכון');}else issues.push(`חסר המספר ${q.answer}`);if(wt.trim().split(/\s+/).length>=4){score+=25;praises.push('משפט מלא');}else issues.push('המשפט קצר מדי');const ctxWords=['כל','יש','קיבל','נשאר','בסך','ביחד'];if(ctxWords.some(w=>wt.includes(w))){score+=20;praises.push('יש הקשר לשאלה');}else issues.push('התייחס לנושא השאלה');if(wt.trim().match(/[.!?]$/)){score+=15;praises.push('משפט מסודר');}else issues.push('שכחת נקודה בסוף');score=Math.min(score,100);let ptAdj=0;if(score<40)ptAdj=-4;else if(score<65)ptAdj=-2;else if(score>=90)ptAdj=2;if(ptAdj!==0)addPts(ptAdj);const barColor=score>=80?'var(--a3)':score>=50?'var(--a2)':'var(--a1)';const qualityBar=`<div class="quality-bar"><div class="quality-label"><span>איכות</span><span style="color:${barColor}">${score}/100</span></div><div class="quality-outer"><div class="quality-inner" style="width:${score}%;background:${barColor}"></div></div></div>`;if(score>=80)showFb('ok',`🌟 תשובה מצוינת! (${score}/100)`,`${praises.map(p=>`✅ ${p}`).join('<br>')}${qualityBar}`);else if(score>=50)showFb('part',`✅ בסדר, אפשר לשפר (${score}/100)`,`${issues.map(i=>`⚠️ ${i}`).join('<br>')}<br><br>🌟 דוגמה: "${example}"${qualityBar}`);else showFb('part',`📝 תשובה חלשה (${score}/100)`,`${issues.map(i=>`❌ ${i}`).join('<br>')}<br><br>🌟 דוגמה: "${example}"${qualityBar}`);}
+  // ── Word questions: validate equation FIRST, then text ──
+  if (q.type === 'word') {
+    const userAns = parseInt(ansInpEl.value);
+    if (isNaN(userAns)) { showToast('✏️ הכנס מספר בתשובה הסופית!'); return; }
+
+    // Read what the student typed into the equation builder
+    const userA  = parseFloat(document.getElementById('exprNumA')?.value);
+    const userB  = parseFloat(document.getElementById('exprNumB')?.value);
+    const userOp = exprState.op;
+
+    const eqResult = checkWordEquation(userA, userOp, userB, q);
+    const inp = ansInpEl;
+
+    if (eqResult === 'correct') {
+      // ✅ Equation is correct AND answer matches → full points
+      inp.classList.add('ok'); inp.classList.remove('bad');
+      document.getElementById('ad'+qs.attempts).classList.add('ok');
+      const pts = Math.max(q.pts - (qs.hintUsed ? cfg.ptsHint : 0) - qs.attempts * 2, 1);
+      addPts(pts); showPtsPop(pts); handleStreak(true);
+      showWordFb(document.getElementById('wordInp').value.trim(), q, userAns, true);
+      recordHistory(q, userAns, true);
+      spawnConf();
+      endQ();
+
+    } else if (eqResult === 'right-answer-wrong-equation') {
+      // ⚠️ Answer number is right but equation is wrong → NO points, explain
+      qs.attempts++;
+      inp.classList.add('bad');
+      document.getElementById('ad'+(qs.attempts-1)).classList.add('used');
+      inp.value=''; setTimeout(()=>inp.classList.remove('bad'),400);
+      handleStreak(false);
+      addPts(-cfg.ptsWrong);
+
+      // Build a hint showing what the correct equation looks like
+      const correctEq = q.validOps[0];
+      const opSymbols = {'+':'חיבור','-':'חיסור','×':'כפל','÷':'חילוק'};
+      const eqHint = correctEq
+        ? `<br><br>💡 הפעולה הנכונה: <strong>${correctEq.a} ${correctEq.op} ${correctEq.b} = ${q.answer}</strong><br>זו שאלת <strong>${opSymbols[correctEq.op]||correctEq.op}</strong>`
+        : '';
+
+      if (qs.attempts >= cfg.maxAttempts) {
+        showFb('bad', '❌ נסית ${q.answer} — נכון! אבל החישוב שגוי',
+          `📊 המספר הסופי נכון אבל המשוואה לא נכונה!${eqHint}`);
+        recordHistory(q, userAns, false);
+        endQ();
+      } else {
+        showFb('part', '⚠️ המספר נכון — אבל החישוב שגוי!',
+          `📊 התשובה הסופית ${q.answer} נכונה, אבל ניסית משוואה שגויה!${eqHint}<br><br>עוד ${cfg.maxAttempts - qs.attempts} ניסיון/ות`);
+        setTimeout(()=>{ document.getElementById('fbBox').classList.remove('on'); inp.focus(); }, 2200);
+      }
+
+    } else {
+      // ❌ Fully wrong
+      qs.attempts++;
+      inp.classList.add('bad');
+      document.getElementById('ad'+(qs.attempts-1)).classList.add('used');
+      addPts(-cfg.ptsWrong);
+      inp.value=''; setTimeout(()=>inp.classList.remove('bad'),400);
+      handleStreak(false);
+
+      if (qs.attempts >= cfg.maxAttempts) {
+        showFb('bad', '❌ הפעם לא...', buildExpl(q));
+        recordHistory(q, userAns, false);
+        endQ();
+      } else {
+        showFb('bad', `😅 לא נכון! עוד ${cfg.maxAttempts-qs.attempts} ניסיון/ות`, '');
+        setTimeout(()=>{ document.getElementById('fbBox').classList.remove('on'); inp.focus(); }, 1600);
+      }
+    }
+    return;
+  }
+
+  // ── All other question types: just check the number ──
+  const userAns = parseInt(ansInpEl.value);
+  if (isNaN(userAns)) { showToast('✏️ הכנס מספר!'); return; }
+  const ok = userAns === q.answer;
+  const inp = ansInpEl;
+  if (ok) {
+    inp.classList.add('ok'); inp.classList.remove('bad');
+    document.getElementById('ad'+qs.attempts).classList.add('ok');
+    const pts = Math.max(q.pts - (qs.hintUsed ? cfg.ptsHint : 0) - qs.attempts * 2, 1);
+    addPts(pts); showPtsPop(pts); handleStreak(true);
+    showFb('ok', `🎉 ${pick(['מדהים!','אלוף!','גאון!','נפלא!','💯'])}`, `${q.answer} — נכון מאוד!`);
+    recordHistory(q, userAns, true);
+    spawnConf();
+    endQ();
+  } else {
+    qs.attempts++;
+    inp.classList.add('bad');
+    document.getElementById('ad'+(qs.attempts-1)).classList.add('used');
+    addPts(-cfg.ptsWrong);
+    inp.value=''; setTimeout(()=>inp.classList.remove('bad'),400);
+    handleStreak(false);
+    if (qs.attempts >= cfg.maxAttempts) {
+      showFb('bad', '❌ הפעם לא...', buildExpl(q));
+      recordHistory(q, userAns, false);
+      endQ();
+    } else {
+      showFb('bad', `😅 לא נכון! עוד ${cfg.maxAttempts-qs.attempts} ניסיון/ות`, '');
+      setTimeout(()=>{ document.getElementById('fbBox').classList.remove('on'); inp.focus(); }, 1600);
+    }
+  }
+}
+
+function showWordFb(writtenText, q, num, equationCorrect) {
+  const example = q.exampleAnswer || `${q.answer}`;
+  if (!writtenText) {
+    showFb('ok', `🎉 נכון! (${q.answer})`, `✅ החישוב נכון!<br><br>📝 טיפ: בפעם הבאה כתוב גם משפט תשובה מלא:<br>🌟 דוגמה: "${example}"`);
+    return;
+  }
+  let score = 0, issues = [], praises = [];
+  if (writtenText.includes(String(q.answer))) { score += 40; praises.push('כוללת את המספר הנכון'); }
+  else issues.push(`חסר המספר ${q.answer}`);
+  if (writtenText.trim().split(/\s+/).length >= 4) { score += 25; praises.push('משפט מלא'); }
+  else issues.push('המשפט קצר מדי');
+  const ctxWords = ['כל','יש','קיבל','נשאר','בסך','ביחד'];
+  if (ctxWords.some(w => writtenText.includes(w))) { score += 20; praises.push('יש הקשר לשאלה'); }
+  else issues.push('התייחס לנושא השאלה');
+  if (writtenText.trim().match(/[.!?]$/)) { score += 15; praises.push('משפט מסודר'); }
+  else issues.push('שכחת נקודה בסוף');
+  score = Math.min(score, 100);
+  const barColor = score>=80 ? 'var(--a3)' : score>=50 ? 'var(--a2)' : 'var(--a1)';
+  const qualityBar = `<div class="quality-bar"><div class="quality-label"><span>איכות משפט</span><span style="color:${barColor}">${score}/100</span></div><div class="quality-outer"><div class="quality-inner" style="width:${score}%;background:${barColor}"></div></div></div>`;
+  if (score >= 80)
+    showFb('ok', `🌟 מצוין! חישוב + משפט מושלם!`, `${praises.map(p=>`✅ ${p}`).join('<br>')}${qualityBar}`);
+  else if (score >= 50)
+    showFb('ok', `✅ נכון! המשפט יכול להיות טוב יותר`, `${issues.map(i=>`⚠️ ${i}`).join('<br>')}<br><br>🌟 דוגמה: "${example}"${qualityBar}`);
+  else
+    showFb('ok', `✅ נכון! אבל כדאי לשפר את המשפט`, `${issues.map(i=>`❌ ${i}`).join('<br>')}<br><br>🌟 דוגמה: "${example}"${qualityBar}`);
+}
 
 function buildExpl(q){if(q.cat==='word'){let s=`התשובה: <strong>${q.answer}</strong>`;if(q.steps?.length)s+=`<br><br>${q.steps.map(st=>`→ ${st}`).join('<br>')}`;s+=`<br><br>🌟 "${q.exampleAnswer||q.answer}"`;return s;}if(q.cat==='mul')return`התשובה: ${q.answer}<br>${q.mulA} × ${q.mulB} = ${q.answer}`;if(q.cat==='div')return`התשובה: ${q.answer}<br>${q.mulB} × ${q.answer} = ${q.mulB*q.answer}`;return`התשובה: ${q.answer}`;}
 
