@@ -134,12 +134,12 @@ window.fbRegister = async function() {
   if (pass!==pass2){err.textContent='הסיסמאות לא תואמות';err.style.display='block';return;}
   if (!termsAccepted){err.textContent='יש לאשר את תנאי השימוש כדי להמשיך';err.style.display='block';document.getElementById('regTermsRow').style.animation='shk .4s';setTimeout(()=>document.getElementById('regTermsRow').style.animation='',400);return;}
   if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)){err.textContent='כתובת מייל לא תקינה';err.style.display='block';return;}
-  const fakeEmail = contactEmail ? contactEmail.toLowerCase() : cleanU + '@brainspark.local';
-  try {
+const cleanU = cleanUsername(username);
+const fakeEmail = contactEmail ? contactEmail.toLowerCase() : cleanU + '@brainspark.local';
+try {
     document.getElementById('authBtn').disabled=true;
     document.getElementById('authBtn').textContent='נרשם...';
     const cred = await createUserWithEmailAndPassword(auth,fakeEmail,pass);
-    const cleanU = cleanUsername(username);
     const userData = {displayName,username:cleanU,grade,createdAt:Date.now(),friends:[],st,cfg,termsAccepted:true};
     if (gender) userData.gender = gender;
     if (contactEmail) userData.contactEmail = contactEmail.toLowerCase();
@@ -159,7 +159,7 @@ window.fbLogin = async function() {
   const pass = document.getElementById('loginPass').value;
   const err = document.getElementById('loginErr');
   err.style.display='none';
-  const fakeEmail = contactEmail ? contactEmail.toLowerCase() : cleanU + '@brainspark.local';
+  const fakeEmail = username.toLowerCase().replace(/[^a-z0-9]/g,'') + '@brainspark.local';
   try {
     document.getElementById('loginBtn').disabled=true;
     document.getElementById('loginBtn').textContent='נכנס...';
