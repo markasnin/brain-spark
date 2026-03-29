@@ -612,7 +612,7 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
         <div class="reg-step-title">👋 ?שלום! מי את/ה?</div>
         <div class="reg-step-sub">השם שלך יופיע על לוח הניקוד</div>
         <label class="auth-label">שם תצוגה</label>
-        <input class="auth-inp" id="regDisplayName" type="text" placeholder="לדוגמה: יאן 🔥" autocomplete="given-name" onkeydown="if(event.key==='Enter')document.getElementById('regUsername').focus()">
+        <input class="auth-inp" id="regDisplayName" type="text" placeholder="לדוגמה: דוד 🔥" autocomplete="given-name" onkeydown="if(event.key==='Enter')document.getElementById('regUsername').focus()">
         <label class="auth-label">שם משתמש לכניסה</label>
         <input class="auth-inp" id="regUsername" type="text" placeholder="באנגלית/עברית, ללא רווחים" autocomplete="username" onkeydown="if(event.key==='Enter')regGoStep(2)">
         <button class="reg-next-btn" onclick="regGoStep(2)">המשך ←</button>
@@ -704,7 +704,7 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
     <div style="font-family:'Fredoka',sans-serif;font-size:1.6rem;font-weight:700;color:var(--a2);margin-bottom:8px">בחר שם משתמש</div>
     <div style="font-size:.9rem;color:var(--txt2);margin-bottom:22px;line-height:1.6">שם המשתמש שלך מזהה אותך במשחק.<br>אפשר לחפש אותך לפיו ולהוסיף אותך כחבר!</div>
     <div class="auth-err" id="setupErr"></div>
-    <input class="auth-inp" id="setupUsername" type="text" placeholder="לדוגמה: יאן או yan123" autocomplete="username" onkeydown="if(event.key==='Enter')fbSaveUsername()">
+    <input class="auth-inp" id="setupUsername" type="text" placeholder="לדוגמה: דוד או david123" autocomplete="username" onkeydown="if(event.key==='Enter')fbSaveUsername()">
     <button class="auth-btn" id="setupBtn" onclick="fbSaveUsername()">✅ שמור והמשך</button>
   </div>
 </div>
