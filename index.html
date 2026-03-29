@@ -531,6 +531,45 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
 .profile-stat{background:rgba(255,255,255,.05);border-radius:12px;padding:14px;text-align:center;}
 .profile-stat-val{font-size:1.5rem;font-weight:900;}.profile-stat-lbl{font-size:.75rem;color:var(--txt2);margin-top:3px;}
 .q-game-label{font-size:.78rem;font-weight:700;color:var(--a6);opacity:.8;text-align:center;margin-bottom:6px;letter-spacing:.5px;}
+/* ── Multi-step registration ── */
+.reg-stepper{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:24px;}
+.reg-step-dot{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;color:var(--txt2);transition:all .35s;background:rgba(255,255,255,.04);flex-shrink:0;}
+.reg-step-dot.active{border-color:var(--a4);color:#fff;background:linear-gradient(135deg,var(--a4),var(--a5));box-shadow:0 0 16px rgba(30,144,255,.45);}
+.reg-step-dot.done{border-color:var(--a3);color:var(--a3);background:rgba(46,213,115,.12);}
+.reg-step-line{flex:1;height:2px;background:rgba(255,255,255,.1);max-width:36px;transition:background .35s;}
+.reg-step-line.done{background:var(--a3);}
+.reg-step-panel{display:none;}
+.reg-step-panel.on{display:block;animation:stepIn .3s ease;}
+@keyframes stepIn{from{opacity:0;transform:translateX(-10px);}to{opacity:1;transform:translateX(0);}}
+.reg-grade-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px;}
+.reg-grade-card{border-radius:15px;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);cursor:pointer;padding:11px 5px 9px;text-align:center;font-family:'Fredoka',sans-serif;transition:border-color .2s,background .2s,transform .3s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;}
+.reg-grade-card .rgc-emoji{font-size:1.75rem;display:block;transition:transform .35s cubic-bezier(.34,1.56,.64,1);}
+.reg-grade-card:hover .rgc-emoji{transform:rotate(-10deg) scale(1.18);}
+.reg-grade-card.selected .rgc-emoji{transform:rotate(8deg) scale(1.28);}
+.reg-grade-card .rgc-name{font-size:.85rem;font-weight:700;margin-top:5px;}
+.reg-grade-card .rgc-sub{font-size:.62rem;color:var(--txt2);margin-top:2px;line-height:1.3;}
+.reg-grade-card::after{content:'';position:absolute;inset:0;border-radius:13px;opacity:0;transition:opacity .2s;pointer-events:none;}
+.reg-grade-card:hover::after{opacity:1;}
+.reg-grade-card.selected{transform:scale(1.07);}
+.reg-grade-card.rg1{border-color:rgba(46,213,115,.22);}.reg-grade-card.rg1::after{background:rgba(46,213,115,.06);}
+.reg-grade-card.rg1 .rgc-name{color:#2ed573;}.reg-grade-card.rg1.selected{border-color:#2ed573;background:rgba(46,213,115,.12);box-shadow:0 0 18px rgba(46,213,115,.28);}
+.reg-grade-card.rg2{border-color:rgba(255,211,42,.22);}.reg-grade-card.rg2::after{background:rgba(255,211,42,.06);}
+.reg-grade-card.rg2 .rgc-name{color:#ffd32a;}.reg-grade-card.rg2.selected{border-color:#ffd32a;background:rgba(255,211,42,.12);box-shadow:0 0 18px rgba(255,211,42,.28);}
+.reg-grade-card.rg3{border-color:rgba(30,144,255,.22);}.reg-grade-card.rg3::after{background:rgba(30,144,255,.06);}
+.reg-grade-card.rg3 .rgc-name{color:#1e90ff;}.reg-grade-card.rg3.selected{border-color:#1e90ff;background:rgba(30,144,255,.12);box-shadow:0 0 18px rgba(30,144,255,.28);}
+.reg-grade-card.rg4{border-color:rgba(155,89,182,.22);}.reg-grade-card.rg4::after{background:rgba(155,89,182,.06);}
+.reg-grade-card.rg4 .rgc-name{color:#9b59b6;}.reg-grade-card.rg4.selected{border-color:#9b59b6;background:rgba(155,89,182,.12);box-shadow:0 0 18px rgba(155,89,182,.28);}
+.reg-grade-card.rg5{border-color:rgba(255,99,72,.22);}.reg-grade-card.rg5::after{background:rgba(255,99,72,.06);}
+.reg-grade-card.rg5 .rgc-name{color:#ff6348;}.reg-grade-card.rg5.selected{border-color:#ff6348;background:rgba(255,99,72,.12);box-shadow:0 0 18px rgba(255,99,72,.28);}
+.reg-grade-card.rg6{border-color:rgba(255,71,87,.22);}.reg-grade-card.rg6::after{background:rgba(255,71,87,.06);}
+.reg-grade-card.rg6 .rgc-name{color:#ff4757;}.reg-grade-card.rg6.selected{border-color:#ff4757;background:rgba(255,71,87,.12);box-shadow:0 0 18px rgba(255,71,87,.28);}
+.reg-next-btn{width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--a4),var(--a5));color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:4px;}
+.reg-next-btn:hover:not(:disabled){transform:scale(1.02);box-shadow:0 6px 22px rgba(30,144,255,.35);}
+.reg-next-btn:disabled{opacity:.4;cursor:not-allowed;}
+.reg-back-link{text-align:center;margin-top:11px;font-size:.83rem;color:var(--txt2);cursor:pointer;transition:color .2s;}
+.reg-back-link:hover{color:#fff;}
+.reg-step-title{font-family:'Fredoka',sans-serif;font-size:1.2rem;font-weight:700;color:var(--a2);margin-bottom:3px;text-align:center;}
+.reg-step-sub{font-size:.8rem;color:var(--txt2);margin-bottom:16px;text-align:center;line-height:1.5;}
 ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:rgba(255,255,255,.04);}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:99px;}
 @media(max-width:420px){.logo{font-size:2.4rem;}.qtxt{font-size:1.05rem;}.ans-inp{width:72px;height:50px;font-size:1.5rem;}}
 </style>
@@ -558,41 +597,100 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
     </div>
     <div class="auth-form" id="regForm">
       <div class="auth-err" id="authErr"></div>
-      <label class="auth-label">שם תצוגה</label>
-      <input class="auth-inp" id="regDisplayName" type="text" placeholder="לדוגמה: יאן 🔥">
-      <label class="auth-label">שם משתמש לכניסה</label>
-      <input class="auth-inp" id="regUsername" type="text" placeholder="באנגלית/עברית, ללא רווחים" autocomplete="username">
-      <label class="auth-label">כיתה</label>
-      <select class="auth-sel" id="regGrade">
-        <option value="">בחר כיתה...</option>
-        <option value="א">כיתה א</option><option value="ב">כיתה ב</option>
-        <option value="ג">כיתה ג</option><option value="ד">כיתה ד</option>
-        <option value="ה">כיתה ה</option><option value="ו">כיתה ו</option>
-      </select>
-      <label class="auth-label">מי אני?</label>
-      <div id="regGenderPicker" class="gender-picker">
-        <button type="button" class="gender-btn" data-value="boy" onclick="selectGender('reg','boy')" aria-pressed="false">
-          <span class="gender-emoji">👦</span><span class="gender-label">ילד</span>
-        </button>
-        <button type="button" class="gender-btn" data-value="girl" onclick="selectGender('reg','girl')" aria-pressed="false">
-          <span class="gender-emoji">👧</span><span class="gender-label">ילדה</span>
-        </button>
-        <button type="button" class="gender-btn" data-value="other" onclick="selectGender('reg','other')" aria-pressed="false">
-          <span class="gender-emoji">🌟</span><span class="gender-label">לא רוצה להגיד</span>
-        </button>
+
+      <!-- Step indicator -->
+      <div class="reg-stepper" id="regStepper">
+        <div class="reg-step-dot active" id="rdot1">1</div>
+        <div class="reg-step-line" id="rline1"></div>
+        <div class="reg-step-dot" id="rdot2">2</div>
+        <div class="reg-step-line" id="rline2"></div>
+        <div class="reg-step-dot" id="rdot3">3</div>
       </div>
-      <label class="auth-label">מייל (לא חובה)</label>
-      <input class="auth-inp" id="regEmail" type="email" placeholder="example@mail.com" dir="ltr" autocomplete="email">
-      <div class="email-note">מומלץ לחבר מייל כדי שניתן יהיה לשחזר סיסמה בעתיד</div>
-      <label class="auth-label">סיסמה (לפחות 6 תווים)</label>
-      <input class="auth-inp" id="regPass" type="password" placeholder="סיסמה" autocomplete="new-password">
-      <label class="auth-label">אשר סיסמה</label>
-      <input class="auth-inp" id="regPass2" type="password" placeholder="חזור על הסיסמה" autocomplete="new-password" onkeydown="if(event.key==='Enter')fbRegister()">
-      <div class="terms-row" id="regTermsRow" onclick="toggleRegTerms()">
-        <div class="terms-chk" id="regTermsChk"><span class="terms-chk-inner">✓</span></div>
-        <div class="terms-text">אני מסכים/ה ל<a onclick="event.stopPropagation();showTermsModal()">תנאי השימוש</a> ומדיניות הפרטיות של Brain Spark</div>
+
+      <!-- ── Step 1: Name + Username ── -->
+      <div class="reg-step-panel on" id="regStep1">
+        <div class="reg-step-title">👋 שלום! מי אתה?</div>
+        <div class="reg-step-sub">השם שלך יופיע על לוח הניקוד</div>
+        <label class="auth-label">שם תצוגה</label>
+        <input class="auth-inp" id="regDisplayName" type="text" placeholder="לדוגמה: יאן 🔥" autocomplete="given-name" onkeydown="if(event.key==='Enter')document.getElementById('regUsername').focus()">
+        <label class="auth-label">שם משתמש לכניסה</label>
+        <input class="auth-inp" id="regUsername" type="text" placeholder="באנגלית/עברית, ללא רווחים" autocomplete="username" onkeydown="if(event.key==='Enter')regGoStep(2)">
+        <button class="reg-next-btn" onclick="regGoStep(2)">המשך ←</button>
       </div>
-      <button class="auth-btn" id="authBtn" onclick="fbRegister()">✅ הרשמה</button>
+
+      <!-- ── Step 2: Gender + Grade ── -->
+      <div class="reg-step-panel" id="regStep2">
+        <div class="reg-step-title">🎯 קצת עלייך</div>
+        <div class="reg-step-sub">בחר כיתה ומי אתה</div>
+        <label class="auth-label">מי אני?</label>
+        <div id="regGenderPicker" class="gender-picker" style="margin-bottom:16px;">
+          <button type="button" class="gender-btn" data-value="boy" onclick="selectGender('reg','boy')" aria-pressed="false">
+            <span class="gender-emoji">👦</span><span class="gender-label">ילד</span>
+          </button>
+          <button type="button" class="gender-btn" data-value="girl" onclick="selectGender('reg','girl')" aria-pressed="false">
+            <span class="gender-emoji">👧</span><span class="gender-label">ילדה</span>
+          </button>
+          <button type="button" class="gender-btn" data-value="other" onclick="selectGender('reg','other')" aria-pressed="false">
+            <span class="gender-emoji">🌟</span><span class="gender-label">לא רוצה להגיד</span>
+          </button>
+        </div>
+        <label class="auth-label">באיזו כיתה אתה?</label>
+        <div class="reg-grade-grid">
+          <div class="reg-grade-card rg1" onclick="selectRegGrade('א')" data-grade="א">
+            <span class="rgc-emoji">🌱</span>
+            <div class="rgc-name">כיתה א</div>
+            <div class="rgc-sub">חיבור וחיסור</div>
+          </div>
+          <div class="reg-grade-card rg2" onclick="selectRegGrade('ב')" data-grade="ב">
+            <span class="rgc-emoji">📊</span>
+            <div class="rgc-name">כיתה ב</div>
+            <div class="rgc-sub">+ כפל</div>
+          </div>
+          <div class="reg-grade-card rg3" onclick="selectRegGrade('ג')" data-grade="ג">
+            <span class="rgc-emoji">⚡</span>
+            <div class="rgc-name">כיתה ג</div>
+            <div class="rgc-sub">+ חילוק</div>
+          </div>
+          <div class="reg-grade-card rg4" onclick="selectRegGrade('ד')" data-grade="ד">
+            <span class="rgc-emoji">🔮</span>
+            <div class="rgc-name">כיתה ד</div>
+            <div class="rgc-sub">שברים</div>
+          </div>
+          <div class="reg-grade-card rg5" onclick="selectRegGrade('ה')" data-grade="ה">
+            <span class="rgc-emoji">🏆</span>
+            <div class="rgc-name">כיתה ה</div>
+            <div class="rgc-sub">מספרים גדולים</div>
+          </div>
+          <div class="reg-grade-card rg6" onclick="selectRegGrade('ו')" data-grade="ו">
+            <span class="rgc-emoji">🚀</span>
+            <div class="rgc-name">כיתה ו</div>
+            <div class="rgc-sub">רמה מקסימלית</div>
+          </div>
+        </div>
+        <!-- hidden input for grade value -->
+        <input type="hidden" id="regGrade" value="">
+        <button class="reg-next-btn" onclick="regGoStep(3)">המשך ←</button>
+        <div class="reg-back-link" onclick="regGoStep(1)">← חזרה</div>
+      </div>
+
+      <!-- ── Step 3: Email + Password + Terms ── -->
+      <div class="reg-step-panel" id="regStep3">
+        <div class="reg-step-title">🔐 עוד רגע ונגמר!</div>
+        <div class="reg-step-sub">הגן על החשבון שלך</div>
+        <label class="auth-label">מייל <span style="color:var(--a3);font-size:.76rem;">(לא חובה)</span></label>
+        <input class="auth-inp" id="regEmail" type="email" placeholder="example@mail.com" dir="ltr" autocomplete="email">
+        <div class="email-note" style="margin-top:-6px;margin-bottom:13px;">מומלץ לחבר מייל לשחזור סיסמה בעתיד</div>
+        <label class="auth-label">סיסמה (לפחות 6 תווים)</label>
+        <input class="auth-inp" id="regPass" type="password" placeholder="סיסמה" autocomplete="new-password" onkeydown="if(event.key==='Enter')document.getElementById('regPass2').focus()">
+        <label class="auth-label">אשר סיסמה</label>
+        <input class="auth-inp" id="regPass2" type="password" placeholder="חזור על הסיסמה" autocomplete="new-password" onkeydown="if(event.key==='Enter')fbRegister()">
+        <div class="terms-row" id="regTermsRow" onclick="toggleRegTerms()">
+          <div class="terms-chk" id="regTermsChk"><span class="terms-chk-inner">✓</span></div>
+          <div class="terms-text">אני מסכים/ה ל<a onclick="event.stopPropagation();showTermsModal()">תנאי השימוש</a> ומדיניות הפרטיות של Brain Spark</div>
+        </div>
+        <button class="auth-btn" id="authBtn" onclick="fbRegister()">✅ צור חשבון!</button>
+        <div class="reg-back-link" onclick="regGoStep(2)">← חזרה</div>
+      </div>
     </div>
   </div>
 </div>
@@ -1301,8 +1399,77 @@ async function loadMiniLeaderboard(){const el=document.getElementById('homeLbLis
 async function renderFriendsList(){const el=document.getElementById('friendsList');if(!el)return;el.innerHTML='';if(!window._friends||window._friends.length===0){el.innerHTML='<div style="color:var(--txt2);text-align:center;padding:16px">אין חברים עדיין!</div>';return;}for(const uid of window._friends){try{const{db:dbInst,doc:docFn,getDoc:gdoc}=window._fb;const snap=await gdoc(docFn(dbInst,'users',uid));if(!snap.exists())continue;const d=snap.data();const lv=LEVELS[Math.min(d.st?.level||0,LEVELS.length-1)];const card=document.createElement('div');card.className='friend-card';card.innerHTML=`<div class="friend-avatar">${(d.displayName||'?')[0].toUpperCase()}</div><div style="flex:1"><div style="font-weight:700;color:var(--a2)">${d.displayName}</div><div style="font-size:.8rem;color:var(--txt2)">כיתה ${d.grade||'?'} • רמה ${(d.st?.level||0)+1} • ${d.st?.totalSolved||0} תרגילים</div></div><div style="font-weight:900;color:var(--a3)">${(d.st?.score||0).toLocaleString()} ⭐</div>`;card.onclick=()=>openFriendProfile(d,uid);el.appendChild(card);}catch(e){}}}
 function openFriendProfile(d,uid){const lv=LEVELS[Math.min(d.st?.level||0,LEVELS.length-1)];document.getElementById('fprofileContent').innerHTML=`<div class="profile-avatar">${(d.displayName||'?')[0].toUpperCase()}</div><div style="font-family:'Fredoka',sans-serif;font-size:1.8rem;color:var(--a2);margin-bottom:4px">${d.displayName}</div><div style="color:var(--txt2);font-size:.9rem;margin-bottom:20px">@${d.username||''} • כיתה ${d.grade||'?'} • ${lv.e} ${lv.n}</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%"><div class="profile-stat"><div class="profile-stat-val" style="color:var(--a2)">${(d.st?.score||0).toLocaleString()}</div><div class="profile-stat-lbl">נקודות</div></div><div class="profile-stat"><div class="profile-stat-val" style="color:var(--a4)">${(d.st?.level||0)+1}</div><div class="profile-stat-lbl">רמה</div></div><div class="profile-stat"><div class="profile-stat-val" style="color:var(--a3)">${d.st?.totalSolved||0}</div><div class="profile-stat-lbl">תרגילים</div></div></div>`;show('fprofile-scr');}
 
+// ══ MULTI-STEP REGISTRATION ══
+let _regCurrentStep = 1;
+
+function regGoStep(step) {
+  const err = document.getElementById('authErr');
+  err.style.display = 'none';
+
+  // Validate current step before advancing
+  if (step > _regCurrentStep) {
+    if (_regCurrentStep === 1) {
+      const name = document.getElementById('regDisplayName').value.trim();
+      const user = document.getElementById('regUsername').value.trim();
+      if (!name || name.length < 2) { err.textContent = 'שם תצוגה חייב להיות לפחות 2 תווים'; err.style.display = 'block'; document.getElementById('regDisplayName').focus(); return; }
+      if (!user || user.length < 2) { err.textContent = 'שם משתמש חייב להיות לפחות 2 תווים'; err.style.display = 'block'; document.getElementById('regUsername').focus(); return; }
+    }
+    if (_regCurrentStep === 2) {
+      const grade = document.getElementById('regGrade').value;
+      if (!grade) { err.textContent = 'בחר כיתה להמשיך'; err.style.display = 'block'; return; }
+    }
+  }
+
+  // Hide all panels
+  document.querySelectorAll('.reg-step-panel').forEach(p => p.classList.remove('on'));
+  document.getElementById('regStep' + step).classList.add('on');
+
+  // Update stepper dots
+  for (let i = 1; i <= 3; i++) {
+    const dot = document.getElementById('rdot' + i);
+    dot.classList.remove('active', 'done');
+    if (i < step) dot.classList.add('done'), dot.textContent = '✓';
+    else if (i === step) dot.classList.add('active'), dot.textContent = i;
+    else dot.textContent = i;
+  }
+  // Update lines
+  for (let i = 1; i <= 2; i++) {
+    const line = document.getElementById('rline' + i);
+    line.classList.toggle('done', step > i);
+  }
+
+  _regCurrentStep = step;
+}
+
+function selectRegGrade(grade) {
+  document.getElementById('regGrade').value = grade;
+  document.querySelectorAll('.reg-grade-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.grade === grade);
+  });
+}
+
+// Reset registration form when switching to reg tab
+function resetRegForm() {
+  regGoStep(1);
+  ['regDisplayName','regUsername','regEmail','regPass','regPass2'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('regGrade').value = '';
+  document.querySelectorAll('.reg-grade-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('#regGenderPicker .gender-btn').forEach(b => { b.classList.remove('selected'); b.setAttribute('aria-pressed','false'); });
+  const termsRow = document.getElementById('regTermsRow');
+  if (termsRow) termsRow.classList.remove('accepted');
+  document.getElementById('authErr').style.display = 'none';
+}
+
 // ══ AUTH / SETTINGS TABS ══
-function switchAuthTab(tab){document.getElementById('loginForm').classList.toggle('on',tab==='login');document.getElementById('regForm').classList.toggle('on',tab==='reg');document.getElementById('tabLogin').classList.toggle('active',tab==='login');document.getElementById('tabReg').classList.toggle('active',tab==='reg');}
+function switchAuthTab(tab){
+  document.getElementById('loginForm').classList.toggle('on',tab==='login');
+  document.getElementById('regForm').classList.toggle('on',tab==='reg');
+  document.getElementById('tabLogin').classList.toggle('active',tab==='login');
+  document.getElementById('tabReg').classList.toggle('active',tab==='reg');
+  if (tab === 'reg') resetRegForm();
+}
 function switchSettingsTab(tab){const parentsSection=document.getElementById('settingsParentsSection');const adminSection=document.getElementById('settingsAdminSection');const parentsBtn=document.getElementById('parentsTabBtn');const adminBtn=document.getElementById('adminTabBtn');if(tab==='parents'){parentsSection.style.display='block';adminSection.style.display='none';document.getElementById('pgateWrap').style.display='block';document.getElementById('settingsContent').style.display='none';if(parentsBtn)parentsBtn.classList.add('active');if(adminBtn)adminBtn.classList.remove('active');}else{parentsSection.style.display='none';adminSection.style.display='block';if(parentsBtn)parentsBtn.classList.remove('active');if(adminBtn)adminBtn.classList.add('active');const gc2=st.specialGlowColor||'#00d362';const bc2=st.specialBadgeColor||'#00d362';document.getElementById('glowColorCustom').value=gc2;document.getElementById('badgeColorCustom').value=bc2;updateGlowPreview(gc2);updateBadgePreview(bc2);highlightSelected('glowColorPicker',gc2);highlightSelected('badgeColorPicker',bc2);}}
 function highlightSelected(pickerId,color){const picker=document.getElementById(pickerId);if(!picker)return;picker.querySelectorAll('div[data-color]').forEach(el=>{el.style.border=el.dataset.color.toLowerCase()===color.toLowerCase()?'3px solid #fff':'3px solid transparent';el.style.transform=el.dataset.color.toLowerCase()===color.toLowerCase()?'scale(1.2)':'scale(1)';});}
 function pickGlowColor(color){st.specialGlowColor=color;document.getElementById('glowColorCustom').value=color;updateGlowPreview(color);highlightSelected('glowColorPicker',color);}
