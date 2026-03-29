@@ -169,6 +169,7 @@ window.fbLogin = async function() {
     if (snap.empty) throw new Error('not found');
     const userData = snap.docs[0].data();
     const loginEmail = userData.contactEmail || (clean + '@brainspark.local');
+    alert('trying to login with: ' + loginEmail);
     await signInWithEmailAndPassword(auth, loginEmail, pass);
   } catch(e) {
     document.getElementById('loginBtn').disabled=false;
