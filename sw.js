@@ -1,4 +1,4 @@
-const CACHE = 'brainspark-v2';
+const CACHE = 'brainspark-v3';
 const FILES = [
   './index.html',
   './style.css',
