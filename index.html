@@ -136,7 +136,7 @@ window.fbRegister = async function() {
   if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)){err.textContent='כתובת מייל לא תקינה';err.style.display='block';return;}
 const cleanU = cleanUsername(username);
 const encodedU = Array.from(cleanU).map(c=>c.charCodeAt(0).toString(36)).join('');
-const fakeEmail = contactEmail ? contactEmail.toLowerCase() : encodedU + '@brainspark.local';
+const fakeEmail = contactEmail ? contactEmail.toLowerCase() : cleanU + '@brainspark.local';
 try {
     document.getElementById('authBtn').disabled=true;
     document.getElementById('authBtn').textContent='נרשם...';
@@ -165,12 +165,8 @@ window.fbLogin = async function() {
     document.getElementById('loginBtn').disabled=true;
     document.getElementById('loginBtn').textContent='נכנס...';
     const clean = username.trim().toLowerCase().replace(/[^\u05d0-\u05eaa-z0-9]/g,'');
-    const snap = await getDocs(query(collection(db,'users'), where('username','==',clean)));
-    if (snap.empty) throw new Error('not found');
-    const userData = snap.docs[0].data();
-    const loginEmail = userData.contactEmail || (clean + '@brainspark.local');
-    alert('trying to login with: ' + loginEmail);
-    await signInWithEmailAndPassword(auth, loginEmail, pass);
+    const fakeEmail = clean + '@brainspark.local';
+    await signInWithEmailAndPassword(auth, fakeEmail, pass);
   } catch(e) {
     document.getElementById('loginBtn').disabled=false;
     document.getElementById('loginBtn').textContent='🚀 כניסה';
