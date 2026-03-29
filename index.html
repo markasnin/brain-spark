@@ -91,6 +91,32 @@ window.fbSave = function() {
   }, 1200);
 };
 
+// ── USERNAME AVAILABILITY ──
+let _unameCheckTimer = null;
+window.scheduleUsernameCheck = function() {
+  clearTimeout(_unameCheckTimer);
+  _unameCheckTimer = setTimeout(async () => {
+    const val = document.getElementById('regUsername').value.trim();
+    const badge = document.getElementById('regUsernameBadge');
+    if (!badge) return;
+    const clean = val.trim().toLowerCase().replace(/[^\u05d0-\u05eaa-z0-9]/g,'');
+    if (!clean || clean.length < 2) { badge.style.display='none'; return; }
+    badge.style.cssText='display:inline-flex;padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:700;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:var(--txt2);margin-top:-8px;margin-bottom:10px;';
+    badge.textContent = '⏳ בודק...';
+    try {
+      const { collection:col, getDocs:gd, query:qr, where:wh, db:dbInst } = window._fb;
+      const snap = await gd(qr(col(dbInst,'users'), wh('username','==',clean)));
+      if (snap.empty) {
+        badge.style.cssText='display:inline-flex;padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:700;border:1px solid rgba(46,213,115,.4);background:rgba(46,213,115,.12);color:var(--a3);margin-top:-8px;margin-bottom:10px;';
+        badge.textContent = '✅ פנוי!';
+      } else {
+        badge.style.cssText='display:inline-flex;padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:700;border:1px solid rgba(255,71,87,.4);background:rgba(255,71,87,.12);color:var(--a1);margin-top:-8px;margin-bottom:10px;';
+        badge.textContent = '❌ תפוס — נסה שם אחר';
+      }
+    } catch(e) { badge.style.display='none'; }
+  }, 600);
+};
+
 window.fbRegister = async function() {
   const username = document.getElementById('regUsername').value.trim();
   const pass = document.getElementById('regPass').value;
@@ -614,8 +640,11 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
         <label class="auth-label">שם תצוגה</label>
         <input class="auth-inp" id="regDisplayName" type="text" placeholder="לדוגמה: דוד 🔥" autocomplete="given-name" onkeydown="if(event.key==='Enter')document.getElementById('regUsername').focus()">
         <label class="auth-label">שם משתמש לכניסה</label>
-        <input class="auth-inp" id="regUsername" type="text" placeholder="באנגלית/עברית, ללא רווחים" autocomplete="username" onkeydown="if(event.key==='Enter')regGoStep(2)">
-        <button class="reg-next-btn" onclick="regGoStep(2)">המשך ←</button>
+<input class="auth-inp" id="regUsername" type="text" placeholder="באנגלית/עברית, ללא רווחים" autocomplete="username"
+  oninput="scheduleUsernameCheck()"
+  onkeydown="if(event.key==='Enter')regGoStep(2)">
+<span id="regUsernameBadge" style="display:none"></span>
+<button class="reg-next-btn" onclick="regGoStep(2)">המשך ←</button>
       </div>
 
       <!-- ── Step 2: Gender + Grade ── -->
@@ -1413,6 +1442,13 @@ function regGoStep(step) {
       const user = document.getElementById('regUsername').value.trim();
       if (!name || name.length < 2) { err.textContent = 'שם תצוגה חייב להיות לפחות 2 תווים'; err.style.display = 'block'; document.getElementById('regDisplayName').focus(); return; }
       if (!user || user.length < 2) { err.textContent = 'שם משתמש חייב להיות לפחות 2 תווים'; err.style.display = 'block'; document.getElementById('regUsername').focus(); return; }
+      const badge = document.getElementById('regUsernameBadge');
+if (badge && badge.textContent.includes('תפוס')) {
+  err.textContent = 'שם המשתמש הזה תפוס — בחר שם אחר';
+  err.style.display = 'block';
+  document.getElementById('regUsername').focus();
+  return;
+}
     }
     if (_regCurrentStep === 2) {
       const grade = document.getElementById('regGrade').value;
