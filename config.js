@@ -92,7 +92,7 @@ const CAT_NAMES = {
   shapes: '📐 גיאומטריה', fractions: '½ שברים'
 };
 
-const LOCKED_TOPICS = { div: 'division', shapes: 'shapes', fractions: 'fractions' };
+const LOCKED_TOPICS = { div: 'division', shapes: 'shapes', fractions: 'fractions', word: 'word' };
 
 // ══ BRAINROT / GAME THEMES ══
 const BRAINROT_LABELS = [
