@@ -1073,7 +1073,7 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
 <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
   <div class="set-label">כיתה <span style="font-size:.78rem;color:var(--a1)">(ישנה את רמת השאלות!)</span></div>
   <input type="hidden" id="setGrade" value="">
-  <div class="reg-grade-grid" id="setGradeGrid">
+  <div class="reg-grade-grid" id="setGradeGrid" style="width:100%;grid-template-columns:repeat(3,1fr);">
     <div class="reg-grade-card rg1" onclick="selectSetGrade('א')" data-grade="א"><span class="rgc-emoji">🌱</span><div class="rgc-name">כיתה א</div><div class="rgc-sub">חיבור וחיסור</div></div>
     <div class="reg-grade-card rg2" onclick="selectSetGrade('ב')" data-grade="ב"><span class="rgc-emoji">📊</span><div class="rgc-name">כיתה ב</div><div class="rgc-sub">+ כפל</div></div>
     <div class="reg-grade-card rg3" onclick="selectSetGrade('ג')" data-grade="ג"><span class="rgc-emoji">⚡</span><div class="rgc-name">כיתה ג</div><div class="rgc-sub">+ חילוק</div></div>
