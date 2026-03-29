@@ -275,10 +275,15 @@ window.fbSendPasswordReset = async function() {
   }
   try {
     await sendPasswordResetEmail(auth, contactEmail);
-    err.style.display = 'none';
     showToast(`✅ קישור לאיפוס סיסמה נשלח ל-${contactEmail}`);
   } catch(e) {
-    err.textContent = 'שגיאה בשליחת המייל: ' + e.message;
+    // If Firebase doesn't recognize the email, it means the auth account
+    // still uses the fake @brainspark.local email. Tell the user clearly.
+    if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-email') {
+      err.textContent = 'המייל לא מזוהה על ידי Firebase. עדכן את המייל בהגדרות ושמור שוב — ואז נסה מחדש.';
+    } else {
+      err.textContent = 'שגיאה: ' + e.message;
+    }
     err.style.display = 'block';
   }
 };
@@ -1431,7 +1436,9 @@ function toggleRegTerms(){const row=document.getElementById('regTermsRow');if(ro
 // ── Profile fields helpers (used by profile-fields.js) ──
 window.selectGender=function(idPrefix,value){const picker=document.getElementById(idPrefix+'GenderPicker');if(!picker)return;picker.querySelectorAll('.gender-btn').forEach(btn=>{const isSel=btn.dataset.value===value;btn.classList.toggle('selected',isSel);btn.setAttribute('aria-pressed',isSel);});};
 window.getSelectedGender=function(idPrefix){const picker=document.getElementById(idPrefix+'GenderPicker');if(!picker)return'';const sel=picker.querySelector('.gender-btn.selected');return sel?sel.dataset.value:'';};
-window.fbSaveProfileSettings=async function(){if(!window._fbUser)return;const gender=window.getSelectedGender('set');const emailEl=document.getElementById('setContactEmail');const email=emailEl?emailEl.value.trim():'';const err=document.getElementById('profileFieldsErr');if(err)err.style.display='none';if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){if(err){err.textContent='כתובת מייל לא תקינה';err.style.display='block';}return;}try{const{db:dbInst,doc:docFn,updateDoc:updDoc}=window._fb;const update={};if(gender){update.gender=gender;window._gender=gender;}if(email){update.contactEmail=email.toLowerCase();window._contactEmail=email.toLowerCase();}if(Object.keys(update).length>0)await updDoc(docFn(dbInst,'users',window._fbUser.uid),update);showToast('✅ פרטים עודכנו!');}catch(e){if(err){err.textContent='שגיאה בשמירה';err.style.display='block';}};};
+window.fbSaveProfileSettings=async function(){if(!window._fbUser)return;const gender=window.getSelectedGender('set');const emailEl=document.getElementById('setContactEmail');const email=emailEl?emailEl.value.trim():'';const err=document.getElementById('profileFieldsErr');if(err)err.style.display='none';if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){if(err){err.textContent='כתובת מייל לא תקינה';err.style.display='block';}return;}try{const{db:dbInst,doc:docFn,updateDoc:updDoc}=window._fb;const update={};if(gender){update.gender=gender;window._gender=gender;}if(email){update.contactEmail=email.toLowerCase();window._contactEmail=email.toLowerCase();}if(Object.keys(update).length>0)await updDoc(docFn(dbInst,'users',window._fbUser.uid),update);
+if(email&&window._fbUser){try{const{updateEmail}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');await updateEmail(window._fbUser,email.toLowerCase());}catch(e){console.warn('Could not update auth email:',e.message);}}
+showToast('✅ פרטים עודכנו!');}catch(e){if(err){err.textContent='שגיאה בשמירה';err.style.display='block';}};};
 function checkGate(){const v=parseInt(document.getElementById('pgateInp').value);if(v===gateB){document.getElementById('pgateWrap').style.display='none';document.getElementById('settingsContent').style.display='block';}else{document.getElementById('pgateErr').style.display='block';document.getElementById('pgateInp').value='';document.getElementById('pgateInp').focus();}}
 function saveSettings(){cfg.ptsEasy=parseInt(document.getElementById('setPtsEasy').value)||5;cfg.ptsMed=parseInt(document.getElementById('setPtsMed').value)||10;cfg.ptsHard=parseInt(document.getElementById('setPtsHard').value)||18;cfg.ptsWordBonus=parseInt(document.getElementById('setPtsWordBonus').value)||8;cfg.ptsWrong=parseInt(document.getElementById('setPtsWrong').value)||1;cfg.ptsHint=parseInt(document.getElementById('setPtsHint').value)||2;cfg.maxAttempts=parseInt(document.getElementById('setMaxAttempts').value)||3;cfg.hintTime=parseInt(document.getElementById('setHintTime').value)||180;cfg.streakBonus3=parseInt(document.getElementById('setStreakBonus3').value)||5;cfg.streakBonus5=parseInt(document.getElementById('setStreakBonus5').value)||10;cfg.streakBonus10=parseInt(document.getElementById('setStreakBonus10').value)||20;save();showToast('💾 הגדרות נשמרו!');show('home');}
 function clearHistory(){if(confirm('בטוח למחוק?')){st.history=[];st.totalSolved=0;st.correctCount=0;save();showToast('🗑️ היסטוריה נמחקה');}}
