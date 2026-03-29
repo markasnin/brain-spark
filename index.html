@@ -915,7 +915,7 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
 <div class="streak-fire" id="strkFire"><div class="sf-val" id="sfVal">🔥 3</div><div class="sf-lbl" id="sfLbl">ברצף!</div></div>
 <script>
 const LEVELS=[{n:'מתמטיקאי מתחיל',xp:50,e:'🌱'},{n:'סוחר המספרים',xp:120,e:'📊'},{n:'גיבור חשבון',xp:250,e:'⚡'},{n:'קוסם המספרים',xp:450,e:'🔮'},{n:'אלוף חשבון',xp:700,e:'🏆'},{n:'מייסטרו מתמטיקה',xp:1000,e:'🌟'},{n:'אגדת המספרים',xp:1400,e:'💫'},{n:'לאינסוף ומעבר!',xp:Infinity,e:'🚀'}];
-const SPECIAL_USERS={'asasin':{title:'אלוהי המספרים 👑⚡',badge:'⚡👑',color:'#00d2d3',glowColor:'#00d362',badgeColor:'#00d2d3',scoreDisplay:(n)=>'♾️',streakDisplay:(n)=>'♾️',pinTop:true},'יאן':{title:'V.I.P 💎',badge:'💎',color:'#00d362',glowColor:'#00d362',badgeColor:'#00d362',scoreDisplay:(n)=>`💎 ${n.toLocaleString()}`,streakDisplay:(n)=>`🔥 ${n} ברצף 💎`,pinTop:false}};
+const SPECIAL_USERS={'asasin':{title:'אלוהי המספרים 👑⚡',badge:'⚡👑',color:'#00d2d3',glowColor:'#00d362',badgeColor:'#00d2d3',scoreDisplay:(n)=>'♾️',streakDisplay:(n)=>'♾️',allUnlocked:true,defaultGradeLabel:'👑 המנהל',pinTop:true},'יאן':{title:'V.I.P 💎',badge:'💎',color:'#00d362',glowColor:'#00d362',badgeColor:'#00d362',scoreDisplay:(n)=>`💎 ${n.toLocaleString()}`,streakDisplay:(n)=>`🔥 ${n} ברצף 💎`,pinTop:false}};
 const BRAINROT_LABELS=['תרגיל הבריינרוט','הסיגמה של המתמטיקה','ריצה W','לא L','פתרון הגיוסי','מבחן הסקיבידי','המצב גריז'];
 const GAME_THEMES=[{name:'מיינקראפט',items:['⛏️','💎','🪨','🌲','🔥','🐷','🧱'],label:'⛏️ מיינקראפט'},{name:'רובלוקס',items:['🎮','🏗️','🤖','🎲','💰','🌈','🎯'],label:'🎮 רובלוקס'},{name:'פוקימון',items:['⚡','🔥','💧','🌿','👾','🌀','💥'],label:'⚡ פוקימון'},{name:'מריו',items:['🍄','⭐','🪙','🎯','🌟','🎪','🚩'],label:'🍄 מריו'},{name:'פורטנייט',items:['🏆','💥','🔫','🎯','⭐','🌟','🏅'],label:'🏆 פורטנייט'},{name:'כדורגל',items:['⚽','🏃','🥅','🏅','🎯','⭐','🌟'],label:'⚽ כדורגל'},{name:'חייזרים',items:['👾','🛸','🌌','⭐','💫','🔭','🚀'],label:'👾 חייזרים'}];
 const THEME_LOOT={'מיינקראפט':['יהלומים','גוש אבן','עצי עץ','קוביות זהב'],'רובלוקס':['רובוקסים','בניות','כלי נשק','מטבעות'],'פוקימון':['כרטיסי פוקימון','פוקיבולים','תגים','מדליות'],'מריו':['מטבעות','פטריות','כוכבים','מפתחות'],'פורטנייט':['חומרי בנייה','נשקים','תחמושת','ניצחונות'],'כדורגל':['שערים','כרטיסים','ניקוד','כרטיסי שחקן'],'חייזרים':['ספינות','לייזרים','כוכבים','תחנות חלל']};
@@ -1004,8 +1004,13 @@ function updateHome(){
   if(special){const glowColor=st.specialGlowColor||special.glowColor||'#00d362';const badgeColor=st.specialBadgeColor||special.badgeColor||special.color;document.getElementById('playerName').innerHTML=`<span class="name-glow-blue" style="color:${glowColor};animation:none;text-shadow:0 0 8px ${glowColor},0 0 20px ${glowColor}99,0 0 40px ${glowColor}66">${playerDisplayName}</span><span class="special-badge" style="--sc:${badgeColor}">${special.badge} ${special.title}</span>`;document.getElementById('levelDisplay').textContent=`${special.badge} ${special.title}`;}
   else{document.getElementById('playerName').innerHTML=`⭐ ${playerDisplayName}${st.level>0?`<span class="nickname-badge">${lv.n}</span>`:''}`;document.getElementById('levelDisplay').textContent=`${lv.e} רמה ${st.level+1} — ${lv.n}`;}
   const gbw=document.getElementById('gradeBadgeWrap');
-  if(gc){gbw.innerHTML=`<div class="grade-chip" style="color:${gc.gradeColor};border-color:${gc.gradeColor}40;background:${gc.gradeColor}15;">${gc.gradeEmoji} ${gc.gradeName}</div>${gc.tip?`<div style="font-size:.78rem;color:var(--txt2);margin-top:5px;">${gc.tip}</div>`:''}`;}
-  else gbw.innerHTML='';
+  if(special){
+    const glowColor=st.specialGlowColor||special.glowColor||'#00d362';
+    const gradeLabel=st.specialGradeLabel!=null?st.specialGradeLabel:(special.defaultGradeLabel||'');
+    gbw.innerHTML=gradeLabel?`<div class="grade-chip" style="color:${glowColor};border-color:${glowColor}40;background:${glowColor}15;font-family:'Fredoka',sans-serif;">${gradeLabel}</div>`:'';
+  } else if(gc){
+    gbw.innerHTML=`<div class="grade-chip" style="color:${gc.gradeColor};border-color:${gc.gradeColor}40;background:${gc.gradeColor}15;">${gc.gradeEmoji} ${gc.gradeName}</div>${gc.tip?`<div style="font-size:.78rem;color:var(--txt2);margin-top:5px;">${gc.tip}</div>`:''}`;
+  } else gbw.innerHTML='';
   const pct=st.level>=LEVELS.length-1?100:Math.round(st.xp/lv.xp*100);
   document.getElementById('xpBar').style.width=pct+'%';
   document.getElementById('xpTxt').textContent=st.level>=LEVELS.length-1?`${st.xp} נקודות 🔥`:`${st.xp} / ${lv.xp} לרמה ${st.level+2}`;
