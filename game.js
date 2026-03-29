@@ -120,12 +120,11 @@ function submitAns() {
   const ansInpEl = document.getElementById('ansInp');
   if (ansInpEl?.disabled) return;
 
-  // ── Word questions: validate equation FIRST, then text ──
+  // ── Word questions: validate equation FIRST ──
   if (q.type === 'word') {
     const userAns = parseInt(ansInpEl.value);
     if (isNaN(userAns)) { showToast('✏️ הכנס מספר בתשובה הסופית!'); return; }
 
-    // Read what the student typed into the equation builder
     const userA  = parseFloat(document.getElementById('exprNumA')?.value);
     const userB  = parseFloat(document.getElementById('exprNumB')?.value);
     const userOp = exprState.op;
@@ -134,41 +133,38 @@ function submitAns() {
     const inp = ansInpEl;
 
     if (eqResult === 'correct') {
-      // ✅ Equation is correct AND answer matches → full points
+      // ✅ Right equation AND right answer → full points
       inp.classList.add('ok'); inp.classList.remove('bad');
       document.getElementById('ad'+qs.attempts).classList.add('ok');
       const pts = Math.max(q.pts - (qs.hintUsed ? cfg.ptsHint : 0) - qs.attempts * 2, 1);
       addPts(pts); showPtsPop(pts); handleStreak(true);
-      showWordFb(document.getElementById('wordInp').value.trim(), q, userAns, true);
+      showWordFb(document.getElementById('wordInp').value.trim(), q);
       recordHistory(q, userAns, true);
       spawnConf();
       endQ();
 
     } else if (eqResult === 'right-answer-wrong-equation') {
-      // ⚠️ Answer number is right but equation is wrong → NO points, explain
+      // ⚠️ Right number but wrong equation → no points, correct them
       qs.attempts++;
       inp.classList.add('bad');
       document.getElementById('ad'+(qs.attempts-1)).classList.add('used');
-      inp.value=''; setTimeout(()=>inp.classList.remove('bad'),400);
+      inp.value=''; setTimeout(()=>inp.classList.remove('bad'), 400);
       handleStreak(false);
       addPts(-cfg.ptsWrong);
 
-      // Build a hint showing what the correct equation looks like
-      const correctEq = q.validOps[0];
-      const opSymbols = {'+':'חיבור','-':'חיסור','×':'כפל','÷':'חילוק'};
+      const correctEq = q.validOps && q.validOps[0];
+      const opNames = {'+':'חיבור', '-':'חיסור', '×':'כפל', '÷':'חילוק'};
       const eqHint = correctEq
-        ? `<br><br>💡 הפעולה הנכונה: <strong>${correctEq.a} ${correctEq.op} ${correctEq.b} = ${q.answer}</strong><br>זו שאלת <strong>${opSymbols[correctEq.op]||correctEq.op}</strong>`
+        ? `<br><br>💡 הפעולה הנכונה היא <strong>${opNames[correctEq.op]||correctEq.op}</strong>:<br><strong>${correctEq.a} ${correctEq.op} ${correctEq.b} = ${q.answer}</strong>`
         : '';
 
       if (qs.attempts >= cfg.maxAttempts) {
-        showFb('bad', '❌ נסית ${q.answer} — נכון! אבל החישוב שגוי',
-          `📊 המספר הסופי נכון אבל המשוואה לא נכונה!${eqHint}`);
+        showFb('bad', `❌ המספר ${q.answer} נכון — אבל המשוואה שגויה`, `📊 ניסית משוואה שנותנת ${q.answer} אבל היא לא נכונה לשאלה!${eqHint}`);
         recordHistory(q, userAns, false);
         endQ();
       } else {
-        showFb('part', '⚠️ המספר נכון — אבל החישוב שגוי!',
-          `📊 התשובה הסופית ${q.answer} נכונה, אבל ניסית משוואה שגויה!${eqHint}<br><br>עוד ${cfg.maxAttempts - qs.attempts} ניסיון/ות`);
-        setTimeout(()=>{ document.getElementById('fbBox').classList.remove('on'); inp.focus(); }, 2200);
+        showFb('part', `⚠️ המספר נכון — אבל המשוואה שגויה!`, `📊 ${q.answer} נכון, אבל המשוואה שלך לא מתאימה לשאלה!${eqHint}<br><br>נשארו ${cfg.maxAttempts - qs.attempts} ניסיון/ות`);
+        setTimeout(()=>{ document.getElementById('fbBox').classList.remove('on'); inp.focus(); }, 2500);
       }
 
     } else {
@@ -177,7 +173,7 @@ function submitAns() {
       inp.classList.add('bad');
       document.getElementById('ad'+(qs.attempts-1)).classList.add('used');
       addPts(-cfg.ptsWrong);
-      inp.value=''; setTimeout(()=>inp.classList.remove('bad'),400);
+      inp.value=''; setTimeout(()=>inp.classList.remove('bad'), 400);
       handleStreak(false);
 
       if (qs.attempts >= cfg.maxAttempts) {
@@ -185,7 +181,7 @@ function submitAns() {
         recordHistory(q, userAns, false);
         endQ();
       } else {
-        showFb('bad', `😅 לא נכון! עוד ${cfg.maxAttempts-qs.attempts} ניסיון/ות`, '');
+        showFb('bad', `😅 לא נכון! עוד ${cfg.maxAttempts - qs.attempts} ניסיון/ות`, '');
         setTimeout(()=>{ document.getElementById('fbBox').classList.remove('on'); inp.focus(); }, 1600);
       }
     }
@@ -211,23 +207,23 @@ function submitAns() {
     inp.classList.add('bad');
     document.getElementById('ad'+(qs.attempts-1)).classList.add('used');
     addPts(-cfg.ptsWrong);
-    inp.value=''; setTimeout(()=>inp.classList.remove('bad'),400);
+    inp.value=''; setTimeout(()=>inp.classList.remove('bad'), 400);
     handleStreak(false);
     if (qs.attempts >= cfg.maxAttempts) {
       showFb('bad', '❌ הפעם לא...', buildExpl(q));
       recordHistory(q, userAns, false);
       endQ();
     } else {
-      showFb('bad', `😅 לא נכון! עוד ${cfg.maxAttempts-qs.attempts} ניסיון/ות`, '');
+      showFb('bad', `😅 לא נכון! עוד ${cfg.maxAttempts - qs.attempts} ניסיון/ות`, '');
       setTimeout(()=>{ document.getElementById('fbBox').classList.remove('on'); inp.focus(); }, 1600);
     }
   }
 }
 
-function showWordFb(writtenText, q, num, equationCorrect) {
+function showWordFb(writtenText, q) {
   const example = q.exampleAnswer || `${q.answer}`;
   if (!writtenText) {
-    showFb('ok', `🎉 נכון! (${q.answer})`, `✅ החישוב נכון!<br><br>📝 טיפ: בפעם הבאה כתוב גם משפט תשובה מלא:<br>🌟 דוגמה: "${example}"`);
+    showFb('ok', `🎉 נכון! (${q.answer})`, `✅ המשוואה נכונה!<br><br>📝 טיפ: בפעם הבאה כתוב גם משפט תשובה:<br>🌟 דוגמה: "${example}"`);
     return;
   }
   let score = 0, issues = [], praises = [];
