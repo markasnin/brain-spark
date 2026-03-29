@@ -1,7 +1,7 @@
 {
-  "name": "יאן לומד!",
-  "short_name": "יאן לומד",
-  "description": "אפליקציית חשבון לכיתה ג",
+  "name": "Brain Spark ⚡",
+  "short_name": "Brain Spark",
+  "description": "משחק מתמטיקה לכיתות א-ו",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#07050f",
