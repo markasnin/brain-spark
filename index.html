@@ -7,635 +7,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Brain Spark ⚡</title>
+<link rel="stylesheet" href="style.css">
+
+<!-- Grade config loader slot -->
 <script id="gradeScript"></script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword, EmailAuthProvider, reauthenticateWithCredential, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCT4liZo4u4Fs8DJ2jTImtUPG0yJFOdn5Y",
-  authDomain: "brain-sprak.firebaseapp.com",
-  projectId: "brain-sprak",
-  storageBucket: "brain-sprak.firebasestorage.app",
-  messagingSenderId: "829015668389",
-  appId: "1:829015668389:web:525c91b159f1bb248fbf4c"
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-window._fb = { auth, db, doc, setDoc, getDoc, updateDoc, collection, getDocs, query, where,
-  createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
-  updatePassword, EmailAuthProvider, reauthenticateWithCredential };
+<!-- ══ LOAD ORDER ══
+  1. special-users.js  — SPECIAL_USERS object (edit to add/remove VIPs)
+  2. config.js         — cfg, st, qs, LEVELS, GRADE_FILES, ALL_CATS, themes
+  3. questions.js      — genQ, genPool, genAdd/Sub/Mul/Div/Word/Shapes/Frac
+  4. game.js           — loadQ, submitAns, streak, points, exam, daily, history
+  5. lessons.js        — openLearn, openLesson, LESSONS
+  6. ui.js             — show, updateHome, buildGrid, settings, friends UI
+  7. firebase.js       — Firebase init + all async Firebase functions (module)
+-->
+<script src="special-users.js"></script>
+<script src="config.js"></script>
+<script src="questions.js"></script>
+<script src="game.js"></script>
+<script src="lessons.js"></script>
+<script src="ui.js"></script>
+<script type="module" src="firebase.js"></script>
 
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    window._fbUser = user;
-    await fbLoad(user.uid);
-    document.getElementById('auth-scr').classList.remove('on');
-    if (!window._username) {
-      document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
-      document.getElementById('username-setup-scr').classList.add('on');
-    } else if (!window._grade) {
-      document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
-      document.getElementById('grade-select-scr').classList.add('on');
-    } else {
-      await loadGradeConfig(window._grade);
-      document.getElementById('home').classList.add('on');
-      updateHome();
-    }
-  } else {
-    window._fbUser = null;
-    document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
-    document.getElementById('auth-scr').classList.add('on');
-  }
-});
-
-window.fbLoad = async function(uid) {
-  try {
-    const snap = await getDoc(doc(db,'users',uid));
-    if (snap.exists()) {
-      const d = snap.data();
-      if (d.displayName) window._displayName = d.displayName;
-      if (d.grade) window._grade = d.grade;
-      if (d.username) window._username = d.username;
-      if (d.friends) window._friends = d.friends;
-      if (d.gender) window._gender = d.gender;
-      if (d.contactEmail) window._contactEmail = d.contactEmail;
-      if (d.termsAccepted) window._termsAccepted = d.termsAccepted;
-      if (d.st) Object.assign(st, d.st);
-      if (d.cfg) Object.assign(cfg, d.cfg);
-    }
-    if (!window._friends) window._friends = [];
-    const today = new Date().toDateString();
-    if (st.dailyDate !== today) { st.dailyDone = false; st.dailyDate = today; }
-    if (!st.history) st.history = [];
-  } catch(e) { console.warn('fbLoad error', e); }
-};
-
-let _saveTimer = null;
-window.fbSave = function() {
-  if (!window._fbUser) return;
-  clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(async () => {
-    try {
-      const { doc: docFn, setDoc: setDocFn, db: dbInst } = window._fb;
-      await setDocFn(docFn(dbInst,'users',window._fbUser.uid), {
-        st, cfg,
-        displayName: window._displayName||'',
-        username: window._username||'',
-        grade: window._grade||'',
-        friends: window._friends||[]
-      }, { merge: true });
-    } catch(e) { console.warn('fbSave error', e); }
-  }, 1200);
-};
-
-// ── USERNAME AVAILABILITY ──
-let _unameCheckTimer = null;
-window.scheduleUsernameCheck = function(immediate = false) {
-  clearTimeout(_unameCheckTimer);
-  _unameCheckTimer = setTimeout(async () => {
-    const val = document.getElementById('regUsername').value.trim();
-    const badge = document.getElementById('regUsernameBadge');
-    if (!badge) return;
-    const clean = val.trim().toLowerCase().replace(/[^\u05d0-\u05eaa-z0-9]/g,'');
-    if (!clean || clean.length < 2) { badge.style.display='none'; return; }
-    badge.style.cssText='display:inline-flex;padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:700;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:var(--txt2);margin-top:-8px;margin-bottom:10px;';
-    badge.textContent = '⏳ בודק...';
-    try {
-      const { collection:col, getDocs:gd, query:qr, where:wh, db:dbInst } = window._fb;
-      const snap = await gd(qr(col(dbInst,'users'), wh('username','==',clean)));
-      if (snap.empty) {
-        badge.style.cssText='display:inline-flex;padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:700;border:1px solid rgba(46,213,115,.4);background:rgba(46,213,115,.12);color:var(--a3);margin-top:-8px;margin-bottom:10px;';
-        badge.textContent = '✅ פנוי!';
-      } else {
-        badge.style.cssText='display:inline-flex;padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:700;border:1px solid rgba(255,71,87,.4);background:rgba(255,71,87,.12);color:var(--a1);margin-top:-8px;margin-bottom:10px;';
-        badge.textContent = '❌ תפוס — נסה שם אחר';
-      }
-    } catch(e) { badge.style.display='none'; }
-  }, immediate ? 0 : 600);
-};
-
-window.fbRegister = async function() {
-  const username = document.getElementById('regUsername').value.trim();
-  const pass = document.getElementById('regPass').value;
-  const pass2 = document.getElementById('regPass2').value;
-  const grade = document.getElementById('regGrade').value;
-  const displayName = document.getElementById('regDisplayName').value.trim();
-  const gender = window.getSelectedGender ? window.getSelectedGender('reg') : '';
-  const contactEmail = document.getElementById('regEmail') ? document.getElementById('regEmail').value.trim() : '';
-  const termsAccepted = document.getElementById('regTermsRow') ? document.getElementById('regTermsRow').classList.contains('accepted') : false;
-  const err = document.getElementById('authErr');
-  err.style.display='none';
-  if (!displayName||displayName.length<2){err.textContent='שם תצוגה חייב להיות לפחות 2 תווים';err.style.display='block';return;}
-  if (!username||username.length<2){err.textContent='שם משתמש חייב להיות לפחות 2 תווים';err.style.display='block';return;}
-  if (!grade){err.textContent='בחר כיתה';err.style.display='block';return;}
-  if (pass.length<6){err.textContent='סיסמה חייבת להיות לפחות 6 תווים';err.style.display='block';return;}
-  if (pass!==pass2){err.textContent='הסיסמאות לא תואמות';err.style.display='block';return;}
-  if (!termsAccepted){err.textContent='יש לאשר את תנאי השימוש כדי להמשיך';err.style.display='block';document.getElementById('regTermsRow').style.animation='shk .4s';setTimeout(()=>document.getElementById('regTermsRow').style.animation='',400);return;}
-  if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)){err.textContent='כתובת מייל לא תקינה';err.style.display='block';return;}
-const cleanU = cleanUsername(username);
-const encodedU = Array.from(cleanU).map(c=>c.charCodeAt(0).toString(36)).join('');
-const fakeEmail = contactEmail ? contactEmail.toLowerCase() : cleanU + '@brainspark.local';
-try {
-    document.getElementById('authBtn').disabled=true;
-    document.getElementById('authBtn').textContent='נרשם...';
-    const cred = await createUserWithEmailAndPassword(auth,fakeEmail,pass);
-    const userData = {displayName,username:cleanU,grade,createdAt:Date.now(),friends:[],st,cfg,termsAccepted:true};
-    if (gender) userData.gender = gender;
-    if (contactEmail) userData.contactEmail = contactEmail.toLowerCase();
-    await setDoc(doc(db,'users',cred.user.uid), userData, {merge:true});
-    window._displayName=displayName; window._username=cleanU; window._grade=grade; window._friends=[];
-  } catch(e) {
-    document.getElementById('authBtn').disabled=false;
-    document.getElementById('authBtn').textContent='הרשמה ✅';
-    if (e.code==='auth/email-already-in-use') err.textContent='שם משתמש זה כבר תפוס, בחר אחר';
-    else err.textContent='שגיאה: '+e.message;
-    err.style.display='block';
-  }
-};
-
-window.fbLogin = async function() {
-  const username = document.getElementById('loginUsername').value.trim();
-  const pass = document.getElementById('loginPass').value;
-  const err = document.getElementById('loginErr');
-  err.style.display='none';
-  if (!username || !pass) { err.textContent='מלא שם משתמש וסיסמה'; err.style.display='block'; return; }
-  try {
-    document.getElementById('loginBtn').disabled=true;
-    document.getElementById('loginBtn').textContent='נכנס...';
-    const clean = username.trim().toLowerCase().replace(/[^\u05d0-\u05eaa-z0-9]/g,'');
-    const fakeEmail = clean + '@brainspark.local';
-    await signInWithEmailAndPassword(auth, fakeEmail, pass);
-  } catch(e) {
-    document.getElementById('loginBtn').disabled=false;
-    document.getElementById('loginBtn').textContent='🚀 כניסה';
-    err.textContent='שם משתמש או סיסמה שגויים';
-    err.style.display='block';
-  }
-};
-
-window.fbLogout = async function() {
-  if (!confirm('להתנתק?')) return;
-  await signOut(auth);
-};
-
-window.fbSearchUser = async function() {
-  const q = cleanUsername(document.getElementById('friendSearch').value);
-  const res = document.getElementById('friendResults');
-  res.innerHTML='<div style="color:var(--txt2)">מחפש...</div>';
-  try {
-    const { collection:col, getDocs:gd, query:qr, where:wh, db:dbInst } = window._fb;
-    const snap = await gd(qr(col(dbInst,'users'),wh('username','==',q)));
-    if (snap.empty){res.innerHTML='<div style="color:var(--txt2)">לא נמצא משתמש</div>';return;}
-    snap.forEach(docSnap => {
-      const d=docSnap.data();
-      if (docSnap.id===window._fbUser.uid){res.innerHTML='<div style="color:var(--txt2)">זה אתה 😄</div>';return;}
-      const alreadyFriend=(window._friends||[]).includes(docSnap.id);
-      res.innerHTML=`<div class="friend-result-card"><div><div style="font-weight:700;color:var(--a2)">${d.displayName}</div><div style="font-size:.8rem;color:var(--txt2)">@${d.username} • כיתה ${d.grade||'?'} • ${d.st?.score||0} נקודות</div></div>${alreadyFriend?'<span style="color:var(--a3);font-size:.85rem">✅ חבר</span>':`<button class="auth-btn" style="width:auto;padding:8px 16px;font-size:.85rem" onclick="fbAddFriend('${docSnap.id}','${d.displayName}')">+ הוסף</button>`}</div>`;
-    });
-  } catch(e){res.innerHTML='<div style="color:var(--a1)">שגיאה בחיפוש</div>';}
-};
-
-window.fbAddFriend = async function(uid,name) {
-  if (!window._friends) window._friends=[];
-  if (window._friends.includes(uid)) return;
-  window._friends.push(uid); window.fbSave();
-  showToast(`✅ ${name} נוסף לחברים!`); openFriends();
-};
-
-window.fbRemoveFriend = async function(uid, name) {
-  if (!confirm(`להסיר את ${name} מהחברים?`)) return;
-  window._friends = (window._friends || []).filter(id => id !== uid);
-  window.fbSave();
-  showToast(`🗑️ ${name} הוסר מהחברים`);
-  renderFriendsList();
-  loadMiniLeaderboard();
-};
-
-window.fbLoadLeaderboard = async function() {
-  const board=document.getElementById('leaderboardList');
-  board.innerHTML='<div style="color:var(--txt2);text-align:center">טוען...</div>';
-  try {
-    const myUid=window._fbUser?.uid;
-    const allIds=[myUid,...(window._friends||[])];
-    const results=[];
-    const {db:dbInst,doc:docFn,getDoc:gdoc}=window._fb;
-    for (const uid of allIds) {
-      if (!uid) continue;
-      const snap=await gdoc(docFn(dbInst,'users',uid));
-      if (snap.exists()){
-        const d=snap.data();
-        results.push({name:d.displayName,score:d.st?.score||0,level:d.st?.level||0,uid,grade:d.grade||'?',username:d.username||'',glowColor:d.st?.specialGlowColor||null,badgeColor:d.st?.specialBadgeColor||null});
-      }
-    }
-    sortLeaderboard(results);
-    board.innerHTML='';
-    results.forEach((r,i) => {
-      const medals=['🥇','🥈','🥉'];
-      const isMe=r.uid===myUid;
-      const special=SPECIAL_USERS[(r.username||'').toLowerCase()];
-      const glowColor=r.glowColor||special?.glowColor||'#00d362';
-      const badgeColor=r.badgeColor||special?.badgeColor||special?.color||'#00d362';
-      const nameHtml=special
-        ?`<span style="color:${glowColor};font-family:'Fredoka',sans-serif;font-weight:700;text-shadow:0 0 8px ${glowColor},0 0 20px ${glowColor}99,0 0 40px ${glowColor}66;">${r.name}${isMe?' (אתה)':''}</span><span class="special-badge" style="--sc:${badgeColor};font-size:.7rem;padding:2px 8px;">${special.badge}</span>`
-        :`<span style="color:${isMe?'var(--a2)':'var(--txt)'}">${r.name}${isMe?' (אתה)':''}</span>`;
-      board.innerHTML+=`<div class="lb-row ${isMe?'lb-me':''}"><div class="lb-rank">${medals[i]||`#${i+1}`}</div><div class="lb-info"><div style="font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${nameHtml}</div><div style="font-size:.78rem;color:var(--txt2)">רמה ${r.level+1} • כיתה ${r.grade}</div></div><div style="font-weight:900;color:var(--a3);font-size:1.1rem">${special?.scoreDisplay?special.scoreDisplay(r.score):r.score.toLocaleString()}</div></div>`;
-    });
-    if (results.length===0) board.innerHTML='<div style="color:var(--txt2);text-align:center">אין חברים עדיין 😢</div>';
-  } catch(e){board.innerHTML='<div style="color:var(--a1)">שגיאה בטעינה</div>';}
-};
-
-function cleanUsername(val){return val.trim().toLowerCase().replace(/[^\u05d0-\u05eaa-z0-9]/g,'');}
-
-window.fbSaveUsername = async function() {
-  const val=document.getElementById('setupUsername').value.trim();
-  const err=document.getElementById('setupErr');
-  err.style.display='none';
-  const clean=cleanUsername(val);
-  if (!clean||clean.length<2){err.textContent='שם משתמש חייב להיות לפחות 2 תווים';err.style.display='block';return;}
-  const btn=document.getElementById('setupBtn');
-  btn.disabled=true;btn.textContent='שומר...';
-  try {
-    const {collection:col,getDocs:gd,query:qr,where:wh,db:dbInst,doc:docFn,updateDoc:updateDocFn}=window._fb;
-    const snap=await gd(qr(col(dbInst,'users'),wh('username','==',clean)));
-    if (!snap.empty){err.textContent='שם משתמש זה תפוס, נסה אחר';err.style.display='block';btn.disabled=false;btn.textContent='✅ שמור והמשך';return;}
-    window._username=clean;
-    await updateDocFn(docFn(dbInst,'users',window._fbUser.uid),{username:clean});
-    document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
-    if (!window._grade){document.getElementById('grade-select-scr').classList.add('on');}
-    else{await loadGradeConfig(window._grade);document.getElementById('home').classList.add('on');updateHome();}
-  } catch(e) {
-    try {
-      const {db:dbInst,doc:docFn,setDoc:setDocFn}=window._fb;
-      await setDocFn(docFn(dbInst,'users',window._fbUser.uid),{username:cleanUsername(val)},{merge:true});
-      window._username=cleanUsername(val);
-      document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
-      document.getElementById('grade-select-scr').classList.add('on');
-    } catch(e2){err.textContent='שגיאה: '+e2.message;err.style.display='block';btn.disabled=false;btn.textContent='✅ שמור והמשך';}
-  }
-};
-
-window.fbSendPasswordReset = async function() {
-  const contactEmail = window._contactEmail;
-  // Show what Firebase Auth thinks the email is
-  alert('Firebase Auth email: ' + (window._fbUser?.email || 'none') + '\nContactEmail stored: ' + (contactEmail || 'none'));
-  const err = document.getElementById('passErr');
-  err.style.display = 'none';
-  if (!contactEmail) {
-    err.textContent = 'לא קיים מייל מחובר לחשבון. הוסף מייל בהגדרות כדי לאפס סיסמה.';
-    err.style.display = 'block';
-    return;
-  }
-  try {
-    await sendPasswordResetEmail(auth, contactEmail);
-    showToast(`✅ קישור לאיפוס סיסמה נשלח ל-${contactEmail}`);
-  } catch(e) {
-    // If Firebase doesn't recognize the email, it means the auth account
-    // still uses the fake @brainspark.local email. Tell the user clearly.
-    if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-email') {
-      err.textContent = 'המייל לא מזוהה על ידי Firebase. עדכן את המייל בהגדרות ושמור שוב — ואז נסה מחדש.';
-    } else {
-      err.textContent = 'שגיאה: ' + e.message;
-    }
-    err.style.display = 'block';
-  }
-};
-
-window.fbChangePassword = async function() {
-  const oldPass=document.getElementById('oldPass').value;
-  const newPass=document.getElementById('newPass').value;
-  const err=document.getElementById('passErr');
-  err.style.display='none';
-  if (newPass.length<6){err.textContent='סיסמה חדשה לפחות 6 תווים';err.style.display='block';return;}
-  try {
-    const {EmailAuthProvider:EAP,reauthenticateWithCredential:reauth,updatePassword:updPass}=window._fb;
-    const cred=EAP.credential(window._fbUser.email,oldPass);
-    await reauth(window._fbUser,cred);
-    await updPass(window._fbUser,newPass);
-    showToast('✅ סיסמה עודכנה!');
-    document.getElementById('oldPass').value='';document.getElementById('newPass').value='';
-  } catch(e){err.textContent=e.code==='auth/wrong-password'?'סיסמה ישנה שגויה':'שגיאה: '+e.message;err.style.display='block';}
-};
-
-window.fbChangeDisplayName = async function() {
-  const newName=document.getElementById('newDisplayName').value.trim();
-  const err=document.getElementById('nameErr');err.style.display='none';
-  if (!newName||newName.length<2){err.textContent='שם חייב להיות לפחות 2 תווים';err.style.display='block';return;}
-  window._displayName=newName;window.fbSave();updateHome();showToast('✅ שם עודכן!');
-};
-
-window.fbChangeGrade = async function() {
-  const grade=document.getElementById('setGrade').value;
-  if (!grade) return;
-  if (!confirm(`לעבור לכיתה ${grade}? זה ישנה את רמת השאלות!`)) return;
-  window._grade=grade;window.fbSave();
-  await loadGradeConfig(grade);updateHome();showToast(`✅ עברת לכיתה ${grade}!`);
-};
-</script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Rubik:wght@400;500;700;900&display=swap');
-:root{--bg:#07050f;--card:#110e2e;--card2:#1c1850;--card3:#251f60;--a1:#ff4757;--a2:#ffd32a;--a3:#2ed573;--a4:#1e90ff;--a5:#9b59b6;--a6:#ff6348;--txt:#fff;--txt2:#a89fd4;--r:16px;--sh:0 8px 40px rgba(0,0,0,.55);--streak:#ff9f43;}
-*{margin:0;padding:0;box-sizing:border-box;}
-html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);color:var(--txt);direction:rtl;overflow-x:hidden;}
-#bg{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 15% 40%,#1a0060 0%,transparent 55%),radial-gradient(ellipse at 85% 15%,#001a60 0%,transparent 50%),radial-gradient(ellipse at 50% 90%,#300040 0%,transparent 60%);}
-.star{position:absolute;border-radius:50%;background:#fff;animation:twink var(--d,3s) infinite;}
-@keyframes twink{0%,100%{opacity:.15;}50%{opacity:1;}}
-.scr{display:none;position:relative;z-index:1;min-height:100vh;padding:24px 20px 40px;flex-direction:column;align-items:center;gap:0;}
-.scr.on{display:flex;}
-.sec-label{width:100%;max-width:420px;font-size:.72rem;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin:18px 0 8px;opacity:.6;}
-.logo{font-family:'Fredoka',sans-serif;font-weight:700;font-size:3.4rem;letter-spacing:2px;background:linear-gradient(135deg,#fff 0%,var(--a2) 40%,var(--a4) 70%,var(--a5) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;animation:float 3s ease-in-out infinite;}
-.logo-sub{font-size:.85rem;color:var(--txt2);letter-spacing:4px;text-transform:uppercase;margin-top:-8px;margin-bottom:6px;font-weight:500;}
-@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
-.grade-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:99px;font-size:.82rem;font-weight:700;border:1.5px solid;margin-top:4px;}
-/* ── Grade Grid (redesigned) ── */
-.grade-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;width:100%;max-width:460px;margin:20px 0;}
-@media(min-width:520px){.grade-grid{grid-template-columns:repeat(3,1fr);}}
-.grade-btn{position:relative;background:linear-gradient(145deg,var(--card),var(--card2));border:2px solid rgba(255,255,255,.1);border-radius:20px;padding:22px 12px 16px;cursor:pointer;transition:all .25s cubic-bezier(.34,1.4,.64,1);text-align:center;font-family:'Fredoka',sans-serif;overflow:hidden;}
-.grade-btn::before{content:'';position:absolute;inset:0;border-radius:20px;opacity:0;transition:opacity .25s;pointer-events:none;}
-.grade-btn:hover{transform:translateY(-6px) scale(1.04);box-shadow:0 18px 42px rgba(0,0,0,.55);}
-.grade-btn:hover::before{opacity:1;}
-.grade-btn .ge{font-size:2.6rem;display:block;margin-bottom:8px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4));transition:transform .25s;}
-.grade-btn:hover .ge{transform:scale(1.15) rotate(-5deg);}
-.grade-btn .gn{font-size:1.05rem;font-weight:700;}
-.grade-btn .gs{font-size:.72rem;color:var(--txt2);margin-top:4px;line-height:1.4;}
-.grade-btn .g-tag{display:inline-block;font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:99px;margin-top:8px;letter-spacing:.5px;}
-.grade-btn.g1{border-color:#2ed57360;}.grade-btn.g1::before{background:rgba(46,213,115,.06);}
-.grade-btn.g1 .gn{color:#2ed573;}.grade-btn.g1 .g-tag{background:rgba(46,213,115,.15);color:#2ed573;border:1px solid #2ed57340;}
-.grade-btn.g2{border-color:#ffd32a60;}.grade-btn.g2::before{background:rgba(255,211,42,.06);}
-.grade-btn.g2 .gn{color:#ffd32a;}.grade-btn.g2 .g-tag{background:rgba(255,211,42,.15);color:#ffd32a;border:1px solid #ffd32a40;}
-.grade-btn.g3{border-color:#1e90ff60;}.grade-btn.g3::before{background:rgba(30,144,255,.06);}
-.grade-btn.g3 .gn{color:#1e90ff;}.grade-btn.g3 .g-tag{background:rgba(30,144,255,.15);color:#1e90ff;border:1px solid #1e90ff40;}
-.grade-btn.g4{border-color:#9b59b660;}.grade-btn.g4::before{background:rgba(155,89,182,.06);}
-.grade-btn.g4 .gn{color:#9b59b6;}.grade-btn.g4 .g-tag{background:rgba(155,89,182,.15);color:#9b59b6;border:1px solid #9b59b640;}
-.grade-btn.g5{border-color:#ff634860;}.grade-btn.g5::before{background:rgba(255,99,72,.06);}
-.grade-btn.g5 .gn{color:#ff6348;}.grade-btn.g5 .g-tag{background:rgba(255,99,72,.15);color:#ff6348;border:1px solid #ff634840;}
-.grade-btn.g6{border-color:#ff475760;}.grade-btn.g6::before{background:rgba(255,71,87,.06);}
-.grade-btn.g6 .gn{color:#ff4757;}.grade-btn.g6 .g-tag{background:rgba(255,71,87,.15);color:#ff4757;border:1px solid #ff475740;}
-
-/* ── Gender Picker ── */
-.gender-picker{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
-.gender-btn{flex:1;min-width:90px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 8px;border-radius:14px;border:2px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);cursor:pointer;transition:all .2s;font-family:'Rubik',sans-serif;}
-.gender-btn:hover{border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.08);}
-.gender-btn.selected{border-color:var(--a5);background:rgba(155,89,182,.18);box-shadow:0 0 18px rgba(155,89,182,.25);}
-.gender-emoji{font-size:1.7rem;line-height:1;}
-.gender-label{font-size:.8rem;font-weight:700;color:var(--txt2);}
-.gender-btn.selected .gender-label{color:var(--a5);}
-
-/* ── Terms checkbox ── */
-.terms-row{display:flex;align-items:flex-start;gap:10px;padding:12px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.09);border-radius:12px;margin-bottom:14px;cursor:pointer;transition:border-color .2s;}
-.terms-row:hover{border-color:rgba(255,255,255,.18);}
-.terms-row.accepted{border-color:rgba(46,213,115,.4);background:rgba(46,213,115,.06);}
-.terms-chk{width:22px;height:22px;flex-shrink:0;border-radius:6px;border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .2s;background:transparent;}
-.terms-row.accepted .terms-chk{background:var(--a3);border-color:var(--a3);}
-.terms-chk-inner{color:#fff;font-size:.85rem;display:none;}
-.terms-row.accepted .terms-chk-inner{display:block;}
-.terms-text{font-size:.82rem;color:var(--txt2);line-height:1.55;}
-.terms-text a{color:var(--a4);text-decoration:underline;cursor:pointer;}
-
-/* ── Optional email note ── */
-.email-note{font-size:.76rem;color:var(--txt2);display:flex;align-items:center;gap:5px;margin-top:-8px;margin-bottom:12px;opacity:.8;}
-.email-note::before{content:'💡';}
-.pcard{background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid rgba(255,255,255,.1);border-radius:20px;padding:18px 24px;width:100%;max-width:420px;margin-bottom:18px;position:relative;overflow:hidden;}
-.pcard::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,71,87,.05),rgba(30,144,255,.05));pointer-events:none;}
-.pname{font-size:1.55rem;font-weight:900;color:var(--a2);display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:'Fredoka',sans-serif;letter-spacing:.02em;}
-.name-glow-blue{color:#00d362;font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.65rem;text-shadow:0 0 8px rgba(0,211,98,.9),0 0 20px rgba(0,211,98,.6),0 0 40px rgba(0,211,98,.35);animation:nameGlow 2.5s ease-in-out infinite;}
-@keyframes nameGlow{0%,100%{text-shadow:0 0 8px rgba(0,211,98,.9),0 0 20px rgba(0,211,98,.6),0 0 40px rgba(0,211,98,.3);}50%{text-shadow:0 0 12px rgba(0,211,98,1),0 0 30px rgba(0,211,98,.9),0 0 60px rgba(0,211,98,.5);}}
-.special-badge{font-size:.82rem;font-weight:700;background:linear-gradient(135deg,rgba(0,210,211,.2),rgba(30,144,255,.2));border:1.5px solid var(--sc,#00d362);border-radius:99px;padding:4px 13px;color:var(--sc,#00d362);box-shadow:0 0 12px rgba(0,211,53,.25);white-space:nowrap;}
-.nickname-badge{font-size:.9rem;color:var(--a5);font-weight:700;background:rgba(155,89,182,.2);border:1px solid var(--a5);border-radius:99px;padding:3px 10px;}
-.plevel{font-size:.9rem;color:var(--txt2);margin-top:4px;}
-.xp-outer{background:rgba(255,255,255,.1);border-radius:99px;height:12px;margin-top:10px;overflow:hidden;}
-.xp-inner{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--a4),var(--a5));transition:width .5s;}
-.xp-txt{font-size:.8rem;color:var(--txt2);margin-top:5px;}
-.streak-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,159,67,.2);border:1px solid var(--streak);border-radius:99px;padding:4px 12px;font-size:.85rem;font-weight:700;color:var(--streak);margin-top:8px;}
-.recommend{background:linear-gradient(135deg,rgba(30,144,255,.12),rgba(155,89,182,.12));border:1px solid rgba(30,144,255,.3);border-radius:14px;padding:12px 16px;width:100%;max-width:420px;margin-bottom:16px;font-size:.9rem;display:flex;gap:10px;align-items:center;}
-.recommend-icon{font-size:1.5rem;flex-shrink:0;}
-.recommend-text{color:var(--txt2);line-height:1.5;}
-.recommend-text strong{color:var(--a4);}
-.daily-banner{background:linear-gradient(135deg,rgba(255,71,87,.15),rgba(255,211,42,.15));border:2px solid var(--a2);border-radius:16px;padding:14px 18px;width:100%;max-width:420px;margin-bottom:16px;cursor:pointer;transition:transform .2s;display:flex;align-items:center;gap:12px;}
-.daily-banner:hover{transform:scale(1.02);}
-.daily-banner.done{opacity:.5;cursor:default;}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%;max-width:420px;}
-@media(min-width:680px){.grid{grid-template-columns:repeat(3,1fr);max-width:600px;}}
-.cbt{background:linear-gradient(145deg,var(--card),var(--card2));border:2px solid rgba(255,255,255,.07);border-radius:18px;padding:16px 12px;cursor:pointer;transition:all .2s;text-align:center;position:relative;overflow:hidden;}
-.cbt:hover:not(.locked){transform:translateY(-5px) scale(1.02);box-shadow:0 16px 40px rgba(0,0,0,.5);}
-.cbt.locked{opacity:.45;cursor:not-allowed;}
-.cbt::after{content:'';position:absolute;inset:0;border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.04),transparent);pointer-events:none;}
-.cbt .ci{font-size:2.2rem;display:block;margin-bottom:8px;filter:drop-shadow(0 0 8px rgba(255,255,255,.3));}
-.cbt .cn{font-size:.95rem;font-weight:700;}
-.cbt .cs{font-size:.72rem;color:var(--txt2);margin-top:3px;}
-.cbt.add{border-color:#2ed57330;}.cbt.sub{border-color:#ff475730;}.cbt.mul{border-color:#ffd32a30;}
-.cbt.div{border-color:#1e90ff30;}.cbt.word{border-color:#9b59b630;}
-.cbt.learn{border-color:#ff634830;background:linear-gradient(145deg,#1a0e2e,#2a1545);}
-.cbt.history{border-color:#00d2d330;}.cbt.mistakes{border-color:#ff9f4330;}
-.cbt.test{border-color:#00d2d330;background:linear-gradient(145deg,#0a1a2e,#0a2040);}
-.cbt.settings{border-color:rgba(255,255,255,.15);}
-.gcard{background:linear-gradient(135deg,var(--card),var(--card2));border:1.5px solid rgba(255,255,255,.11);border-radius:24px;padding:26px;width:100%;max-width:580px;box-shadow:0 12px 48px rgba(0,0,0,.6);}
-.diffs{display:flex;flex-direction:column;gap:12px;width:100%;max-width:340px;}
-.dbtn{padding:16px 20px;border-radius:14px;cursor:pointer;border:2px solid;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;transition:all .2s;display:flex;align-items:center;gap:12px;background:transparent;}
-.dbtn:hover{transform:scale(1.03);}
-.de{border-color:var(--a3);color:var(--a3);}.de:hover{background:rgba(46,213,115,.1);}
-.dm{border-color:var(--a2);color:var(--a2);}.dm:hover{background:rgba(255,211,42,.1);}
-.dh{border-color:var(--a1);color:var(--a1);}.dh:hover{background:rgba(255,71,87,.1);}
-.dx{border-color:var(--a5);color:var(--a5);}.dx:hover{background:rgba(155,89,182,.1);}
-.back{margin-top:18px;padding:10px 26px;border-radius:99px;background:rgba(255,255,255,.08);color:var(--txt2);border:1.5px solid rgba(255,255,255,.1);font-family:'Rubik',sans-serif;cursor:pointer;font-size:.9rem;transition:all .2s;font-weight:500;}
-.back:hover{background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.25);}
-.qhdr{width:100%;max-width:580px;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:10px;}
-.qscore{font-size:1rem;font-weight:700;color:var(--a2);}
-.streak-live{display:inline-flex;align-items:center;gap:4px;background:rgba(255,159,67,.2);border:1px solid var(--streak);border-radius:99px;padding:3px 10px;font-size:.82rem;font-weight:700;color:var(--streak);}
-.lbadge{padding:4px 12px;border-radius:99px;font-size:.78rem;font-weight:700;}
-.easy{background:rgba(46,213,115,.15);color:var(--a3);border:1px solid var(--a3);}
-.med{background:rgba(255,211,42,.15);color:var(--a2);border:1px solid var(--a2);}
-.hard{background:rgba(255,71,87,.15);color:var(--a1);border:1px solid var(--a1);}
-.pts-badge{padding:4px 12px;border-radius:99px;font-size:.78rem;font-weight:700;background:rgba(155,89,182,.15);color:var(--a5);border:1px solid var(--a5);}
-.qtxt{font-size:1.35rem;font-weight:700;text-align:center;line-height:1.7;margin-bottom:18px;min-height:56px;letter-spacing:.01em;}
-.streak-fire{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:linear-gradient(135deg,#ff6348,#ffd32a);border-radius:20px;padding:20px 36px;text-align:center;z-index:1500;transition:transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;border:3px solid var(--a2);}
-.streak-fire.show{transform:translate(-50%,-50%) scale(1);}
-.sf-val{font-family:'Fredoka',sans-serif;font-weight:700;font-size:3.2rem;color:#fff;}
-.sf-lbl{font-size:1rem;color:rgba(255,255,255,.85);}
-.mulvis-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:10px 0;}
-.mg{background:rgba(255,255,255,.07);border-radius:10px;padding:8px;display:flex;flex-wrap:wrap;gap:4px;max-width:110px;justify-content:center;}
-.mi{font-size:1.3rem;}
-.mul-table{border-collapse:collapse;font-size:.75rem;margin:0 auto;}
-.mul-table td{padding:4px 7px;text-align:center;border:1px solid rgba(255,255,255,.08);min-width:28px;}
-.mth{background:rgba(30,144,255,.25);font-weight:700;}
-.mhl{background:rgba(255,211,42,.25);font-weight:700;color:var(--a2);}
-.expr-wrap{background:rgba(255,255,255,.04);border-radius:14px;padding:14px;margin-bottom:12px;}
-.expr-display{min-height:54px;border:2px dashed rgba(255,255,255,.18);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:var(--a2);margin-bottom:12px;padding:10px;gap:8px;flex-wrap:wrap;direction:ltr;}
-.expr-num-inp{width:64px;height:46px;border-radius:10px;background:rgba(255,255,255,.1);border:2.5px solid var(--a4);color:#fff;font-size:1.5rem;font-weight:700;text-align:center;font-family:'Fredoka',sans-serif;outline:none;direction:ltr;transition:border-color .2s;}
-.expr-num-inp:focus{border-color:var(--a5);box-shadow:0 0 14px rgba(155,89,182,.35);}
-.op-picker{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;}
-.op-btn{width:52px;height:52px;border-radius:14px;font-size:1.6rem;font-weight:900;cursor:pointer;border:none;transition:all .2s;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.op-btn:hover{transform:scale(1.15) rotate(-5deg);}
-.op-btn.sel{transform:scale(1.15);box-shadow:0 0 18px currentColor;}
-.op-plus{background:linear-gradient(135deg,#2ed573,#1dd1a1);color:#fff;}.op-minus{background:linear-gradient(135deg,#ff4757,#c0392b);color:#fff;}
-.op-times{background:linear-gradient(135deg,#ffd32a,#f9ca24);color:#111;}.op-div{background:linear-gradient(135deg,#1e90ff,#0abde3);color:#fff;}
-.op-btn .op-sel-ring{display:none;position:absolute;inset:-4px;border-radius:18px;border:3px solid #fff;pointer-events:none;}
-.op-btn.sel .op-sel-ring{display:block;}
-.multistep-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,99,72,.18);border:1px solid var(--a6);border-radius:99px;padding:3px 11px;font-size:.78rem;font-weight:700;color:var(--a6);margin-bottom:8px;}
-.quality-bar{margin-top:8px;}.quality-label{font-size:.8rem;color:var(--txt2);margin-bottom:4px;display:flex;justify-content:space-between;}
-.quality-outer{background:rgba(255,255,255,.1);border-radius:99px;height:8px;overflow:hidden;}
-.quality-inner{height:100%;border-radius:99px;transition:width .6s ease;}
-.ans-row{display:flex;gap:10px;align-items:center;direction:ltr;justify-content:center;margin-bottom:14px;}
-.ans-eq{font-size:1.8rem;font-weight:900;color:var(--txt2);}
-.ans-inp{width:96px;height:62px;border-radius:16px;background:rgba(255,255,255,.08);border:3px solid var(--a4);color:#fff;font-size:2rem;font-weight:900;text-align:center;font-family:'Fredoka',sans-serif;outline:none;direction:ltr;transition:border-color .2s,box-shadow .2s;}
-.ans-inp:focus{border-color:var(--a5);box-shadow:0 0 24px rgba(155,89,182,.35);}
-.ans-inp.ok{border-color:var(--a3);background:rgba(46,213,115,.1);}
-.ans-inp.bad{border-color:var(--a1);background:rgba(255,71,87,.1);animation:shk .3s;}
-@keyframes shk{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
-.word-inp{width:100%;min-height:74px;border-radius:14px;background:rgba(255,255,255,.06);border:3px solid var(--a5);color:#fff;font-size:.95rem;padding:10px 14px;font-family:'Rubik',sans-serif;outline:none;resize:vertical;direction:rtl;margin-bottom:12px;}
-.word-inp:focus{border-color:var(--a2);}
-.atts{display:flex;gap:7px;align-items:center;justify-content:center;margin-bottom:12px;}
-.adot{width:13px;height:13px;border-radius:50%;background:rgba(255,255,255,.18);transition:all .3s;}
-.adot.used{background:var(--a1);}.adot.ok{background:var(--a3);}
-.hint-box{background:rgba(255,211,42,.08);border:2px solid var(--a2);border-radius:14px;padding:14px;margin-bottom:12px;display:none;}
-.hint-box.on{display:block;}.hint-title{font-size:.88rem;font-weight:700;color:var(--a2);margin-bottom:7px;}
-.cubes-row{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin:8px 0;}
-.cube{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;}
-.cf{background:var(--a4);color:#fff;}.cr{background:rgba(255,255,255,.08);color:var(--txt2);text-decoration:line-through;}
-.fb-box{border-radius:16px;padding:16px;margin-bottom:12px;display:none;line-height:1.75;}
-.fb-box.on{display:block;}
-.fb-ok{background:rgba(46,213,115,.1);border:2px solid var(--a3);}
-.fb-bad{background:rgba(255,71,87,.1);border:2px solid var(--a1);}
-.fb-part{background:rgba(255,211,42,.1);border:2px solid var(--a2);}
-.fb-title{font-size:1.05rem;font-weight:700;margin-bottom:6px;font-family:'Fredoka',sans-serif;}
-.fb-ok .fb-title{color:var(--a3);}.fb-bad .fb-title{color:var(--a1);}.fb-part .fb-title{color:var(--a2);}
-.qbtns{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;}
-.qbtn{padding:12px 26px;border-radius:99px;cursor:pointer;border:none;font-family:'Fredoka',sans-serif;font-size:1rem;font-weight:600;transition:all .2s;letter-spacing:.02em;}
-.qbtn:hover{transform:scale(1.06);}
-.bsubmit{background:linear-gradient(135deg,var(--a3),#1dd1a1);color:#fff;box-shadow:0 4px 18px rgba(46,213,115,.35);}
-.bhint{background:rgba(255,211,42,.15);color:var(--a2);border:2px solid var(--a2)!important;}
-.bhint:disabled{opacity:.35;cursor:not-allowed;transform:none;}
-.bskip{background:rgba(255,255,255,.08);color:var(--txt2);}
-.bnext{background:linear-gradient(135deg,var(--a4),var(--a5));color:#fff;box-shadow:0 4px 18px rgba(30,144,255,.3);}
-.bmore{background:linear-gradient(135deg,var(--a6),var(--a1));color:#fff;box-shadow:0 4px 18px rgba(255,99,72,.3);}
-.pts-pop{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:linear-gradient(135deg,var(--card),var(--card2));border:3px solid var(--a2);border-radius:20px;padding:20px 36px;text-align:center;z-index:1000;transition:all .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;}
-.pts-pop.on{transform:translate(-50%,-50%) scale(1);}
-.pts-val{font-family:'Fredoka',sans-serif;font-weight:700;font-size:3.2rem;color:var(--a2);}
-.lvup-ov{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:2000;}
-.lvup-ov.on{display:flex;}
-.lvup-card{background:linear-gradient(135deg,#1a1740,#2d1b4e);border:3px solid var(--a5);border-radius:24px;padding:40px;text-align:center;max-width:340px;width:90%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1);}
-@keyframes popIn{from{transform:scale(0);opacity:0;}to{transform:scale(1);opacity:1;}}
-.cf-p{position:fixed;pointer-events:none;z-index:3000;animation:cfFall 1.8s ease-in forwards;}
-@keyframes cfFall{0%{opacity:1;transform:translateY(-20px) rotate(0deg);}100%{opacity:0;transform:translateY(100vh) rotate(720deg);}}
-.ltopics{display:flex;flex-direction:column;gap:11px;width:100%;max-width:460px;}
-.ltopic{background:linear-gradient(135deg,var(--card),var(--card2));border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:13px;border:2px solid rgba(255,255,255,.07);cursor:pointer;transition:all .2s;}
-.ltopic:hover:not(.ltlock){transform:translateX(-4px);box-shadow:var(--sh);}
-.ltopic.ltlock{opacity:.45;cursor:not-allowed;}.ltopic.ltdone{border-color:rgba(46,213,115,.3);}
-.lt-icon{font-size:1.9rem;flex-shrink:0;}.lt-info{flex:1;}
-.lt-name{font-size:1rem;font-weight:700;}.lt-desc{font-size:.77rem;color:var(--txt2);margin-top:2px;}
-.lt-badge{padding:3px 10px;border-radius:99px;font-size:.73rem;font-weight:700;}
-.ltnew{background:rgba(255,71,87,.15);color:var(--a1);border:1px solid var(--a1);}
-.ltdone-b{background:rgba(46,213,115,.15);color:var(--a3);border:1px solid var(--a3);}
-.lesson-c{background:linear-gradient(135deg,var(--card),var(--card2));border-radius:22px;padding:26px;width:100%;max-width:560px;border:2px solid rgba(255,255,255,.09);box-shadow:var(--sh);line-height:1.8;}
-.lesson-title{font-family:'Fredoka',sans-serif;font-size:1.7rem;color:var(--a6);margin-bottom:14px;text-align:center;}
-.lsec{margin-bottom:18px;}.lsec h3{color:var(--a4);font-size:1rem;margin-bottom:7px;}
-.lexample{background:rgba(255,255,255,.05);border-radius:10px;padding:12px;margin:8px 0;text-align:center;font-size:1.3rem;font-weight:700;color:var(--a2);direction:ltr;}
-.lexample.rtl{direction:rtl;font-size:1rem;}
-.lstep{display:flex;gap:9px;align-items:flex-start;margin-bottom:7px;}
-.lstepn{width:24px;height:24px;border-radius:50%;flex-shrink:0;background:var(--a4);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;margin-top:2px;}
-.lgo{width:100%;padding:15px;border-radius:var(--r);border:none;background:linear-gradient(135deg,var(--a6),var(--a1));color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;margin-top:14px;transition:all .2s;}
-.lgo:hover{transform:scale(1.02);}
-.exam-hdr{width:100%;max-width:580px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
-.exam-timer{background:rgba(255,71,87,.15);border:1px solid var(--a1);padding:5px 13px;border-radius:99px;color:var(--a1);font-weight:700;font-size:.9rem;}
-.prog-bar{width:100%;max-width:580px;background:rgba(255,255,255,.08);border-radius:99px;height:7px;margin-bottom:18px;}
-.prog-inner{height:100%;border-radius:99px;background:linear-gradient(90deg,#00d2d3,var(--a4));transition:width .4s;}
-.exam-topics-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;max-width:440px;margin:14px 0;}
-.etopic-btn{padding:12px;border-radius:13px;cursor:pointer;border:2px solid rgba(255,255,255,.12);background:var(--card);font-family:'Rubik',sans-serif;font-size:.9rem;font-weight:700;color:var(--txt2);transition:all .2s;text-align:center;}
-.etopic-btn.sel{border-color:var(--a4);color:var(--a4);background:rgba(30,144,255,.12);}
-.etopic-btn:hover{border-color:var(--a5);color:var(--a5);}
-.hist-entry{background:var(--card);border-radius:13px;padding:12px 16px;display:flex;align-items:center;gap:11px;border:1px solid rgba(255,255,255,.07);cursor:pointer;transition:all .2s;}
-.hist-entry:hover{background:var(--card2);}
-.hist-icon{font-size:1.5rem;flex-shrink:0;}.hist-info{flex:1;}
-.hist-q{font-size:.95rem;font-weight:700;}.hist-meta{font-size:.77rem;color:var(--txt2);margin-top:2px;}
-.hist-status{padding:3px 9px;border-radius:99px;font-size:.73rem;font-weight:700;}
-.hs-ok{background:rgba(46,213,115,.15);color:var(--a3);border:1px solid var(--a3);}
-.hs-bad{background:rgba(255,71,87,.15);color:var(--a1);border:1px solid var(--a1);}
-.set-section{width:100%;max-width:480px;margin-bottom:20px;}
-.set-title{font-size:1rem;font-weight:700;color:var(--a4);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.08);}
-.set-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);}
-.set-label{font-size:.9rem;}.set-sub{font-size:.75rem;color:var(--txt2);margin-top:2px;}
-.set-inp{background:var(--card2);border:2px solid rgba(255,255,255,.15);border-radius:9px;padding:6px 11px;color:#fff;font-family:'Rubik',sans-serif;font-size:.9rem;width:80px;text-align:center;outline:none;}
-.set-inp:focus{border-color:var(--a4);}
-.pgate{background:linear-gradient(135deg,var(--card),var(--card2));border-radius:22px;padding:28px;width:100%;max-width:420px;border:2px solid var(--a1);text-align:center;}
-.pgate-title{font-size:1.2rem;font-weight:700;color:var(--a1);margin-bottom:8px;}
-.pgate-q{font-size:1.5rem;font-weight:900;color:var(--a2);margin:16px 0;direction:ltr;}
-.pgate-inp{width:100px;height:54px;border-radius:12px;background:rgba(255,255,255,.08);border:3px solid var(--a4);color:#fff;font-size:1.8rem;font-weight:900;text-align:center;font-family:'Rubik',sans-serif;outline:none;margin-bottom:14px;}
-.pgate-btn{padding:12px 28px;border-radius:99px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--a4),var(--a5));color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;}
-.pgate-err{color:var(--a1);font-size:.85rem;margin-top:8px;}
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:#fff;padding:10px 20px;border-radius:99px;font-size:.9rem;z-index:9999;pointer-events:none;white-space:nowrap;}
-.auth-card{background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid rgba(255,255,255,.1);border-radius:24px;padding:32px 28px;width:100%;max-width:380px;box-shadow:var(--sh);}
-.auth-tabs{display:flex;gap:0;background:rgba(255,255,255,.06);border-radius:12px;overflow:hidden;margin-bottom:24px;}
-.auth-tab{flex:1;padding:11px;border:none;background:none;color:var(--txt2);font-family:'Rubik',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;}
-.auth-tab.active{background:linear-gradient(135deg,var(--a4),var(--a5));color:#fff;}
-.auth-form{display:none;}.auth-form.on{display:block;}
-.auth-inp{width:100%;padding:13px 16px;border-radius:12px;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.12);color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;outline:none;margin-bottom:13px;direction:rtl;transition:border-color .2s;}
-.auth-inp:focus{border-color:var(--a4);}.auth-inp::placeholder{color:var(--txt2);}
-.auth-sel{width:100%;padding:13px 16px;border-radius:12px;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.12);color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;outline:none;margin-bottom:13px;direction:rtl;cursor:pointer;}
-.auth-sel:focus{border-color:var(--a4);}
-.auth-btn{width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--a4),var(--a5));color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:4px;}
-.auth-btn:hover:not(:disabled){transform:scale(1.02);}.auth-btn:disabled{opacity:.6;cursor:not-allowed;}
-.auth-err{background:rgba(255,71,87,.15);border:1px solid var(--a1);border-radius:10px;padding:10px 14px;font-size:.88rem;color:var(--a1);margin-bottom:13px;display:none;}
-.auth-label{font-size:.82rem;color:var(--txt2);margin-bottom:6px;display:block;}
-.logout-btn{background:rgba(255,71,87,.1);border:1px solid var(--a1);border-radius:99px;padding:5px 14px;color:var(--a1);font-size:.78rem;cursor:pointer;font-family:'Rubik',sans-serif;}
-.lb-card{background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid rgba(255,255,255,.09);border-radius:20px;padding:16px;width:100%;max-width:420px;margin-bottom:20px;}
-.lb-title{font-size:.85rem;font-weight:700;color:var(--a4);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
-.lb-row{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:12px;margin-bottom:6px;background:rgba(255,255,255,.03);transition:background .2s;}
-.lb-row:hover{background:rgba(255,255,255,.07);}
-.lb-me{background:rgba(255,211,42,.08)!important;border:1px solid rgba(255,211,42,.2);}
-.lb-rank{font-size:1.3rem;min-width:30px;text-align:center;}.lb-info{flex:1;}
-.friends-list{display:flex;flex-direction:column;gap:10px;width:100%;max-width:500px;}
-.friend-card{background:var(--card);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,.07);cursor:pointer;transition:all .2s;}
-.friend-card:hover{background:var(--card2);transform:translateX(-3px);}
-.friend-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--a4),var(--a5));display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
-.friend-result-card{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.05);border-radius:12px;padding:12px;margin-top:10px;gap:10px;}
-.profile-card{background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid rgba(255,255,255,.1);border-radius:24px;padding:28px;width:100%;max-width:420px;text-align:center;}
-.profile-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--a4),var(--a5));display:flex;align-items:center;justify-content:center;font-size:2.5rem;margin:0 auto 16px;}
-.profile-stat{background:rgba(255,255,255,.05);border-radius:12px;padding:14px;text-align:center;}
-.profile-stat-val{font-size:1.5rem;font-weight:900;}.profile-stat-lbl{font-size:.75rem;color:var(--txt2);margin-top:3px;}
-.q-game-label{font-size:.78rem;font-weight:700;color:var(--a6);opacity:.8;text-align:center;margin-bottom:6px;letter-spacing:.5px;}
-/* ── Multi-step registration ── */
-.reg-stepper{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:24px;}
-.reg-step-dot{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;color:var(--txt2);transition:all .35s;background:rgba(255,255,255,.04);flex-shrink:0;}
-.reg-step-dot.active{border-color:var(--a4);color:#fff;background:linear-gradient(135deg,var(--a4),var(--a5));box-shadow:0 0 16px rgba(30,144,255,.45);}
-.reg-step-dot.done{border-color:var(--a3);color:var(--a3);background:rgba(46,213,115,.12);}
-.reg-step-line{flex:1;height:2px;background:rgba(255,255,255,.1);max-width:36px;transition:background .35s;}
-.reg-step-line.done{background:var(--a3);}
-.reg-step-panel{display:none;}
-.reg-step-panel.on{display:block;animation:stepIn .3s ease;}
-@keyframes stepIn{from{opacity:0;transform:translateX(-10px);}to{opacity:1;transform:translateX(0);}}
-.reg-grade-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px;}
-.reg-grade-card{border-radius:15px;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);cursor:pointer;padding:11px 5px 9px;text-align:center;font-family:'Fredoka',sans-serif;transition:border-color .2s,background .2s,transform .3s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;}
-.reg-grade-card .rgc-emoji{font-size:1.75rem;display:block;transition:transform .35s cubic-bezier(.34,1.56,.64,1);}
-.reg-grade-card:hover .rgc-emoji{transform:rotate(-10deg) scale(1.18);}
-.reg-grade-card.selected .rgc-emoji{transform:rotate(8deg) scale(1.28);}
-.reg-grade-card .rgc-name{font-size:.85rem;font-weight:700;margin-top:5px;}
-.reg-grade-card .rgc-sub{font-size:.62rem;color:var(--txt2);margin-top:2px;line-height:1.3;}
-.reg-grade-card::after{content:'';position:absolute;inset:0;border-radius:13px;opacity:0;transition:opacity .2s;pointer-events:none;}
-.reg-grade-card:hover::after{opacity:1;}
-.reg-grade-card.selected{transform:scale(1.07);}
-.reg-grade-card.rg1{border-color:rgba(46,213,115,.22);}.reg-grade-card.rg1::after{background:rgba(46,213,115,.06);}
-.reg-grade-card.rg1 .rgc-name{color:#2ed573;}.reg-grade-card.rg1.selected{border-color:#2ed573;background:rgba(46,213,115,.12);box-shadow:0 0 18px rgba(46,213,115,.28);}
-.reg-grade-card.rg2{border-color:rgba(255,211,42,.22);}.reg-grade-card.rg2::after{background:rgba(255,211,42,.06);}
-.reg-grade-card.rg2 .rgc-name{color:#ffd32a;}.reg-grade-card.rg2.selected{border-color:#ffd32a;background:rgba(255,211,42,.12);box-shadow:0 0 18px rgba(255,211,42,.28);}
-.reg-grade-card.rg3{border-color:rgba(30,144,255,.22);}.reg-grade-card.rg3::after{background:rgba(30,144,255,.06);}
-.reg-grade-card.rg3 .rgc-name{color:#1e90ff;}.reg-grade-card.rg3.selected{border-color:#1e90ff;background:rgba(30,144,255,.12);box-shadow:0 0 18px rgba(30,144,255,.28);}
-.reg-grade-card.rg4{border-color:rgba(155,89,182,.22);}.reg-grade-card.rg4::after{background:rgba(155,89,182,.06);}
-.reg-grade-card.rg4 .rgc-name{color:#9b59b6;}.reg-grade-card.rg4.selected{border-color:#9b59b6;background:rgba(155,89,182,.12);box-shadow:0 0 18px rgba(155,89,182,.28);}
-.reg-grade-card.rg5{border-color:rgba(255,99,72,.22);}.reg-grade-card.rg5::after{background:rgba(255,99,72,.06);}
-.reg-grade-card.rg5 .rgc-name{color:#ff6348;}.reg-grade-card.rg5.selected{border-color:#ff6348;background:rgba(255,99,72,.12);box-shadow:0 0 18px rgba(255,99,72,.28);}
-.reg-grade-card.rg6{border-color:rgba(255,71,87,.22);}.reg-grade-card.rg6::after{background:rgba(255,71,87,.06);}
-.reg-grade-card.rg6 .rgc-name{color:#ff4757;}.reg-grade-card.rg6.selected{border-color:#ff4757;background:rgba(255,71,87,.12);box-shadow:0 0 18px rgba(255,71,87,.28);}
-.reg-next-btn{width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--a4),var(--a5));color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:4px;}
-.reg-next-btn:hover:not(:disabled){transform:scale(1.02);box-shadow:0 6px 22px rgba(30,144,255,.35);}
-.reg-next-btn:disabled{opacity:.4;cursor:not-allowed;}
-.reg-back-link{text-align:center;margin-top:11px;font-size:.83rem;color:var(--txt2);cursor:pointer;transition:color .2s;}
-.reg-back-link:hover{color:#fff;}
-.reg-step-title{font-family:'Fredoka',sans-serif;font-size:1.2rem;font-weight:700;color:var(--a2);margin-bottom:3px;text-align:center;}
-.reg-step-sub{font-size:.8rem;color:var(--txt2);margin-bottom:16px;text-align:center;line-height:1.5;}
-::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:rgba(255,255,255,.04);}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:99px;}
-@media(max-width:420px){.logo{font-size:2.4rem;}.qtxt{font-size:1.05rem;}.ans-inp{width:72px;height:50px;font-size:1.5rem;}}
-</style>
 </head>
 <body>
 <div id="bg"></div>
@@ -660,8 +53,6 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
     </div>
     <div class="auth-form" id="regForm">
       <div class="auth-err" id="authErr"></div>
-
-      <!-- Step indicator -->
       <div class="reg-stepper" id="regStepper">
         <div class="reg-step-dot active" id="rdot1">1</div>
         <div class="reg-step-line" id="rline1"></div>
@@ -669,78 +60,42 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
         <div class="reg-step-line" id="rline2"></div>
         <div class="reg-step-dot" id="rdot3">3</div>
       </div>
-
-      <!-- ── Step 1: Name + Username ── -->
+      <!-- Step 1 -->
       <div class="reg-step-panel on" id="regStep1">
         <div class="reg-step-title">👋 ?שלום! מי את/ה?</div>
         <div class="reg-step-sub">השם שלך יופיע על לוח הניקוד</div>
         <label class="auth-label">שם תצוגה</label>
         <input class="auth-inp" id="regDisplayName" type="text" placeholder="לדוגמה: דוד 🔥" autocomplete="given-name" onkeydown="if(event.key==='Enter')document.getElementById('regUsername').focus()">
         <label class="auth-label">שם משתמש לכניסה</label>
-<input class="auth-inp" id="regUsername" type="text" placeholder="באנגלית/עברית, ללא רווחים" autocomplete="username"
-  oninput="scheduleUsernameCheck()"
-  onblur="scheduleUsernameCheck(true)"
-  onkeydown="if(event.key==='Enter')regGoStep(2)">
-<span id="regUsernameBadge" style="display:none"></span>
-<button class="reg-next-btn" onclick="regGoStep(2)">המשך ←</button>
+        <input class="auth-inp" id="regUsername" type="text" placeholder="באנגלית/עברית, ללא רווחים" autocomplete="username"
+          oninput="scheduleUsernameCheck()" onblur="scheduleUsernameCheck(true)" onkeydown="if(event.key==='Enter')regGoStep(2)">
+        <span id="regUsernameBadge" style="display:none"></span>
+        <button class="reg-next-btn" onclick="regGoStep(2)">המשך ←</button>
       </div>
-
-      <!-- ── Step 2: Gender + Grade ── -->
+      <!-- Step 2 -->
       <div class="reg-step-panel" id="regStep2">
         <div class="reg-step-title">🎯 קצת עלייך</div>
         <div class="reg-step-sub">בחר כיתה ומי אתה</div>
         <label class="auth-label">מי אני?</label>
         <div id="regGenderPicker" class="gender-picker" style="margin-bottom:16px;">
-          <button type="button" class="gender-btn" data-value="boy" onclick="selectGender('reg','boy')" aria-pressed="false">
-            <span class="gender-emoji">👦</span><span class="gender-label">ילד</span>
-          </button>
-          <button type="button" class="gender-btn" data-value="girl" onclick="selectGender('reg','girl')" aria-pressed="false">
-            <span class="gender-emoji">👧</span><span class="gender-label">ילדה</span>
-          </button>
-          <button type="button" class="gender-btn" data-value="other" onclick="selectGender('reg','other')" aria-pressed="false">
-            <span class="gender-emoji">🌟</span><span class="gender-label">לא רוצה להגיד</span>
-          </button>
+          <button type="button" class="gender-btn" data-value="boy"   onclick="selectGender('reg','boy')"   aria-pressed="false"><span class="gender-emoji">👦</span><span class="gender-label">ילד</span></button>
+          <button type="button" class="gender-btn" data-value="girl"  onclick="selectGender('reg','girl')"  aria-pressed="false"><span class="gender-emoji">👧</span><span class="gender-label">ילדה</span></button>
+          <button type="button" class="gender-btn" data-value="other" onclick="selectGender('reg','other')" aria-pressed="false"><span class="gender-emoji">🌟</span><span class="gender-label">לא רוצה להגיד</span></button>
         </div>
         <label class="auth-label">באיזו כיתה אתה?</label>
         <div class="reg-grade-grid">
-          <div class="reg-grade-card rg1" onclick="selectRegGrade('א')" data-grade="א">
-            <span class="rgc-emoji">🌱</span>
-            <div class="rgc-name">כיתה א</div>
-            <div class="rgc-sub">חיבור וחיסור</div>
-          </div>
-          <div class="reg-grade-card rg2" onclick="selectRegGrade('ב')" data-grade="ב">
-            <span class="rgc-emoji">📊</span>
-            <div class="rgc-name">כיתה ב</div>
-            <div class="rgc-sub">+ כפל</div>
-          </div>
-          <div class="reg-grade-card rg3" onclick="selectRegGrade('ג')" data-grade="ג">
-            <span class="rgc-emoji">⚡</span>
-            <div class="rgc-name">כיתה ג</div>
-            <div class="rgc-sub">+ חילוק</div>
-          </div>
-          <div class="reg-grade-card rg4" onclick="selectRegGrade('ד')" data-grade="ד">
-            <span class="rgc-emoji">🔮</span>
-            <div class="rgc-name">כיתה ד</div>
-            <div class="rgc-sub">שברים</div>
-          </div>
-          <div class="reg-grade-card rg5" onclick="selectRegGrade('ה')" data-grade="ה">
-            <span class="rgc-emoji">🏆</span>
-            <div class="rgc-name">כיתה ה</div>
-            <div class="rgc-sub">מספרים גדולים</div>
-          </div>
-          <div class="reg-grade-card rg6" onclick="selectRegGrade('ו')" data-grade="ו">
-            <span class="rgc-emoji">🚀</span>
-            <div class="rgc-name">כיתה ו</div>
-            <div class="rgc-sub">רמה מקסימלית</div>
-          </div>
+          <div class="reg-grade-card rg1" onclick="selectRegGrade('א')" data-grade="א"><span class="rgc-emoji">🌱</span><div class="rgc-name">כיתה א</div><div class="rgc-sub">חיבור וחיסור</div></div>
+          <div class="reg-grade-card rg2" onclick="selectRegGrade('ב')" data-grade="ב"><span class="rgc-emoji">📊</span><div class="rgc-name">כיתה ב</div><div class="rgc-sub">+ כפל</div></div>
+          <div class="reg-grade-card rg3" onclick="selectRegGrade('ג')" data-grade="ג"><span class="rgc-emoji">⚡</span><div class="rgc-name">כיתה ג</div><div class="rgc-sub">+ חילוק</div></div>
+          <div class="reg-grade-card rg4" onclick="selectRegGrade('ד')" data-grade="ד"><span class="rgc-emoji">🔮</span><div class="rgc-name">כיתה ד</div><div class="rgc-sub">שברים</div></div>
+          <div class="reg-grade-card rg5" onclick="selectRegGrade('ה')" data-grade="ה"><span class="rgc-emoji">🏆</span><div class="rgc-name">כיתה ה</div><div class="rgc-sub">מספרים גדולים</div></div>
+          <div class="reg-grade-card rg6" onclick="selectRegGrade('ו')" data-grade="ו"><span class="rgc-emoji">🚀</span><div class="rgc-name">כיתה ו</div><div class="rgc-sub">רמה מקסימלית</div></div>
         </div>
-        <!-- hidden input for grade value -->
         <input type="hidden" id="regGrade" value="">
         <button class="reg-next-btn" onclick="regGoStep(3)">המשך ←</button>
         <div class="reg-back-link" onclick="regGoStep(1)">← חזרה</div>
       </div>
-
-      <!-- ── Step 3: Email + Password + Terms ── -->
+      <!-- Step 3 -->
       <div class="reg-step-panel" id="regStep3">
         <div class="reg-step-title">🔐 עוד רגע ונגמר!</div>
         <div class="reg-step-sub">הגן על החשבון שלך</div>
@@ -783,42 +138,12 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
   <div style="font-family:'Fredoka',sans-serif;font-size:1.6rem;color:var(--a2);margin-bottom:6px;margin-top:20px;text-align:center;">באיזו כיתה אתה? 🎯</div>
   <div style="font-size:.9rem;color:var(--txt2);margin-bottom:4px;text-align:center;">השאלות יותאמו בדיוק לרמה שלך</div>
   <div class="grade-grid">
-    <div class="grade-btn g1" onclick="selectGrade('א')">
-      <span class="ge">🌱</span>
-      <div class="gn">כיתה א</div>
-      <div class="gs">חיבור וחיסור</div>
-      <span class="g-tag">מתחילים</span>
-    </div>
-    <div class="grade-btn g2" onclick="selectGrade('ב')">
-      <span class="ge">📊</span>
-      <div class="gn">כיתה ב</div>
-      <div class="gs">+ כפל ומילוליות</div>
-      <span class="g-tag">בסיס חזק</span>
-    </div>
-    <div class="grade-btn g3" onclick="selectGrade('ג')">
-      <span class="ge">⚡</span>
-      <div class="gn">כיתה ג</div>
-      <div class="gs">+ חילוק</div>
-      <span class="g-tag">מתקדמים</span>
-    </div>
-    <div class="grade-btn g4" onclick="selectGrade('ד')">
-      <span class="ge">🔮</span>
-      <div class="gn">כיתה ד</div>
-      <div class="gs">+ שברים וגיאומטריה</div>
-      <span class="g-tag">אתגר</span>
-    </div>
-    <div class="grade-btn g5" onclick="selectGrade('ה')">
-      <span class="ge">🏆</span>
-      <div class="gn">כיתה ה</div>
-      <div class="gs">מספרים גדולים</div>
-      <span class="g-tag">מקצוענים</span>
-    </div>
-    <div class="grade-btn g6" onclick="selectGrade('ו')">
-      <span class="ge">🚀</span>
-      <div class="gn">כיתה ו</div>
-      <div class="gs">רמה מקסימלית</div>
-      <span class="g-tag">אלופים</span>
-    </div>
+    <div class="grade-btn g1" onclick="selectGrade('א')"><span class="ge">🌱</span><div class="gn">כיתה א</div><div class="gs">חיבור וחיסור</div><span class="g-tag">מתחילים</span></div>
+    <div class="grade-btn g2" onclick="selectGrade('ב')"><span class="ge">📊</span><div class="gn">כיתה ב</div><div class="gs">+ כפל ומילוליות</div><span class="g-tag">בסיס חזק</span></div>
+    <div class="grade-btn g3" onclick="selectGrade('ג')"><span class="ge">⚡</span><div class="gn">כיתה ג</div><div class="gs">+ חילוק</div><span class="g-tag">מתקדמים</span></div>
+    <div class="grade-btn g4" onclick="selectGrade('ד')"><span class="ge">🔮</span><div class="gn">כיתה ד</div><div class="gs">+ שברים וגיאומטריה</div><span class="g-tag">אתגר</span></div>
+    <div class="grade-btn g5" onclick="selectGrade('ה')"><span class="ge">🏆</span><div class="gn">כיתה ה</div><div class="gs">מספרים גדולים</div><span class="g-tag">מקצוענים</span></div>
+    <div class="grade-btn g6" onclick="selectGrade('ו')"><span class="ge">🚀</span><div class="gn">כיתה ו</div><div class="gs">רמה מקסימלית</div><span class="g-tag">אלופים</span></div>
   </div>
 </div>
 
@@ -935,10 +260,10 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
         <div id="exprResult" style="font-size:1.8rem;font-weight:900;color:var(--a3);min-width:40px;text-align:center;">?</div>
       </div>
       <div class="op-picker" id="exprOpPicker" style="display:flex;">
-        <button class="op-btn op-plus" id="opPlus" onclick="pickOp('+')" title="חיבור"><span>+</span><div class="op-sel-ring"></div></button>
+        <button class="op-btn op-plus"  id="opPlus"  onclick="pickOp('+')" title="חיבור"><span>+</span><div class="op-sel-ring"></div></button>
         <button class="op-btn op-minus" id="opMinus" onclick="pickOp('-')" title="חיסור"><span>−</span><div class="op-sel-ring"></div></button>
         <button class="op-btn op-times" id="opTimes" onclick="pickOp('×')" title="כפל"><span>×</span><div class="op-sel-ring"></div></button>
-        <button class="op-btn op-div" id="opDiv" onclick="pickOp('÷')" title="חילוק"><span>÷</span><div class="op-sel-ring"></div></button>
+        <button class="op-btn op-div"   id="opDiv"   onclick="pickOp('÷')" title="חילוק"><span>÷</span><div class="op-sel-ring"></div></button>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
         <button onclick="clearExpr()" style="padding:5px 14px;background:rgba(255,71,87,.15);border:1px solid var(--a1);color:var(--a1);border-radius:8px;cursor:pointer;font-size:.82rem;font-family:'Rubik',sans-serif;">🗑️ נקה</button>
@@ -990,10 +315,10 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
   <div style="margin:14px 0;width:100%;max-width:440px;">
     <div style="font-size:.9rem;color:var(--txt2);margin-bottom:10px;font-weight:700;">רמת קושי:</div>
     <div style="display:flex;gap:9px;flex-wrap:wrap;">
-      <button class="dbtn de" id="exDe" onclick="setExamDiff('easy')" style="padding:9px 16px;flex:1;min-width:80px;">🌱 קל</button>
+      <button class="dbtn de" id="exDe" onclick="setExamDiff('easy')"   style="padding:9px 16px;flex:1;min-width:80px;">🌱 קל</button>
       <button class="dbtn dm" id="exDm" onclick="setExamDiff('medium')" style="padding:9px 16px;flex:1;min-width:80px;">⚡ בינוני</button>
-      <button class="dbtn dh" id="exDh" onclick="setExamDiff('hard')" style="padding:9px 16px;flex:1;min-width:80px;">🔥 קשה</button>
-      <button class="dbtn dx" id="exDx" onclick="setExamDiff('mix')" style="padding:9px 16px;flex:1;min-width:80px;">🎲 תערובת</button>
+      <button class="dbtn dh" id="exDh" onclick="setExamDiff('hard')"   style="padding:9px 16px;flex:1;min-width:80px;">🔥 קשה</button>
+      <button class="dbtn dx" id="exDx" onclick="setExamDiff('mix')"    style="padding:9px 16px;flex:1;min-width:80px;">🎲 תערובת</button>
     </div>
   </div>
   <div style="font-size:.88rem;color:var(--txt2);margin-bottom:14px;" id="examPreInfo"></div>
@@ -1021,7 +346,7 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:500px;margin-bottom:18px;" id="histStats"></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;width:100%;max-width:500px;">
     <button onclick="filterHist('all')" id="hfAll" class="qbtn" style="padding:7px 14px;font-size:.82rem;background:rgba(30,144,255,.2);color:var(--a4);border:1px solid var(--a4);">הכל</button>
-    <button onclick="filterHist('ok')" id="hfOk" class="qbtn" style="padding:7px 14px;font-size:.82rem;background:rgba(255,255,255,.06);color:var(--txt2);">✅ נכון</button>
+    <button onclick="filterHist('ok')"  id="hfOk"  class="qbtn" style="padding:7px 14px;font-size:.82rem;background:rgba(255,255,255,.06);color:var(--txt2);">✅ נכון</button>
     <button onclick="filterHist('bad')" id="hfBad" class="qbtn" style="padding:7px 14px;font-size:.82rem;background:rgba(255,255,255,.06);color:var(--txt2);">❌ שגוי</button>
   </div>
   <div style="display:flex;flex-direction:column;gap:9px;width:100%;max-width:500px;" id="histList"></div>
@@ -1069,15 +394,9 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
         <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
           <div class="set-label">מי אני?</div>
           <div id="setGenderPicker" class="gender-picker">
-            <button type="button" class="gender-btn" data-value="boy" onclick="selectGender('set','boy')" aria-pressed="false">
-              <span class="gender-emoji">👦</span><span class="gender-label">ילד</span>
-            </button>
-            <button type="button" class="gender-btn" data-value="girl" onclick="selectGender('set','girl')" aria-pressed="false">
-              <span class="gender-emoji">👧</span><span class="gender-label">ילדה</span>
-            </button>
-            <button type="button" class="gender-btn" data-value="other" onclick="selectGender('set','other')" aria-pressed="false">
-              <span class="gender-emoji">🌟</span><span class="gender-label">לא רוצה להגיד</span>
-            </button>
+            <button type="button" class="gender-btn" data-value="boy"   onclick="selectGender('set','boy')"   aria-pressed="false"><span class="gender-emoji">👦</span><span class="gender-label">ילד</span></button>
+            <button type="button" class="gender-btn" data-value="girl"  onclick="selectGender('set','girl')"  aria-pressed="false"><span class="gender-emoji">👧</span><span class="gender-label">ילדה</span></button>
+            <button type="button" class="gender-btn" data-value="other" onclick="selectGender('set','other')" aria-pressed="false"><span class="gender-emoji">🌟</span><span class="gender-label">לא רוצה להגיד</span></button>
           </div>
         </div>
         <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
@@ -1089,27 +408,28 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
           <div style="font-size:.75rem;color:var(--txt2);display:flex;align-items:center;gap:4px;opacity:.8;">💡 חיבור מייל מאפשר שחזור סיסמה בעתיד</div>
           <div class="auth-err" id="profileFieldsErr" style="width:100%"></div>
         </div>
-<div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
-  <div class="set-label">כיתה <span style="font-size:.78rem;color:var(--a1)">(ישנה את רמת השאלות!)</span></div>
-  <input type="hidden" id="setGrade" value="">
-  <div class="reg-grade-grid" id="setGradeGrid" style="width:100%;grid-template-columns:repeat(3,1fr);">
-    <div class="reg-grade-card rg1" onclick="selectSetGrade('א')" data-grade="א"><span class="rgc-emoji">🌱</span><div class="rgc-name">כיתה א</div><div class="rgc-sub">חיבור וחיסור</div></div>
-    <div class="reg-grade-card rg2" onclick="selectSetGrade('ב')" data-grade="ב"><span class="rgc-emoji">📊</span><div class="rgc-name">כיתה ב</div><div class="rgc-sub">+ כפל</div></div>
-    <div class="reg-grade-card rg3" onclick="selectSetGrade('ג')" data-grade="ג"><span class="rgc-emoji">⚡</span><div class="rgc-name">כיתה ג</div><div class="rgc-sub">+ חילוק</div></div>
-    <div class="reg-grade-card rg4" onclick="selectSetGrade('ד')" data-grade="ד"><span class="rgc-emoji">🔮</span><div class="rgc-name">כיתה ד</div><div class="rgc-sub">שברים</div></div>
-    <div class="reg-grade-card rg5" onclick="selectSetGrade('ה')" data-grade="ה"><span class="rgc-emoji">🏆</span><div class="rgc-name">כיתה ה</div><div class="rgc-sub">מספרים גדולים</div></div>
-    <div class="reg-grade-card rg6" onclick="selectSetGrade('ו')" data-grade="ו"><span class="rgc-emoji">🚀</span><div class="rgc-name">כיתה ו</div><div class="rgc-sub">רמה מקסימלית</div></div>
-  </div>
-  <button onclick="fbChangeGrade()" style="width:100%;padding:11px;background:rgba(30,144,255,.2);border:1px solid var(--a4);color:var(--a4);border-radius:12px;cursor:pointer;font-family:'Rubik',sans-serif;font-weight:700;font-size:.95rem;">✅ עדכן כיתה</button>
-</div>
+        <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+          <div class="set-label">כיתה <span style="font-size:.78rem;color:var(--a1)">(ישנה את רמת השאלות!)</span></div>
+          <input type="hidden" id="setGrade" value="">
+          <div class="reg-grade-grid" id="setGradeGrid" style="width:100%;grid-template-columns:repeat(3,1fr);">
+            <div class="reg-grade-card rg1" onclick="selectSetGrade('א')" data-grade="א"><span class="rgc-emoji">🌱</span><div class="rgc-name">כיתה א</div><div class="rgc-sub">חיבור וחיסור</div></div>
+            <div class="reg-grade-card rg2" onclick="selectSetGrade('ב')" data-grade="ב"><span class="rgc-emoji">📊</span><div class="rgc-name">כיתה ב</div><div class="rgc-sub">+ כפל</div></div>
+            <div class="reg-grade-card rg3" onclick="selectSetGrade('ג')" data-grade="ג"><span class="rgc-emoji">⚡</span><div class="rgc-name">כיתה ג</div><div class="rgc-sub">+ חילוק</div></div>
+            <div class="reg-grade-card rg4" onclick="selectSetGrade('ד')" data-grade="ד"><span class="rgc-emoji">🔮</span><div class="rgc-name">כיתה ד</div><div class="rgc-sub">שברים</div></div>
+            <div class="reg-grade-card rg5" onclick="selectSetGrade('ה')" data-grade="ה"><span class="rgc-emoji">🏆</span><div class="rgc-name">כיתה ה</div><div class="rgc-sub">מספרים גדולים</div></div>
+            <div class="reg-grade-card rg6" onclick="selectSetGrade('ו')" data-grade="ו"><span class="rgc-emoji">🚀</span><div class="rgc-name">כיתה ו</div><div class="rgc-sub">רמה מקסימלית</div></div>
+          </div>
+          <button onclick="fbChangeGrade()" style="width:100%;padding:11px;background:rgba(30,144,255,.2);border:1px solid var(--a4);color:var(--a4);border-radius:12px;cursor:pointer;font-family:'Rubik',sans-serif;font-weight:700;font-size:.95rem;">✅ עדכן כיתה</button>
+        </div>
         <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
           <div class="set-label">שינוי סיסמה</div>
           <input class="set-inp" id="oldPass" style="width:100%" type="password" placeholder="סיסמה ישנה">
           <input class="set-inp" id="newPass" style="width:100%;margin-top:6px" type="password" placeholder="סיסמה חדשה">
           <div class="auth-err" id="passErr" style="width:100%"></div>
-<button onclick="fbChangePassword()" style="padding:9px 18px;background:rgba(155,89,182,.2);border:1px solid var(--a5);color:var(--a5);border-radius:9px;cursor:pointer;font-family:'Rubik',sans-serif;font-weight:700;">🔑 שנה סיסמה</button>
-<button onclick="fbSendPasswordReset()" style="padding:9px 18px;margin-top:8px;background:rgba(30,144,255,.15);border:1px solid var(--a4);color:var(--a4);border-radius:9px;cursor:pointer;font-family:'Rubik',sans-serif;font-weight:700;">📧 שכחתי סיסמה — שלח קישור למייל</button>
-<div style="font-size:.74rem;color:var(--txt2);margin-top:5px;opacity:.75;">💡 יישלח למייל המחובר לחשבון. אם לא חיברת מייל, הוסף אחד למעלה קודם.</div>        </div>
+          <button onclick="fbChangePassword()" style="padding:9px 18px;background:rgba(155,89,182,.2);border:1px solid var(--a5);color:var(--a5);border-radius:9px;cursor:pointer;font-family:'Rubik',sans-serif;font-weight:700;">🔑 שנה סיסמה</button>
+          <button onclick="fbSendPasswordReset()" style="padding:9px 18px;margin-top:8px;background:rgba(30,144,255,.15);border:1px solid var(--a4);color:var(--a4);border-radius:9px;cursor:pointer;font-family:'Rubik',sans-serif;font-weight:700;">📧 שכחתי סיסמה — שלח קישור למייל</button>
+          <div style="font-size:.74rem;color:var(--txt2);margin-top:5px;opacity:.75;">💡 יישלח למייל המחובר לחשבון.</div>
+        </div>
       </div>
       <div class="set-section">
         <div class="set-title">⭐ נקודות</div>
@@ -1204,400 +524,10 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
 </div>
 <div class="pts-pop" id="ptsPop"><div class="pts-val" id="ptsVal">+10</div><div style="color:var(--txt2);font-size:.9rem">נקודות!</div></div>
 <div class="streak-fire" id="strkFire"><div class="sf-val" id="sfVal">🔥 3</div><div class="sf-lbl" id="sfLbl">ברצף!</div></div>
-<script>
-const LEVELS=[{n:'מתמטיקאי מתחיל',xp:50,e:'🌱'},{n:'סוחר המספרים',xp:120,e:'📊'},{n:'גיבור חשבון',xp:250,e:'⚡'},{n:'קוסם המספרים',xp:450,e:'🔮'},{n:'אלוף חשבון',xp:700,e:'🏆'},{n:'מייסטרו מתמטיקה',xp:1000,e:'🌟'},{n:'אגדת המספרים',xp:1400,e:'💫'},{n:'לאינסוף ומעבר!',xp:Infinity,e:'🚀'}];
-const SPECIAL_USERS={
-'asasin':{title:'אלוהי המספרים 👑⚡',badge:'⚡👑',color:'#00d2d3',glowColor:'#00d362',badgeColor:'#00d2d3',scoreDisplay:(n)=>'♾️',streakDisplay:(n)=>'♾️',allUnlocked:true,defaultGradeLabel:' המנהל 🎓',pinTop:true},
-'יאן':{title:'V.I.P 💎',badge:'💎',color:'#00d362',glowColor:'#00d362',badgeColor:'#00d362',scoreDisplay:(n)=>`💎 ${n.toLocaleString()}`,streakDisplay:(n)=>`🔥 ${n} ברצף 💎`,pinTop:false}};
-const BRAINROT_LABELS=['תרגיל הבריינרוט','הסיגמה של המתמטיקה','ריצה W','לא L','פתרון הגיוסי','מבחן הסקיבידי','המצב גריז'];
-const GAME_THEMES=[{name:'מיינקראפט',items:['⛏️','💎','🪨','🌲','🔥','🐷','🧱'],label:'⛏️ מיינקראפט'},{name:'רובלוקס',items:['🎮','🏗️','🤖','🎲','💰','🌈','🎯'],label:'🎮 רובלוקס'},{name:'פוקימון',items:['⚡','🔥','💧','🌿','👾','🌀','💥'],label:'⚡ פוקימון'},{name:'מריו',items:['🍄','⭐','🪙','🎯','🌟','🎪','🚩'],label:'🍄 מריו'},{name:'פורטנייט',items:['🏆','💥','🔫','🎯','⭐','🌟','🏅'],label:'🏆 פורטנייט'},{name:'כדורגל',items:['⚽','🏃','🥅','🏅','🎯','⭐','🌟'],label:'⚽ כדורגל'},{name:'חייזרים',items:['👾','🛸','🌌','⭐','💫','🔭','🚀'],label:'👾 חייזרים'}];
-const THEME_LOOT={'מיינקראפט':['יהלומים','גוש אבן','עצי עץ','קוביות זהב'],'רובלוקס':['רובוקסים','בניות','כלי נשק','מטבעות'],'פוקימון':['כרטיסי פוקימון','פוקיבולים','תגים','מדליות'],'מריו':['מטבעות','פטריות','כוכבים','מפתחות'],'פורטנייט':['חומרי בנייה','נשקים','תחמושת','ניצחונות'],'כדורגל':['שערים','כרטיסים','ניקוד','כרטיסי שחקן'],'חייזרים':['ספינות','לייזרים','כוכבים','תחנות חלל']};
-const WORD_STORIES={easy:[({a,b},th)=>({text:`לדני יש ${a} ${th.loot} מ${th.name}. החבר שלו נתן לו עוד ${b}. כמה יש לו עכשיו?`,answer:a+b,op:'+',nums:[a,b],exampleAnswer:`יש לו ${a+b} ${th.loot} בסך הכל.`,hint:`חבר: ${a} + ${b}`}),({a,b},th)=>({text:`בחנות ${th.name} יש ${a} ${th.loot} על המדף העליון ו-${b} על המדף התחתון. כמה יש בחנות?`,answer:a+b,op:'+',nums:[a,b],exampleAnswer:`יש בחנות ${a+b} ${th.loot}.`,hint:`חבר: ${a} + ${b}`}),({a,b},th)=>({text:`לשירה היו ${a+b} ${th.loot}. השתמשה ב-${b}. כמה נשאר?`,answer:a,op:'-',nums:[a+b,b],exampleAnswer:`נשאר ${a} ${th.loot}.`,hint:`חסר: ${a+b} - ${b}`})],medium:[({a,b},th)=>({text:`קבוצת ${th.name} אספה ${a} ${th.loot} ביום ראשון ו-${b} ביום שני. כמה אספה בסך הכל?`,answer:a+b,op:'+',nums:[a,b],exampleAnswer:`הקבוצה אספה ${a+b} ${th.loot}.`,hint:`חבר שני הימים`}),({a,b},th)=>({text:`ב${th.name} יש ${a} שחקנים. לכל אחד יש ${b} ${th.loot}. כמה בסך הכל?`,answer:a*b,op:'×',nums:[a,b],exampleAnswer:`יש ${a*b} ${th.loot} בסך הכל.`,hint:`כפל: ${a} × ${b}`}),({a,b,c},th)=>({text:`לאלי היו ${a} ${th.loot}. קנה עוד ${b} ואז נתן ${c} לחבר. כמה יש לו?`,answer:a+b-c,op:'+',nums:[a,b,c],multiStep:true,steps:[`שלב 1: ${a} + ${b} = ${a+b}`,`שלב 2: ${a+b} - ${c} = ${a+b-c}`],exampleAnswer:`יש לו ${a+b-c} ${th.loot}.`,hint:`קודם חבר, אחר כך חסר`})],hard:[({a,b,c},th)=>({text:`לדוד יש ${a} ${th.loot}. אחיו נתן עוד ${b}. אחר כך חילק בין ${c} חברים. כמה קיבל כל חבר?`,answer:(a+b)/c,op:'+',nums:[a,b,c],multiStep:true,steps:[`שלב 1: ${a} + ${b} = ${a+b}`,`שלב 2: ${a+b} ÷ ${c} = ${(a+b)/c}`],exampleAnswer:`כל חבר קיבל ${(a+b)/c} ${th.loot}.`,hint:`קודם חבר, אחר כך חלק`}),({a,b,c},th)=>({text:`${a} שחקנים אספו ${b} ${th.loot} כל אחד. אחר כך מצאו עוד ${c}. כמה בסך הכל?`,answer:a*b+c,op:'×',nums:[a,b,c],multiStep:true,steps:[`שלב 1: ${a} × ${b} = ${a*b}`,`שלב 2: ${a*b} + ${c} = ${a*b+c}`],exampleAnswer:`יש ${a*b+c} ${th.loot}.`,hint:`קודם כפל, אחר כך חבר`})]};
 
-let cfg={ptsEasy:5,ptsMed:10,ptsHard:18,ptsWordBonus:8,ptsWrong:1,ptsHint:2,maxAttempts:3,hintTime:180,streakBonus3:5,streakBonus5:10,streakBonus10:20};
-let st={score:0,level:0,xp:0,streak:0,maxStreak:0,learnedTopics:[],dailyDone:false,dailyDate:'',history:[],examTopics:['add','sub','mul'],examDiff:'mix',totalSolved:0,correctCount:0,specialGlowColor:null,specialBadgeColor:null};
-let qs={pool:[],idx:0,cat:'add',diff:'easy',current:null,attempts:0,hintUsed:false,hintSecs:180,hintInterval:null,isDaily:false,isDailyIdx:0,isMistakes:false,isExam:false,examPool:[],examIdx:0,examScore:0,examTimer:null,examSecs:600,done:false};
-
-// ══ GRADE CONFIG SYSTEM ══
-const GRADE_FILES={'א':'grade1.js','ב':'grade2.js','ג':'grade3.js','ד':'grade4.js','ה':'grade5.js','ו':'grade6.js'};
-async function loadGradeConfig(grade){
-  return new Promise((resolve)=>{
-    const file=GRADE_FILES[grade];if(!file){resolve();return;}
-    const old=document.getElementById('gradeScript');if(old)old.remove();
-    const s=document.createElement('script');s.id='gradeScript';
-    s.src=file+'?v='+Date.now();
-    s.onload=()=>{applyGradeConfig();resolve();};
-    s.onerror=()=>{console.warn('Grade file not found, using defaults');resolve();};
-    document.head.appendChild(s);
-  });
-}
-function applyGradeConfig(){
-  const gc=window.GRADE_CONFIG;if(!gc)return;
-  const toUnlock=gc.availableLearnTopics||[];
-  toUnlock.forEach(t=>{if(!st.learnedTopics.includes(t))st.learnedTopics.push(t);});
-  st.examTopics=st.examTopics.filter(t=>(gc.availableExamTopics||[]).includes(t));
-  if(st.examTopics.length===0)st.examTopics=(gc.availableExamTopics||['add']).slice(0,2);
-}
-async function selectGrade(grade){
-  window._grade=grade;window.fbSave();
-  await loadGradeConfig(grade);
-  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
-  document.getElementById('home').classList.add('on');
-  const gc=window.GRADE_CONFIG;if(gc?.welcome)showToast(gc.welcome);
-  updateHome();
-}
-
-// ══ ALL CATEGORY DEFINITIONS ══
-const ALL_CATS=[
-  {id:'add',cls:'add',icon:'➕',name:'חיבור',sub:'מספרים גדולים'},
-  {id:'sub',cls:'sub',icon:'➖',name:'חיסור',sub:'עם ובלי לווה'},
-  {id:'mul',cls:'mul',icon:'✖️',name:'כפל',sub:'לוח הכפל'},
-  {id:'div',cls:'div',icon:'➗',name:'חילוק',sub:'חלוקה שווה'},
-  {id:'word',cls:'word',icon:'📖',name:'מילוליות',sub:'בעיות עם סיפור'},
-  {id:'shapes',cls:'',icon:'📐',name:'גיאומטריה',sub:'צורות וצלעות',borderColor:'#ff9ff3'},
-  {id:'fractions',cls:'',icon:'½',name:'שברים',sub:'חלקים של שלם',borderColor:'#54a0ff'},
-  {id:'learn',cls:'learn',icon:'🎓',name:'בואו נלמד!',sub:'חומר חדש',special:'learn'},
-  {id:'history',cls:'history',icon:'📊',name:'היסטוריה',sub:'כל הפתרונות',special:'history'},
-  {id:'mistakes',cls:'mistakes',icon:'🔄',name:'טעויות',sub:'שיפור עצמי',special:'mistakes'},
-  {id:'exam',cls:'test',icon:'🏆',name:'מבחן',sub:'בחר נושאים',special:'exam'},
-  {id:'friends',cls:'',icon:'👥',name:'חברים',sub:'לוח תוצאות',borderColor:'#2ed573',special:'friends'},
-  {id:'settings',cls:'settings',icon:'⚙️',name:'הגדרות',sub:'הורים',special:'settings'},
-];
-function buildGrid(){
-  const gc=window.GRADE_CONFIG;
-  const available=gc?gc.availableCategories:['add','sub','mul','word'];
-  const grid=document.getElementById('mainGrid');grid.innerHTML='';
-  ALL_CATS.forEach(cat=>{
-    if(!cat.special&&!available.includes(cat.id))return;
-    const div=document.createElement('div');
-    div.className='cbt'+(cat.cls?' '+cat.cls:'');
-    if(cat.borderColor)div.style.borderColor=cat.borderColor+'40';
-    const onclick=cat.special?({'learn':'openLearn()','history':'openHistory()','mistakes':'openMistakes()','exam':'openExamPre()','friends':'openFriends()','settings':'openSettings()'}[cat.special]||''):`openCat('${cat.id}')`;
-    div.setAttribute('onclick',onclick);div.id=cat.id+'Btn';
-    div.innerHTML=`<span class="ci">${cat.icon}</span><div class="cn">${cat.name}</div><div class="cs">${cat.sub}</div>`;
-    grid.appendChild(div);
-  });
-  lockCat('divBtn',!st.learnedTopics.includes('division'));
-  lockCat('shapesBtn',!st.learnedTopics.includes('shapes'));
-  lockCat('fractionsBtn',!st.learnedTopics.includes('fractions'));
-}
-
-function sortLeaderboard(results){return results.sort((a,b)=>{const aPin=!!(SPECIAL_USERS[(a.username||'').toLowerCase()]?.pinTop);const bPin=!!(SPECIAL_USERS[(b.username||'').toLowerCase()]?.pinTop);if(aPin&&!bPin)return -1;if(!aPin&&bPin)return 1;return b.score-a.score;});}
-function load(){try{const d=JSON.parse(localStorage.getItem('yanMath2')||'{}');if(d.st)Object.assign(st,d.st);if(d.cfg)Object.assign(cfg,d.cfg);const today=new Date().toDateString();if(st.dailyDate!==today){st.dailyDone=false;st.dailyDate=today;}if(!st.history)st.history=[];}catch(e){}}
-function save(){try{localStorage.setItem('yanMath2',JSON.stringify({st,cfg}));}catch(e){}if(window.fbSave)window.fbSave();}
-const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
-function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');if(id==='home')updateHome();if(qs.hintInterval){clearInterval(qs.hintInterval);qs.hintInterval=null;}if(qs.examTimer){clearInterval(qs.examTimer);qs.examTimer=null;}}
-function showToast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);}
-
-function updateHome(){
-  const lv=LEVELS[Math.min(st.level,LEVELS.length-1)];
-  const playerDisplayName=window._displayName||(window._fbUser?(window._fbUser.email?.split('@')[0]||'שחקן'):'שחקן');
-  const uname=(window._username||'').toLowerCase();const special=SPECIAL_USERS[uname];const gc=window.GRADE_CONFIG;
-  if(special){const glowColor=st.specialGlowColor||special.glowColor||'#00d362';const badgeColor=st.specialBadgeColor||special.badgeColor||special.color;document.getElementById('playerName').innerHTML=`<span class="name-glow-blue" style="color:${glowColor};animation:none;text-shadow:0 0 8px ${glowColor},0 0 20px ${glowColor}99,0 0 40px ${glowColor}66">${playerDisplayName}</span><span class="special-badge" style="--sc:${badgeColor}">${special.badge} ${special.title}</span>`;document.getElementById('levelDisplay').textContent=`${special.badge} ${special.title}`;}
-  else{document.getElementById('playerName').innerHTML=`⭐ ${playerDisplayName}${st.level>0?`<span class="nickname-badge">${lv.n}</span>`:''}`;document.getElementById('levelDisplay').textContent=`${lv.e} רמה ${st.level+1} — ${lv.n}`;}
-  const gbw=document.getElementById('gradeBadgeWrap');
-  if(special){
-    const glowColor=st.specialGlowColor||special.glowColor||'#00d362';
-    const gradeLabel=st.specialGradeLabel!=null?st.specialGradeLabel:(special.defaultGradeLabel||'');
-    gbw.innerHTML=gradeLabel?`<div class="grade-chip" style="color:${glowColor};border-color:${glowColor}40;background:${glowColor}15;font-family:'Fredoka',sans-serif;">${gradeLabel}</div>`:'';
-  } else if(gc){
-    gbw.innerHTML=`<div class="grade-chip" style="color:${gc.gradeColor};border-color:${gc.gradeColor}40;background:${gc.gradeColor}15;">${gc.gradeEmoji} ${gc.gradeName}</div>${gc.tip?`<div style="font-size:.78rem;color:var(--txt2);margin-top:5px;">${gc.tip}</div>`:''}`;
-  } else gbw.innerHTML='';
-  const pct=st.level>=LEVELS.length-1?100:Math.round(st.xp/lv.xp*100);
-  document.getElementById('xpBar').style.width=pct+'%';
-  document.getElementById('xpTxt').textContent=st.level>=LEVELS.length-1?`${st.xp} נקודות 🔥`:`${st.xp} / ${lv.xp} לרמה ${st.level+2}`;
-  const existingScoreLbl=document.getElementById('specialScoreLbl');if(existingScoreLbl)existingScoreLbl.remove();
-  const scoreLabel=special?.scoreDisplay?special.scoreDisplay(st.score):null;
-  if(scoreLabel){const lbl=document.createElement('div');lbl.id='specialScoreLbl';lbl.style.cssText='font-family:"Fredoka",sans-serif;font-size:1.1rem;font-weight:700;margin-top:6px;';lbl.style.color=st.specialGlowColor||special.glowColor||'#00d362';lbl.textContent=scoreLabel;document.getElementById('xpTxt').insertAdjacentElement('afterend',lbl);}
-  if(st.streak>=3){document.getElementById('streakBadge').style.display='inline-flex';if(special?.streakDisplay)document.getElementById('streakBadge').innerHTML=special.streakDisplay(st.streak);else document.getElementById('streakBadge').innerHTML=`🔥 <span id="streakCount">${st.streak}</span> ברצף!`;}
-  else document.getElementById('streakBadge').style.display='none';
-  if(st.dailyDone){document.getElementById('dailyBanner').classList.add('done');document.getElementById('dailyDesc').textContent='✅ המשימה היומית הושלמה! 🎉';}
-  else{document.getElementById('dailyBanner').classList.remove('done');document.getElementById('dailyDesc').textContent='2 שאלות מיוחדות מחכות לך';}
-  buildRecommendation();buildGrid();loadMiniLeaderboard();
-  const dn=document.getElementById('newDisplayName');if(dn)dn.placeholder=playerDisplayName;
-  const sg=document.getElementById('setGrade');if(sg&&window._grade)sg.value=window._grade;
-  if(window._grade)selectSetGrade(window._grade);
-}
-
-function lockCat(id,locked){const el=document.getElementById(id);if(!el)return;if(locked)el.classList.add('locked');else el.classList.remove('locked');}
-function buildRecommendation(){
-  const box=document.getElementById('recommendBox'),txt=document.getElementById('recommendText');
-  if(st.history.length<5){box.style.display='none';return;}
-  const cats={};st.history.slice(-30).forEach(h=>{if(!cats[h.cat])cats[h.cat]={ok:0,bad:0};if(h.correct)cats[h.cat].ok++;else cats[h.cat].bad++;});
-  let worstCat=null,worstRatio=0;for(const[c,v]of Object.entries(cats)){const total=v.ok+v.bad;if(total<2)continue;const ratio=v.bad/total;if(ratio>worstRatio){worstRatio=ratio;worstCat=c;}}
-  if(!worstCat||worstRatio<0.3){box.style.display='none';return;}
-  const catNames={add:'חיבור',sub:'חיסור',mul:'כפל',div:'חילוק',word:'מילוליות'};
-  box.style.display='flex';txt.innerHTML=`💡 ממליץ לתרגל: <strong>${catNames[worstCat]||worstCat}</strong> — טועה ${Math.round(worstRatio*100)}% מהפעמים!`;
-}
-
-const CAT_NAMES={add:'➕ חיבור',sub:'➖ חיסור',mul:'✖️ כפל',div:'➗ חילוק',word:'📖 מילוליות',shapes:'📐 גיאומטריה',fractions:'½ שברים'};
-const LOCKED_TOPICS={div:'division',shapes:'shapes',fractions:'fractions'};
-function openCat(cat){
-  if(LOCKED_TOPICS[cat]&&!st.learnedTopics.includes(LOCKED_TOPICS[cat])){showToast('🔒 קודם למד את הנושא הזה!');return;}
-  const gc=window.GRADE_CONFIG;if(gc&&!gc.availableCategories.includes(cat)){showToast('🔒 נושא זה לא זמין בכיתה שלך');return;}
-  qs.cat=cat;document.getElementById('diffTitle').textContent=CAT_NAMES[cat]||cat;show('diff-scr');
-}
-function startCat(diff){qs.diff=diff;qs.isDaily=false;qs.isExam=false;qs.isMistakes=false;qs.pool=genPool(qs.cat,diff,10);qs.idx=0;show('q-scr');loadQ(qs.pool[0]);}
-
-// ══ QUESTION GENERATION ══
-function ptsForQ(cat,diff){const gc=window.GRADE_CONFIG;if(gc?.pts)return gc.pts[diff]||(diff==='easy'?cfg.ptsEasy:diff==='medium'?cfg.ptsMed:cfg.ptsHard);const base={easy:cfg.ptsEasy,medium:cfg.ptsMed,hard:cfg.ptsHard};const bonus=cat==='word'?cfg.ptsWordBonus:0;return(base[diff]||cfg.ptsEasy)+bonus;}
-function genPool(cat,diff,n){const pool=[];for(let i=0;i<n;i++){let d=diff==='mix'?pick(['easy','medium','hard']):diff;pool.push(genQ(cat,d));}return pool;}
-function genQ(cat,diff){const gc=window.GRADE_CONFIG;if(gc?.generators?.[cat])return gc.generators[cat](diff);const theme=pick(GAME_THEMES);switch(cat){case 'add':return genAdd(diff,theme);case 'sub':return genSub(diff,theme);case 'mul':return genMul(diff,theme);case 'div':return genDiv(diff,theme);case 'word':return genWord(diff,theme);case 'shapes':return genShapes(diff,theme);case 'fractions':return genFrac(diff,theme);default:return genAdd(diff,theme);}}
-function brainrotLabel(){return rnd(0,3)===0?pick(BRAINROT_LABELS):'';}
-function genAdd(diff,th){let a,b;if(diff==='easy'){a=rnd(1,20);b=rnd(1,20);}else if(diff==='medium'){a=rnd(10,99);b=rnd(10,99);}else{a=rnd(100,500);b=rnd(100,500);}return{type:'num',cat:'add',diff,label:th.label,gameLabel:brainrotLabel(),text:`${a} + ${b} = ?`,answer:a+b,pts:ptsForQ('add',diff),hint:{type:'decompose',a,b},showMul:false,dir:'ltr'};}
-function genSub(diff,th){let a,b;if(diff==='easy'){a=rnd(5,20);b=rnd(1,a);}else if(diff==='medium'){a=rnd(20,99);b=rnd(1,a);}else{a=rnd(100,500);b=rnd(1,a);}return{type:'num',cat:'sub',diff,label:th.label,gameLabel:brainrotLabel(),text:`${a} - ${b} = ?`,answer:a-b,pts:ptsForQ('sub',diff),hint:{type:'cubes',total:a,remove:b},showMul:false,dir:'ltr'};}
-function genMul(diff,th){let a,b;if(diff==='easy'){a=rnd(2,5);b=rnd(1,10);}else if(diff==='medium'){a=rnd(3,9);b=rnd(2,10);}else{a=rnd(6,12);b=rnd(6,12);}const emoji=pick(th.items);return{type:'num',cat:'mul',diff,label:th.label,gameLabel:brainrotLabel(),text:`${a} × ${b} = ?`,answer:a*b,pts:ptsForQ('mul',diff),hint:{type:'groups',a,b,emoji},showMul:true,mulA:a,mulB:b,mulEmoji:emoji,dir:'ltr'};}
-function genDiv(diff,th){let b,q;if(diff==='easy'){b=rnd(2,5);q=rnd(1,5);}else if(diff==='medium'){b=rnd(2,9);q=rnd(2,9);}else{b=rnd(3,12);q=rnd(3,12);}const a=b*q;const emoji=pick(th.items);return{type:'num',cat:'div',diff,label:th.label,gameLabel:brainrotLabel(),text:`${a} ÷ ${b} = ?`,answer:q,pts:ptsForQ('div',diff),hint:{type:'groups',a:q,b,emoji},showMul:true,mulA:q,mulB:b,mulEmoji:emoji,dir:'ltr'};}
-function genWord(diff,th){const loot=pick(THEME_LOOT[th.name]||['פריטים']);th=Object.assign({},th,{loot});const bank=WORD_STORIES[diff]||WORD_STORIES.easy;let tried=0,story=null;while(tried<8){tried++;const tmpl=pick(bank);let nums={};if(diff==='easy'){nums={a:rnd(2,12),b:rnd(2,12)};}else if(diff==='medium'){nums={a:rnd(3,15),b:rnd(3,15),c:rnd(2,8)};}else{const c=rnd(2,5);const b=rnd(2,8);const a=c*rnd(2,4);nums={a,b,c};}try{story=tmpl(nums,th);if(!Number.isInteger(story.answer)||story.answer<=0)continue;break;}catch(e){continue;}}if(!story){const a=rnd(2,12),b=rnd(2,12);story={text:`ב${th.name} יש ${a} ${loot} ועוד ${b}. כמה יש בסך הכל?`,answer:a+b,op:'+',nums:[a,b],exampleAnswer:`יש ${a+b} ${loot}.`,hint:'חבר'};}return{type:'word',cat:'word',diff,label:th.label,gameLabel:brainrotLabel(),text:story.text,answer:story.answer,pts:ptsForQ('word',diff),nums4expr:story.nums||[],op4expr:story.op||'+',exampleAnswer:story.exampleAnswer||`${story.answer}`,multiStep:story.multiStep||false,steps:story.steps||[],hint:{type:'word',op:story.op,hint:story.hint,steps:story.steps},showMul:false,dir:'rtl'};}
-function genShapes(diff,th){const shapes=[{q:'כמה צלעות יש למשולש?',a:3},{q:'כמה פינות יש לריבוע?',a:4},{q:'כמה צלעות יש למלבן?',a:4},{q:'כמה פינות יש לעיגול?',a:0},{q:'כמה צלעות יש למחומש?',a:5},{q:'כמה צלעות יש למשושה?',a:6}];const s=pick(shapes);return{type:'num',cat:'shapes',diff,label:th.label,gameLabel:'',text:s.q,answer:s.a,pts:ptsForQ('shapes',diff),hint:{type:'text',msg:'💡 ספור את הקצוות!'},showMul:false,dir:'rtl'};}
-function genFrac(diff,th){const pairs=[[1,2],[1,4],[3,4],[1,3],[2,3]];const[n,d]=pick(pairs);const total=rnd(4,20)*d;const part=total*n/d;return{type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:`כמה זה ${n}/${d} מתוך ${total}?`,answer:part,pts:ptsForQ('fractions',diff),hint:{type:'text',msg:`💡 ${total}÷${d}=${total/d} לחלק. ×${n}=${part}`},showMul:false,dir:'rtl'};}
-
-// ══ LOAD QUESTION ══
-function loadQ(q){
-  if(!q)return;
-  qs.current=q;qs.attempts=0;qs.hintUsed=false;qs.done=false;
-  document.getElementById('qCatLbl').textContent=CAT_NAMES[q.cat]||q.cat;
-  document.getElementById('qScore').textContent=st.score;
-  const db=document.getElementById('qDiffBadge');db.className='lbadge '+(q.diff==='easy'?'easy':q.diff==='medium'?'med':'hard');db.textContent=q.diff==='easy'?'🌱 קל':q.diff==='medium'?'⚡ בינוני':'🔥 קשה';
-  document.getElementById('qPtsPreview').textContent=q.pts;
-  document.getElementById('qGameLabel').textContent=(q.label||'')+(q.gameLabel?' — '+q.gameLabel:'');
-  const dl=document.getElementById('dailyQLbl');if(qs.isDaily){dl.style.display='block';dl.textContent=`📅 שאלה יומית ${qs.isDailyIdx+1}/2`;}else dl.style.display='none';
-  const qt=document.getElementById('qTxt');qt.textContent=q.text;qt.style.direction=q.dir||'rtl';
-  for(let i=0;i<3;i++)document.getElementById('ad'+i).className='adot';
-  document.getElementById('hintBox').classList.remove('on');document.getElementById('fbBox').classList.remove('on');
-  document.getElementById('qBtns').style.display='flex';document.getElementById('nextBtns').style.display='none';document.getElementById('moreBtn').style.display='none';
-  const mv=document.getElementById('mulVis');if(q.showMul){mv.style.display='block';buildMulGroups(q.mulA,q.mulB,q.mulEmoji);buildMulTable(q.mulA,q.mulB);}else mv.style.display='none';
-  const na=document.getElementById('numAnsWrap'),wa=document.getElementById('wordAnsWrap'),ew=document.getElementById('exprWrap');
-  if(q.type==='word'){na.style.display='block';wa.style.display='block';ew.style.display='block';buildExpr(q.nums4expr||[],q.op4expr||'+');let existing=document.getElementById('multiStepBadge');if(existing)existing.remove();if(q.multiStep){const badge=document.createElement('div');badge.id='multiStepBadge';badge.className='multistep-badge';badge.innerHTML='🔗 שאלה רב-שלבית!';document.getElementById('qTxt').insertAdjacentElement('afterend',badge);}document.getElementById('wordInp').value='';document.getElementById('ansInp').value='';document.getElementById('ansInp').placeholder='תשובה סופית (מספר)';}
-  else{let existing=document.getElementById('multiStepBadge');if(existing)existing.remove();na.style.display='block';wa.style.display='none';ew.style.display='none';document.getElementById('ansInp').value='';document.getElementById('ansInp').placeholder='?';document.getElementById('ansInp').className='ans-inp';}
-  const sl=document.getElementById('streakLive');if(st.streak>=3){sl.style.display='inline-flex';const unameLive=(window._username||'').toLowerCase();const specialLive=SPECIAL_USERS[unameLive];if(specialLive?.streakDisplay)sl.innerHTML=specialLive.streakDisplay(st.streak);else sl.innerHTML=`🔥 <span id="streakLiveCnt">${st.streak}</span>`;}else sl.style.display='none';
-  startHintTimer(q);
-  const inp2=document.getElementById('ansInp');if(inp2)inp2.disabled=false;
-  const submitBtn2=document.querySelector('.bsubmit');if(submitBtn2)submitBtn2.disabled=false;
-  setTimeout(()=>document.getElementById('ansInp').focus(),200);
-}
-function buildMulGroups(a,b,emoji){const el=document.getElementById('mulGrps');el.innerHTML='';for(let i=0;i<Math.min(a,8);i++){const g=document.createElement('div');g.className='mg';for(let j=0;j<Math.min(b,10);j++){const it=document.createElement('div');it.className='mi';it.textContent=emoji;g.appendChild(it);}el.appendChild(g);}if(a>8){const m=document.createElement('div');m.style.cssText='color:var(--txt2);font-size:.8rem;align-self:center;';m.textContent=`+${a-8} עוד`;el.appendChild(m);}}
-function buildMulTable(a,b){const w=document.getElementById('mulTblWrap');let h='<table class="mul-table"><tr><td class="mth">×</td>';for(let j=1;j<=10;j++)h+=`<td class="${j===b?'mhl':'mth'}">${j}</td>`;h+='</tr>';for(let i=1;i<=10;i++){h+=`<tr><td class="${i===a?'mhl':'mth'}">${i}</td>`;for(let j=1;j<=10;j++)h+=`<td class="${i===a&&j===b?'mhl':''}">${i*j}</td>`;h+='</tr>';}h+='</table>';w.innerHTML=h;}
-let exprState={op:null};
-function buildExpr(nums4expr,op4expr){exprState={op:null};const inpA=document.getElementById('exprNumA'),inpB=document.getElementById('exprNumB');if(inpA)inpA.value='';if(inpB)inpB.value='';document.getElementById('exprOpDisplay').textContent='?';document.getElementById('exprOpDisplay').style.color='var(--txt2)';document.getElementById('exprResult').textContent='?';document.getElementById('exprResult').style.color='var(--txt2)';document.getElementById('exprFb').textContent='';['Plus','Minus','Times','Div'].forEach(n=>{const el=document.getElementById('op'+n);if(el)el.classList.remove('sel');});}
-function pickOp(op){exprState.op=op;const display=document.getElementById('exprOpDisplay');const colors={'+':'var(--a3)','-':'var(--a1)','×':'var(--a2)','÷':'var(--a4)'};display.textContent=op;display.style.color=colors[op]||'var(--a2)';const map={'+':'Plus','-':'Minus','×':'Times','÷':'Div'};['Plus','Minus','Times','Div'].forEach(n=>{document.getElementById('op'+n)?.classList.remove('sel');});document.getElementById('op'+(map[op]))?.classList.add('sel');updateExprDisp();}
-function clearExpr(){buildExpr([],null);}
-function updateExprDisp(){const inpA=document.getElementById('exprNumA'),inpB=document.getElementById('exprNumB');if(!inpA||!inpB)return;const a=parseFloat(inpA.value),b=parseFloat(inpB.value),op=exprState.op;const resEl=document.getElementById('exprResult'),fbEl=document.getElementById('exprFb');if(isNaN(a)||isNaN(b)||!op){resEl.textContent='?';resEl.style.color='var(--txt2)';fbEl.textContent='';return;}let res;if(op==='+')res=a+b;else if(op==='-')res=a-b;else if(op==='×')res=a*b;else if(op==='÷'&&b!==0)res=a/b;if(res===undefined||!Number.isInteger(res)){resEl.textContent='?';fbEl.textContent='';return;}resEl.textContent=res;const q=qs.current;if(q&&res===q.answer){resEl.style.color='var(--a3)';fbEl.textContent='✅ נכון!';fbEl.style.color='var(--a3)';}else{resEl.style.color='var(--txt2)';fbEl.textContent=a&&b?`= ${res}`:'';fbEl.style.color='var(--txt2)';}}
-function startHintTimer(q){qs.hintSecs=cfg.hintTime;const btn=document.getElementById('hintBtn');btn.disabled=true;if(qs.hintInterval)clearInterval(qs.hintInterval);updateHintLbl();qs.hintInterval=setInterval(()=>{qs.hintSecs--;updateHintLbl();if(qs.hintSecs<=0){clearInterval(qs.hintInterval);btn.disabled=false;document.getElementById('hintTmr').textContent='זמין!';}},1000);}
-function updateHintLbl(){const m=Math.floor(qs.hintSecs/60),s=qs.hintSecs%60;document.getElementById('hintTmr').textContent=`${m}:${s.toString().padStart(2,'0')}`;}
-function useHint(){if(qs.hintUsed)return;qs.hintUsed=true;addPts(-cfg.ptsHint);const q=qs.current;const h=q.hint||{};const hb=document.getElementById('hintBox');const hc=document.getElementById('hintContent');let html='';if(h.type==='cubes'){html+=`<p style="margin-bottom:7px">🧊 ${h.total} קוביות, מסיר ${h.remove}...</p><div class="cubes-row">`;for(let i=1;i<=Math.min(h.total,30);i++)html+=`<div class="cube ${i>h.total-h.remove?'cr':'cf'}">${i}</div>`;if(h.total>30)html+=`<span style="color:var(--txt2);font-size:.75rem">...עד ${h.total}</span>`;html+=`</div><p>${h.total} - ${h.remove} = <strong style="color:var(--a3)">${h.total-h.remove}</strong></p>`;}else if(h.type==='groups'){html+=`<p style="margin-bottom:7px">👉 ${h.a} קבוצות של ${h.b} ${h.emoji}</p><div class="mulvis-row">`;for(let i=0;i<Math.min(h.a,6);i++){html+='<div class="mg">';for(let j=0;j<Math.min(h.b,8);j++)html+=`<div class="mi">${h.emoji}</div>`;html+='</div>';}html+=`</div><p style="font-size:.82rem;direction:ltr">${h.a} × ${h.b} = <strong style="color:var(--a3)">${h.a*h.b}</strong></p>`;}else if(h.type==='decompose'){const{a,b}=h;const aT=Math.floor(a/10)*10,aU=a%10,bT=Math.floor(b/10)*10,bU=b%10;html+=`<p style="white-space:pre-line">📦 פרק לעשרות:\n${a}=${aT}+${aU}\n${b}=${bT}+${bU}\nעשרות: ${aT+bT}\nאחדות: ${aU+bU}\nסה"כ: <strong style="color:var(--a3)">${a+b}</strong></p>`;}else if(h.type==='word'){const steps=h.steps||[];html+=`<p>"ביחד"→➕ | "נשארו"→➖ | "לכל אחד"→✖️ | "חלוקה"→➗</p>`;if(h.hint)html+=`<p style="margin-top:6px;color:var(--a2)">💡 ${h.hint}</p>`;if(steps.length){html+=`<p style="margin-top:8px;font-weight:700;color:var(--a4)">📋 שלבים:</p>`;steps.forEach(s=>html+=`<p>→ ${s}</p>`);}}else html+=`<p>${h.msg||'💡 חשוב טוב!'}</p>`;hc.innerHTML=html;hb.classList.add('on');document.getElementById('hintBtn').disabled=true;}
-
-// ══ SUBMIT ══
-function submitAns(){const q=qs.current;if(!q)return;if(qs.done)return;const ansInpEl=document.getElementById('ansInp');if(ansInpEl&&ansInpEl.disabled)return;const userAns=parseInt(document.getElementById('ansInp').value);if(isNaN(userAns)){showToast('✏️ הכנס מספר!');return;}const ok=userAns===q.answer;const inp=document.getElementById('ansInp');if(ok){inp.classList.add('ok');inp.classList.remove('bad');document.getElementById('ad'+qs.attempts).classList.add('ok');const pts=Math.max(q.pts-(qs.hintUsed?cfg.ptsHint:0)-qs.attempts*2,1);addPts(pts);showPtsPop(pts);handleStreak(true);if(q.type==='word'){const wt=document.getElementById('wordInp').value.trim();showWordFb(wt,q,userAns);}else{showFb('ok',`🎉 ${pick(['מדהים!','אלוף!','גאון!','נפלא!','💯'])}`,`${q.answer} — נכון מאוד!`);}recordHistory(q,userAns,true);spawnConf();endQ();}else{qs.attempts++;inp.classList.add('bad');document.getElementById('ad'+(qs.attempts-1)).classList.add('used');addPts(-cfg.ptsWrong);inp.value='';setTimeout(()=>inp.classList.remove('bad'),400);handleStreak(false);if(qs.attempts>=cfg.maxAttempts){showFb('bad','❌ הפעם לא...',buildExpl(q));recordHistory(q,userAns,false);endQ();}else{showFb('bad',`😅 לא נכון! עוד ${cfg.maxAttempts-qs.attempts} ניסיון/ות`,'');setTimeout(()=>{document.getElementById('fbBox').classList.remove('on');inp.focus();},1600);}}}
-function showWordFb(wt,q,num){const example=q.exampleAnswer||`${q.answer}`;if(!wt){addPts(-3);showFb('part','✅ נכון מספרית אך...',`📝 לא כתבת משפט!\n\n🌟 דוגמה: "${example}"`);return;}let score=0,issues=[],praises=[];if(wt.includes(String(q.answer))){score+=40;praises.push('כוללת את המספר הנכון');}else issues.push(`חסר המספר ${q.answer}`);if(wt.trim().split(/\s+/).length>=4){score+=25;praises.push('משפט מלא');}else issues.push('המשפט קצר מדי');const ctxWords=['כל','יש','קיבל','נשאר','בסך','ביחד'];if(ctxWords.some(w=>wt.includes(w))){score+=20;praises.push('יש הקשר לשאלה');}else issues.push('התייחס לנושא השאלה');if(wt.trim().match(/[.!?]$/)){score+=15;praises.push('משפט מסודר');}else issues.push('שכחת נקודה בסוף');score=Math.min(score,100);let ptAdj=0;if(score<40)ptAdj=-4;else if(score<65)ptAdj=-2;else if(score>=90)ptAdj=2;if(ptAdj!==0)addPts(ptAdj);const barColor=score>=80?'var(--a3)':score>=50?'var(--a2)':'var(--a1)';const qualityBar=`<div class="quality-bar"><div class="quality-label"><span>איכות</span><span style="color:${barColor}">${score}/100</span></div><div class="quality-outer"><div class="quality-inner" style="width:${score}%;background:${barColor}"></div></div></div>`;if(score>=80)showFb('ok',`🌟 תשובה מצוינת! (${score}/100)`,`${praises.map(p=>`✅ ${p}`).join('<br>')}${qualityBar}`);else if(score>=50)showFb('part',`✅ בסדר, אפשר לשפר (${score}/100)`,`${issues.map(i=>`⚠️ ${i}`).join('<br>')}<br><br>🌟 דוגמה: "${example}"${qualityBar}`);else showFb('part',`📝 תשובה חלשה (${score}/100)`,`${issues.map(i=>`❌ ${i}`).join('<br>')}<br><br>🌟 דוגמה: "${example}"${qualityBar}`);}
-function buildExpl(q){if(q.cat==='word'){let s=`התשובה: <strong>${q.answer}</strong>`;if(q.steps?.length)s+=`<br><br>${q.steps.map(st=>`→ ${st}`).join('<br>')}`;s+=`<br><br>🌟 "${q.exampleAnswer||q.answer}"`;return s;}if(q.cat==='mul')return`התשובה: ${q.answer}<br>${q.mulA} × ${q.mulB} = ${q.answer}`;if(q.cat==='div')return`התשובה: ${q.answer}<br>${q.mulB} × ${q.answer} = ${q.mulB*q.answer}`;return`התשובה: ${q.answer}`;}
-function showFb(type,title,txt){const b=document.getElementById('fbBox');b.className='fb-box on fb-'+type;document.getElementById('fbTitle').textContent=title;document.getElementById('fbText').innerHTML=(txt||'').replace(/\n/g,'<br>');}
-function endQ(){qs.done=true;const inp=document.getElementById('ansInp');if(inp){inp.disabled=true;inp.blur();}const submitBtn=document.querySelector('.bsubmit');if(submitBtn)submitBtn.disabled=true;document.getElementById('qBtns').style.display='none';document.getElementById('nextBtns').style.display='flex';if(qs.hintInterval){clearInterval(qs.hintInterval);qs.hintInterval=null;}document.getElementById('moreBtn').style.display=qs.idx>=qs.pool.length-1?'inline-flex':'none';}
-function nextQ(){if(qs.isDaily){qs.isDailyIdx++;if(qs.isDailyIdx>=2){finishDaily();return;}qs.idx++;if(qs.idx<qs.pool.length)loadQ(qs.pool[qs.idx]);return;}qs.idx++;if(qs.idx>=qs.pool.length){genMore();return;}loadQ(qs.pool[qs.idx]);}
-function skipQ(){addPts(-1);nextQ();}
-function genMore(){const np=genPool(qs.cat,qs.diff,10);qs.pool=[...qs.pool,...np];nextQ();}
-function exitToHome(){if(qs.hintInterval)clearInterval(qs.hintInterval);show('home');}
-
-// ══ STREAK ══
-function handleStreak(correct){if(correct){st.streak++;if(st.streak>st.maxStreak)st.maxStreak=st.streak;let bonus=0,msg='';if(st.streak===3){bonus=cfg.streakBonus3;msg=`🔥 רצף 3! +${bonus}`;}else if(st.streak===5){bonus=cfg.streakBonus5;msg=`⚡ רצף 5! +${bonus}`;}else if(st.streak===10||st.streak%10===0){bonus=cfg.streakBonus10;msg=`💥 רצף ${st.streak}!! +${bonus}`;}if(bonus>0){addPts(bonus);const sf=document.getElementById('strkFire');document.getElementById('sfVal').textContent=`🔥 ${st.streak}`;document.getElementById('sfLbl').textContent=msg;sf.classList.add('show');setTimeout(()=>sf.classList.remove('show'),2000);}const slEl=document.getElementById('streakLive');if(slEl)slEl.style.display='inline-flex';const unameLiveS=(window._username||'').toLowerCase();const specialLiveS=SPECIAL_USERS[unameLiveS];if(specialLiveS?.streakDisplay){if(slEl)slEl.innerHTML=specialLiveS.streakDisplay(st.streak);}else{const streakLiveCntEl=document.getElementById('streakLiveCnt');if(streakLiveCntEl)streakLiveCntEl.textContent=st.streak;}}else{st.streak=0;document.getElementById('streakLive').style.display='none';}save();}
-
-// ══ HISTORY ══
-function recordHistory(q,userAns,correct){st.totalSolved++;if(correct)st.correctCount++;st.history.push({q:q.text,answer:q.answer,userAns,correct,cat:q.cat,diff:q.diff,ts:Date.now(),qObj:q});if(st.history.length>200)st.history.shift();save();}
-function openHistory(){show('history-scr');renderHistory('all');const total=st.history.length,ok=st.history.filter(h=>h.correct).length;document.getElementById('histStats').innerHTML=`<div style="background:var(--card);border-radius:13px;padding:12px;text-align:center;border:1px solid rgba(255,255,255,.07)"><div style="font-size:1.6rem;font-weight:900;color:var(--a2)">${total}</div><div style="font-size:.77rem;color:var(--txt2)">סה"כ</div></div><div style="background:var(--card);border-radius:13px;padding:12px;text-align:center;border:1px solid rgba(46,213,115,.2)"><div style="font-size:1.6rem;font-weight:900;color:var(--a3)">${ok}</div><div style="font-size:.77rem;color:var(--txt2)">נכון</div></div><div style="background:var(--card);border-radius:13px;padding:12px;text-align:center;border:1px solid rgba(255,71,87,.2)"><div style="font-size:1.6rem;font-weight:900;color:var(--a1)">${total-ok}</div><div style="font-size:.77rem;color:var(--txt2)">שגוי</div></div>`;}
-function filterHist(type){['all','ok','bad'].forEach(t=>document.getElementById('hf'+t.charAt(0).toUpperCase()+t.slice(1)).style.background=t===type?'rgba(30,144,255,.2)':'rgba(255,255,255,.06)');renderHistory(type);}
-function renderHistory(filter){const list=document.getElementById('histList');list.innerHTML='';const items=[...st.history].reverse().slice(0,50);const filtered=filter==='all'?items:items.filter(h=>filter==='ok'?h.correct:!h.correct);if(filtered.length===0){list.innerHTML='<div style="color:var(--txt2);text-align:center;padding:20px">אין פריטים להציג</div>';return;}const catNames={add:'חיבור',sub:'חיסור',mul:'כפל',div:'חילוק',word:'מילוליות',shapes:'גיאומטריה',fractions:'שברים'};filtered.forEach(h=>{const d=new Date(h.ts);const timeStr=`${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;const el=document.createElement('div');el.className='hist-entry';el.innerHTML=`<div class="hist-icon">${h.correct?'✅':'❌'}</div><div class="hist-info"><div class="hist-q">${h.q}</div><div class="hist-meta">${catNames[h.cat]||h.cat} • ${h.diff==='easy'?'קל':h.diff==='medium'?'בינוני':'קשה'} • ${timeStr}</div>${!h.correct?`<div style="font-size:.78rem;color:var(--a1)">תשובה נכונה: ${h.answer}</div>`:''}</div><span class="hist-status ${h.correct?'hs-ok':'hs-bad'}">${h.correct?'✓':'✗'}</span>`;el.onclick=()=>retryFromHistory(h);list.appendChild(el);});}
-function retryFromHistory(h){if(!h.qObj)return;qs.pool=[h.qObj];qs.idx=0;qs.isDaily=false;qs.isMistakes=false;qs.isExam=false;qs.cat=h.cat;qs.diff=h.diff;show('q-scr');loadQ(h.qObj);}
-
-// ══ MISTAKES ══
-function openMistakes(){show('mistakes-scr');const list=document.getElementById('mistakesList');list.innerHTML='';const mistakes=st.history.filter(h=>!h.correct&&h.qObj).slice(-20).reverse();document.getElementById('practiceMistakesBtn').style.display=mistakes.length>0?'block':'none';if(mistakes.length===0){list.innerHTML='<div style="color:var(--txt2);text-align:center;padding:24px">🌟 אין טעויות! כל הכבוד!</div>';return;}const catNames={add:'חיבור',sub:'חיסור',mul:'כפל',div:'חילוק',word:'מילוליות'};mistakes.forEach(h=>{const el=document.createElement('div');el.className='hist-entry';el.innerHTML=`<div class="hist-icon">🔄</div><div class="hist-info"><div class="hist-q">${h.q}</div><div class="hist-meta">${catNames[h.cat]||h.cat} • תשובה: <strong style="color:var(--a3)">${h.answer}</strong></div></div><button style="padding:6px 12px;background:rgba(255,159,67,.2);border:1px solid var(--streak);color:var(--streak);border-radius:8px;cursor:pointer;font-family:'Rubik',sans-serif;font-size:.8rem;white-space:nowrap;">תרגל</button>`;el.querySelector('button').onclick=(e)=>{e.stopPropagation();retryFromHistory(h);};list.appendChild(el);});}
-function startMistakesPractice(){const mistakes=st.history.filter(h=>!h.correct&&h.qObj).slice(-20);if(mistakes.length===0){showToast('אין טעויות לתרגל!');return;}qs.pool=mistakes.map(h=>h.qObj);qs.idx=0;qs.isMistakes=true;qs.isDaily=false;qs.isExam=false;qs.cat=qs.pool[0].cat;qs.diff=qs.pool[0].diff;show('q-scr');loadQ(qs.pool[0]);}
-
-// ══ LEARN ══
-const LEARN_TOPICS=[{id:'division',n:'חילוק',icon:'➗',desc:'לחלק שווה בשווה'},{id:'shapes',n:'גיאומטריה',icon:'📐',desc:'צורות, זוויות, צלעות'},{id:'fractions',n:'שברים',icon:'½',desc:'חלקים של שלם'},{id:'measurement',n:'מדידה',icon:'📏',desc:'אורך, משקל, זמן'}];
-function openLearn(){const c=document.getElementById('learnTopics');c.innerHTML='';LEARN_TOPICS.forEach(t=>{const done=st.learnedTopics.includes(t.id);const el=document.createElement('div');el.className='ltopic'+(done?' ltdone':'');el.innerHTML=`<div class="lt-icon">${t.icon}</div><div class="lt-info"><div class="lt-name">${t.n}</div><div class="lt-desc">${t.desc}</div></div><span class="lt-badge ${done?'ltdone-b':'ltnew'}">${done?'✅ למדת':'🆕 חדש'}</span>`;el.onclick=()=>openLesson(t.id);c.appendChild(el);});show('learn-scr');}
-const LESSONS={division:{title:'➗ חילוק',html:`<div class="lesson-title">➗ חילוק!</div><div class="lsec"><h3>🤔 מה זה חילוק?</h3><p>לחלק דברים בשווה!</p><div class="lexample">🍕🍕🍕🍕🍕🍕 ÷ 2 = 🍕🍕🍕</div></div><div class="lsec"><h3>💡 הקשר לכפל</h3><div class="lexample">3 × 4 = 12 ↔ 12 ÷ 4 = 3</div></div><div class="lsec"><h3>🎯 דוגמאות</h3><div class="lstep"><div class="lstepn">1</div><div>10 ÷ 2 = <strong>5</strong></div></div><div class="lstep"><div class="lstepn">2</div><div>15 ÷ 3 = <strong>5</strong></div></div><div class="lstep"><div class="lstepn">3</div><div>24 ÷ 6 = <strong>4</strong></div></div></div>`},shapes:{title:'📐 גיאומטריה',html:`<div class="lesson-title">📐 צורות</div><div class="lsec"><h3>🔺 משולש</h3><p>3 צלעות, 3 פינות</p></div><div class="lsec"><h3>⬜ ריבוע</h3><p>4 צלעות שוות</p></div><div class="lsec"><h3>▭ מלבן</h3><p>4 צלעות, 2 זוגות</p></div><div class="lsec"><h3>⭕ עיגול</h3><p>אין פינות!</p></div><div class="lsec"><div class="lexample rtl">מחומש=5, משושה=6</div></div>`},fractions:{title:'½ שברים',html:`<div class="lesson-title">½ שברים</div><div class="lsec"><h3>🍕 מה זה שבר?</h3><div class="lexample">1/2 = חצי | 1/4 = רבע</div></div><div class="lsec"><h3>🎯 חישוב</h3><div class="lstep"><div class="lstepn">1</div><div>1/2 מ-8: 8÷2=<strong>4</strong></div></div><div class="lstep"><div class="lstepn">2</div><div>3/4 מ-12: (12÷4)×3=<strong>9</strong></div></div></div>`},measurement:{title:'📏 מדידה',html:`<div class="lesson-title">📏 מדידה</div><div class="lsec"><h3>📏 אורך</h3><div class="lstep"><div class="lstepn">📐</div><div>1מ'=100ס"מ | 1ק"מ=1000מ'</div></div></div><div class="lsec"><h3>⚖️ משקל</h3><div class="lstep"><div class="lstepn">⚖️</div><div>1ק"ג=1000גרם</div></div></div><div class="lsec"><h3>⏰ זמן</h3><div class="lstep"><div class="lstepn">⏰</div><div>שעה=60דקות | דקה=60שניות</div></div></div>`}};
-function openLesson(id){const lesson=LESSONS[id];if(!lesson)return;const c=document.getElementById('lessonContent');c.innerHTML=lesson.html;const btn=document.createElement('button');btn.className='lgo';btn.textContent='✅ הבנתי! פתח לתרגול';btn.onclick=()=>{if(!st.learnedTopics.includes(id)){st.learnedTopics.push(id);save();addPts(15);showPtsPop(15);showToast(`🎉 +15! ${lesson.title} נפתח!`);}show('home');setTimeout(updateHome,100);};c.appendChild(btn);show('lesson-scr');}
-
-// ══ EXAM ══
-const EXAM_CATS=[{id:'add',n:'➕ חיבור'},{id:'sub',n:'➖ חיסור'},{id:'mul',n:'✖️ כפל'},{id:'div',n:'➗ חילוק',needs:'division'},{id:'word',n:'📖 מילוליות'},{id:'shapes',n:'📐 גיאומטריה',needs:'shapes'},{id:'fractions',n:'½ שברים',needs:'fractions'}];
-function openExamPre(){const gc=window.GRADE_CONFIG;const available=gc?.availableExamTopics||['add','sub','mul','word'];const g=document.getElementById('examTopicsGrid');g.innerHTML='';EXAM_CATS.forEach(cat=>{if(!available.includes(cat.id))return;const locked=cat.needs&&!st.learnedTopics.includes(cat.needs);const sel=st.examTopics.includes(cat.id);const b=document.createElement('button');b.className='etopic-btn'+(sel&&!locked?' sel':'')+(locked?' locked':'');b.textContent=cat.n+(locked?' 🔒':'');b.disabled=locked;b.onclick=()=>{if(locked)return;const i=st.examTopics.indexOf(cat.id);if(i>=0)st.examTopics.splice(i,1);else st.examTopics.push(cat.id);save();openExamPre();};g.appendChild(b);});['easy','medium','hard','mix'].forEach(d=>{const btn=document.getElementById('exD'+{easy:'e',medium:'m',hard:'h',mix:'x'}[d]);if(btn)btn.style.opacity=st.examDiff===d?1:.4;});document.getElementById('examPreInfo').textContent=`נושאים: ${st.examTopics.length} | 10 שאלות`;show('exam-pre-scr');}
-function setExamDiff(d){st.examDiff=d;save();openExamPre();}
-function startExam(){if(st.examTopics.length===0){showToast('בחר לפחות נושא אחד!');return;}qs.isExam=true;qs.isDaily=false;qs.isMistakes=false;qs.examPool=[];for(let i=0;i<10;i++){const cat=pick(st.examTopics);const diff=st.examDiff==='mix'?pick(['easy','medium','hard']):st.examDiff;qs.examPool.push(genQ(cat,diff));}qs.examIdx=0;qs.examScore=0;qs.examSecs=600;show('exam-scr');document.getElementById('examResults').style.display='none';document.getElementById('examQArea').style.display='block';loadExamQ();startExamTimer();}
-function loadExamQ(){if(qs.examIdx>=qs.examPool.length){finishExam();return;}const q=qs.examPool[qs.examIdx];qs.current=q;qs.attempts=0;qs.hintUsed=false;qs.done=false;document.getElementById('examProg').textContent=`שאלה ${qs.examIdx+1}/10`;document.getElementById('examBar').style.width=((qs.examIdx+1)/10*100)+'%';const area=document.getElementById('examQArea');area.innerHTML=`<div class="gcard"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><span class="lbadge ${q.diff==='easy'?'easy':q.diff==='medium'?'med':'hard'}">${q.diff==='easy'?'🌱 קל':q.diff==='medium'?'⚡ בינוני':'🔥 קשה'}</span><span class="pts-badge">+${q.pts}</span></div><div style="font-size:.78rem;color:var(--a6);text-align:center;margin-bottom:5px">${q.label||''}</div><div class="qtxt" style="direction:${q.dir||'rtl'}">${q.text}</div>${q.showMul?`<div id="emv" style="margin-bottom:10px"></div>`:''}<div class="ans-row"><input type="number" id="eInp" class="ans-inp" placeholder="?" onkeydown="if(event.key==='Enter')submitExamAns()"><div class="ans-eq">=</div></div><div class="atts" id="eAtts"><span style="color:var(--txt2);font-size:.8rem">ניסיונות:</span><div class="adot" id="ead0"></div><div class="adot" id="ead1"></div><div class="adot" id="ead2"></div></div><div class="fb-box" id="eFb"></div><div class="qbtns" id="eBtns"><button class="qbtn bsubmit" onclick="submitExamAns()">✅ בדוק</button></div><div class="qbtns" id="eNext" style="display:none"><button class="qbtn bnext" onclick="nextExamQ()">➡️ הבא</button></div></div>`;if(q.showMul){const emv=document.getElementById('emv');if(!emv)return;let h='<div class="mulvis-row">';for(let i=0;i<Math.min(q.mulA,6);i++){h+='<div class="mg">';for(let j=0;j<Math.min(q.mulB,8);j++)h+=`<div class="mi">${q.mulEmoji}</div>`;h+='</div>';}h+='</div>';emv.innerHTML=h;}setTimeout(()=>{const e=document.getElementById('eInp');if(e)e.focus();},150);}
-function submitExamAns(){const q=qs.current;if(!q)return;if(qs.done)return;const inp=document.getElementById('eInp');if(inp&&inp.disabled)return;const ua=parseInt(inp.value);if(isNaN(ua))return;const ok=ua===q.answer;if(ok){inp.classList.add('ok');document.getElementById('ead'+qs.attempts).classList.add('ok');qs.examScore+=q.pts;recordHistory(q,ua,true);const fb=document.getElementById('eFb');fb.className='fb-box on fb-ok';fb.innerHTML='<div class="fb-title">🎉 נכון!</div>';qs.done=true;if(inp){inp.disabled=true;inp.blur();}document.getElementById('eBtns').style.display='none';document.getElementById('eNext').style.display='flex';}else{qs.attempts++;document.getElementById('ead'+(qs.attempts-1)).classList.add('used');inp.classList.add('bad');inp.value='';setTimeout(()=>inp.classList.remove('bad'),400);if(qs.attempts>=3){recordHistory(q,ua,false);const fb=document.getElementById('eFb');fb.className='fb-box on fb-bad';fb.innerHTML=`<div class="fb-title">❌ לא הצלחת</div><div>תשובה: <strong>${q.answer}</strong></div>`;qs.done=true;if(inp){inp.disabled=true;inp.blur();}document.getElementById('eBtns').style.display='none';document.getElementById('eNext').style.display='flex';}}}
-function nextExamQ(){qs.examIdx++;loadExamQ();}
-function startExamTimer(){qs.examTimer=setInterval(()=>{qs.examSecs--;const m=Math.floor(qs.examSecs/60),s=qs.examSecs%60;document.getElementById('examTmr').textContent=`⏱️ ${m}:${s.toString().padStart(2,'0')}`;if(qs.examSecs<=0){clearInterval(qs.examTimer);finishExam();}},1000);}
-function finishExam(){if(qs.examTimer)clearInterval(qs.examTimer);const total=qs.examPool.reduce((s,q)=>s+q.pts,0);const pct=Math.round(qs.examScore/total*100);let grade,msg;if(pct>=90){grade='A+ 🏆';msg='מדהים! גאון מתמטיקה!';}else if(pct>=75){grade='A 🌟';msg='מצוין מאוד!';}else if(pct>=60){grade='B ⚡';msg='טוב! אפשר לשפר!';}else if(pct>=40){grade='C 📚';msg='עוד קצת תרגול!';}else{grade='D 😊';msg='תלמד שוב ותנסה!';}addPts(Math.round(qs.examScore/10));document.getElementById('examQArea').style.display='none';const r=document.getElementById('examResults');r.style.display='block';r.innerHTML=`<div class="gcard" style="text-align:center"><div style="font-size:3rem;margin-bottom:8px">${pct>=75?'🏆':pct>=50?'⭐':'📚'}</div><div style="font-family:'Fredoka',sans-serif;font-size:2.5rem;color:var(--a2)">${grade}</div><div style="font-size:1rem;margin:10px 0">${msg}</div><div style="font-size:.9rem;color:var(--txt2)">${qs.examScore} / ${total} (${pct}%)</div><button class="lgo" style="margin-top:18px" onclick="show('home')">→ חזרה לבית</button></div>`;if(pct>=75)spawnConf(30);}
-
-// ══ DAILY ══
-function startDaily(){if(st.dailyDone){showToast('✅ כבר השלמת את המשימה היומית!');return;}const gc=window.GRADE_CONFIG;const available=(gc?.availableCategories||['add','sub','mul']).filter(c=>['add','sub','mul'].includes(c));const cats=available.length>0?available:['add','sub'];qs.pool=[genQ(pick(cats),'medium'),genQ(pick(cats),'medium')];qs.idx=0;qs.isDaily=true;qs.isDailyIdx=0;qs.isMistakes=false;qs.isExam=false;qs.cat=qs.pool[0].cat;show('q-scr');loadQ(qs.pool[0]);}
-function finishDaily(){st.dailyDone=true;save();addPts(20);showPtsPop(20);spawnConf(25);showToast('🎉 משימה יומית הושלמה! +20 בונוס!');setTimeout(()=>show('home'),2000);}
-
-// ══ SETTINGS ══
-let gateA,gateB;
-function openSettings(){const uname2=(window._username||'').toLowerCase();const isSpecial=!!SPECIAL_USERS[uname2];document.getElementById('settingsTopTabs').style.display=isSpecial?'flex':'none';const opts=[()=>{const n=pick([4,9,16,25,36,49,64]);gateA=n;gateB=Math.sqrt(n);return`√${n} = ?`},()=>{const a=rnd(20,99),b=rnd(2,9),r=a%b;gateA=a;gateB=r;return`שארית של ${a} ÷ ${b} = ?`},()=>{const a=rnd(11,25),b=rnd(11,25);gateA=a*b;gateB=a*b;return`${a} × ${b} = ?`}];const gen=pick(opts);const q=gen();document.getElementById('pgateQ').textContent=q;document.getElementById('pgateInp').value='';document.getElementById('pgateErr').style.display='none';switchSettingsTab('parents');document.getElementById('setPtsEasy').value=cfg.ptsEasy;document.getElementById('setPtsMed').value=cfg.ptsMed;document.getElementById('setPtsHard').value=cfg.ptsHard;document.getElementById('setPtsWordBonus').value=cfg.ptsWordBonus;document.getElementById('setPtsWrong').value=cfg.ptsWrong;document.getElementById('setPtsHint').value=cfg.ptsHint;document.getElementById('setMaxAttempts').value=cfg.maxAttempts;document.getElementById('setHintTime').value=cfg.hintTime;document.getElementById('setStreakBonus3').value=cfg.streakBonus3;document.getElementById('setStreakBonus5').value=cfg.streakBonus5;document.getElementById('setStreakBonus10').value=cfg.streakBonus10;const dn=document.getElementById('newDisplayName');if(dn)dn.placeholder=window._displayName||'שם חדש';const sg=document.getElementById('setGrade');if(sg&&window._grade)sg.value=window._grade;
-  // Populate new profile fields
-  if(window._gender&&window.selectGender)window.selectGender('set',window._gender);
-  const emailEl=document.getElementById('setContactEmail');if(emailEl&&window._contactEmail)emailEl.value=window._contactEmail;
-  show('settings-scr');}
-
-// ── Terms modal ──
-function showTermsModal(){const m=document.getElementById('termsModal');if(m)m.style.display='flex';}
-function closeTermsModal(){const m=document.getElementById('termsModal');if(m)m.style.display='none';}
-function toggleRegTerms(){const row=document.getElementById('regTermsRow');if(row)row.classList.toggle('accepted');}
-
-// ── Profile fields helpers (used by profile-fields.js) ──
-window.selectGender=function(idPrefix,value){const picker=document.getElementById(idPrefix+'GenderPicker');if(!picker)return;picker.querySelectorAll('.gender-btn').forEach(btn=>{const isSel=btn.dataset.value===value;btn.classList.toggle('selected',isSel);btn.setAttribute('aria-pressed',isSel);});};
-window.getSelectedGender=function(idPrefix){const picker=document.getElementById(idPrefix+'GenderPicker');if(!picker)return'';const sel=picker.querySelector('.gender-btn.selected');return sel?sel.dataset.value:'';};
-window.fbSaveProfileSettings=async function(){if(!window._fbUser)return;const gender=window.getSelectedGender('set');const emailEl=document.getElementById('setContactEmail');const email=emailEl?emailEl.value.trim():'';const err=document.getElementById('profileFieldsErr');if(err)err.style.display='none';if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){if(err){err.textContent='כתובת מייל לא תקינה';err.style.display='block';}return;}try{const{db:dbInst,doc:docFn,updateDoc:updDoc}=window._fb;const update={};if(gender){update.gender=gender;window._gender=gender;}if(email){update.contactEmail=email.toLowerCase();window._contactEmail=email.toLowerCase();}if(Object.keys(update).length>0)await updDoc(docFn(dbInst,'users',window._fbUser.uid),update);
-if(email&&window._fbUser){
-  console.log('Current Firebase Auth email:', window._fbUser.email);
-  console.log('Trying to update to:', email.toLowerCase());
-  try{
-    const{updateEmail}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
-    await updateEmail(window._fbUser,email.toLowerCase());
-    console.log('✅ updateEmail succeeded!');
-  }catch(e){
-    console.log('❌ updateEmail error code:', e.code);
-    console.log('❌ updateEmail error message:', e.message);
-    if(e.code==='auth/requires-recent-login'){
-      const pass=prompt('כדי לעדכן מייל, הכנס סיסמה:');
-      if(pass){
-        try{
-          const{reauthenticateWithCredential,EmailAuthProvider,updateEmail:ue}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
-          const cred=EmailAuthProvider.credential(window._fbUser.email,pass);
-          await reauthenticateWithCredential(window._fbUser,cred);
-          await ue(window._fbUser,email.toLowerCase());
-          console.log('✅ updateEmail after reauth succeeded!');
-        }catch(e2){
-          console.log('❌ reauth error:', e2.code, e2.message);
-        }
-      }
-}
-  }
-}
-showToast('✅ פרטים עודכנו!');}catch(e){if(err){err.textContent='שגיאה בשמירה';err.style.display='block';}};};
-function checkGate(){const v=parseInt(document.getElementById('pgateInp').value);if(v===gateB){document.getElementById('pgateWrap').style.display='none';document.getElementById('settingsContent').style.display='block';}else{document.getElementById('pgateErr').style.display='block';document.getElementById('pgateInp').value='';document.getElementById('pgateInp').focus();}}
-function saveSettings(){cfg.ptsEasy=parseInt(document.getElementById('setPtsEasy').value)||5;cfg.ptsMed=parseInt(document.getElementById('setPtsMed').value)||10;cfg.ptsHard=parseInt(document.getElementById('setPtsHard').value)||18;cfg.ptsWordBonus=parseInt(document.getElementById('setPtsWordBonus').value)||8;cfg.ptsWrong=parseInt(document.getElementById('setPtsWrong').value)||1;cfg.ptsHint=parseInt(document.getElementById('setPtsHint').value)||2;cfg.maxAttempts=parseInt(document.getElementById('setMaxAttempts').value)||3;cfg.hintTime=parseInt(document.getElementById('setHintTime').value)||180;cfg.streakBonus3=parseInt(document.getElementById('setStreakBonus3').value)||5;cfg.streakBonus5=parseInt(document.getElementById('setStreakBonus5').value)||10;cfg.streakBonus10=parseInt(document.getElementById('setStreakBonus10').value)||20;save();showToast('💾 הגדרות נשמרו!');show('home');}
-function clearHistory(){if(confirm('בטוח למחוק?')){st.history=[];st.totalSolved=0;st.correctCount=0;save();showToast('🗑️ היסטוריה נמחקה');}}
-function resetAll(){if(confirm('בטוח לאפס הכל?')){st.score=0;st.level=0;st.xp=0;st.streak=0;st.history=[];st.learnedTopics=[];st.totalSolved=0;st.correctCount=0;save();showToast('🔄 הכל אופס');show('home');}}
-
-// ══ POINTS & LEVELS ══
-function addPts(n){st.score=Math.max(0,st.score+n);st.xp=Math.max(0,st.xp+n);const lv=LEVELS[Math.min(st.level,LEVELS.length-1)];if(st.xp>=lv.xp&&st.level<LEVELS.length-1){st.xp-=lv.xp;st.level++;save();showLvup();}else save();const el=document.getElementById('qScore');if(el)el.textContent=st.score;}
-function showPtsPop(n){const p=document.getElementById('ptsPop'),v=document.getElementById('ptsVal');v.textContent=(n>0?'+':'')+n;v.style.color=n>0?'var(--a2)':'var(--a1)';p.classList.add('on');setTimeout(()=>p.classList.remove('on'),1300);}
-function showLvup(){const lv=LEVELS[Math.min(st.level,LEVELS.length-1)];document.getElementById('lvupIcon').textContent=lv.e;document.getElementById('lvupTitle').textContent=`עלית לרמה ${st.level+1}! ${lv.e}`;document.getElementById('lvupSub').textContent=`עכשיו אתה: ${lv.n}! 🎉`;document.getElementById('lvupOv').classList.add('on');spawnConf(40);}
-function closeLvup(){document.getElementById('lvupOv').classList.remove('on');}
-function spawnConf(n=20){const cols=['#ffd32a','#ff4757','#2ed573','#1e90ff','#9b59b6','#ff6348','#ff9f43'];for(let i=0;i<n;i++){const p=document.createElement('div');p.className='cf-p';p.style.cssText=`left:${rnd(10,90)}vw;top:0;background:${pick(cols)};border-radius:${rnd(0,50)}%;width:${rnd(6,14)}px;height:${rnd(6,14)}px;animation-delay:${rnd(0,10)/10}s;`;document.body.appendChild(p);setTimeout(()=>p.remove(),2200);}}
-function createStars(){const bg=document.getElementById('bg');for(let i=0;i<90;i++){const s=document.createElement('div');s.className='star';const size=rnd(1,3);s.style.cssText=`left:${rnd(0,100)}%;top:${rnd(0,100)}%;width:${size}px;height:${size}px;--d:${2+rnd(0,30)/10}s;animation-delay:${rnd(0,30)/10}s;`;bg.appendChild(s);}}
-
-// ══ FRIENDS ══
-async function openFriends(){show('friends-scr');if(window.fbLoadLeaderboard)await window.fbLoadLeaderboard();renderFriendsList();}
-async function loadMiniLeaderboard(){const el=document.getElementById('homeLbList');if(!el||!window._fbUser)return;try{const{db:dbInst,doc:docFn,getDoc:gdoc}=window._fb;const myUid=window._fbUser.uid;const allIds=[myUid,...(window._friends||[])];const results=[];for(const uid of allIds.slice(0,5)){if(!uid)continue;const snap=await gdoc(docFn(dbInst,'users',uid));if(snap.exists()){const d=snap.data();results.push({name:d.displayName,score:d.st?.score||0,uid,username:d.username||'',glowColor:d.st?.specialGlowColor||null,badgeColor:d.st?.specialBadgeColor||null});}}sortLeaderboard(results);const medals=['🥇','🥈','🥉'];el.innerHTML=results.slice(0,3).map((r,i)=>{const isMe=r.uid===myUid;const special=SPECIAL_USERS[(r.username||'').toLowerCase()];const glowColor=r.glowColor||special?.glowColor||'#00d362';const badgeColor=r.badgeColor||special?.badgeColor||special?.color||'#00d362';const nameHtml=special?`<span style="color:${glowColor};font-family:'Fredoka',sans-serif;font-weight:700;text-shadow:0 0 8px ${glowColor},0 0 16px ${glowColor}99;">${r.name}${isMe?' 👤':''}</span><span class="special-badge" style="--sc:${badgeColor};font-size:.65rem;padding:1px 6px;">${special.badge}</span>`:`<span style="color:${isMe?'var(--a2)':'var(--txt)'};">${r.name}${isMe?' 👤':''}</span>`;return`<div class="lb-row" style="padding:7px 8px;${isMe?'background:rgba(255,211,42,.08);border-radius:10px;':''}"><div class="lb-rank" style="font-size:1rem">${medals[i]||`#${i+1}`}</div><div style="flex:1;font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:5px;flex-wrap:wrap;">${nameHtml}</div><div style="font-weight:900;color:var(--a3);font-size:.9rem">${special?.scoreDisplay?special.scoreDisplay(r.score):r.score.toLocaleString()}</div></div>`;}).join('')||'<div style="color:var(--txt2);font-size:.85rem;text-align:center">הוסף חברים לראות לוח!</div>';}catch(e){el.innerHTML='<div style="color:var(--txt2);font-size:.85rem">—</div>';}}
-async function renderFriendsList(){const el=document.getElementById('friendsList');if(!el)return;el.innerHTML='';if(!window._friends||window._friends.length===0){el.innerHTML='<div style="color:var(--txt2);text-align:center;padding:16px">אין חברים עדיין!</div>';return;}for(const uid of window._friends){try{const{db:dbInst,doc:docFn,getDoc:gdoc}=window._fb;const snap=await gdoc(docFn(dbInst,'users',uid));if(!snap.exists())continue;const d=snap.data();const lv=LEVELS[Math.min(d.st?.level||0,LEVELS.length-1)];const card=document.createElement('div');card.className='friend-card';
-card.innerHTML=`<div class="friend-avatar">${(d.displayName||'?')[0].toUpperCase()}</div><div style="flex:1"><div style="font-weight:700;color:var(--a2)">${d.displayName}</div><div style="font-size:.8rem;color:var(--txt2)">כיתה ${d.grade||'?'} • רמה ${(d.st?.level||0)+1} • ${d.st?.totalSolved||0} תרגילים</div></div><div style="display:flex;align-items:center;gap:8px;"><div style="font-weight:900;color:var(--a3)">${(d.st?.score||0).toLocaleString()} ⭐</div><button onclick="event.stopPropagation();fbRemoveFriend('${uid}','${d.displayName}')" style="padding:5px 10px;background:rgba(255,71,87,.15);border:1px solid var(--a1);color:var(--a1);border-radius:8px;cursor:pointer;font-size:.75rem;font-family:'Rubik',sans-serif;white-space:nowrap;">הסר</button></div>`;card.onclick=()=>openFriendProfile(d,uid);el.appendChild(card);}catch(e){}}}
-function openFriendProfile(d,uid){const lv=LEVELS[Math.min(d.st?.level||0,LEVELS.length-1)];document.getElementById('fprofileContent').innerHTML=`<div class="profile-avatar">${(d.displayName||'?')[0].toUpperCase()}</div><div style="font-family:'Fredoka',sans-serif;font-size:1.8rem;color:var(--a2);margin-bottom:4px">${d.displayName}</div><div style="color:var(--txt2);font-size:.9rem;margin-bottom:20px">@${d.username||''} • כיתה ${d.grade||'?'} • ${lv.e} ${lv.n}</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%"><div class="profile-stat"><div class="profile-stat-val" style="color:var(--a2)">${(d.st?.score||0).toLocaleString()}</div><div class="profile-stat-lbl">נקודות</div></div><div class="profile-stat"><div class="profile-stat-val" style="color:var(--a4)">${(d.st?.level||0)+1}</div><div class="profile-stat-lbl">רמה</div></div><div class="profile-stat"><div class="profile-stat-val" style="color:var(--a3)">${d.st?.totalSolved||0}</div><div class="profile-stat-lbl">תרגילים</div></div></div>`;show('fprofile-scr');}
-
-// ══ MULTI-STEP REGISTRATION ══
-let _regCurrentStep = 1;
-
-function regGoStep(step) {
-  const err = document.getElementById('authErr');
-  err.style.display = 'none';
-
-  // Validate current step before advancing
-  if (step > _regCurrentStep) {
-    if (_regCurrentStep === 1) {
-      const name = document.getElementById('regDisplayName').value.trim();
-      const user = document.getElementById('regUsername').value.trim();
-      if (!name || name.length < 2) { err.textContent = 'שם תצוגה חייב להיות לפחות 2 תווים'; err.style.display = 'block'; document.getElementById('regDisplayName').focus(); return; }
-      if (!user || user.length < 2) { err.textContent = 'שם משתמש חייב להיות לפחות 2 תווים'; err.style.display = 'block'; document.getElementById('regUsername').focus(); return; }
-      const badge = document.getElementById('regUsernameBadge');
-if (badge && badge.textContent.includes('תפוס')) {
-  err.textContent = 'שם המשתמש הזה תפוס — בחר שם אחר';
-  err.style.display = 'block';
-  document.getElementById('regUsername').focus();
-  return;
-}
-    }
-    if (_regCurrentStep === 2) {
-      const grade = document.getElementById('regGrade').value;
-      if (!grade) { err.textContent = 'בחר כיתה להמשיך'; err.style.display = 'block'; return; }
-    }
-  }
-
-  // Hide all panels
-  document.querySelectorAll('.reg-step-panel').forEach(p => p.classList.remove('on'));
-  document.getElementById('regStep' + step).classList.add('on');
-
-  // Update stepper dots
-  for (let i = 1; i <= 3; i++) {
-    const dot = document.getElementById('rdot' + i);
-    dot.classList.remove('active', 'done');
-    if (i < step) dot.classList.add('done'), dot.textContent = '✓';
-    else if (i === step) dot.classList.add('active'), dot.textContent = i;
-    else dot.textContent = i;
-  }
-  // Update lines
-  for (let i = 1; i <= 2; i++) {
-    const line = document.getElementById('rline' + i);
-    line.classList.toggle('done', step > i);
-  }
-
-  _regCurrentStep = step;
-}
-
-function selectSetGrade(grade) {
-  document.getElementById('setGrade').value = grade;
-  document.querySelectorAll('#setGradeGrid .reg-grade-card').forEach(c => {
-    c.classList.toggle('selected', c.dataset.grade === grade);
-  });
-}
-
-function selectRegGrade(grade) {
-  document.getElementById('regGrade').value = grade;
-  document.querySelectorAll('.reg-grade-card').forEach(c => {
-    c.classList.toggle('selected', c.dataset.grade === grade);
-  });
-}
-
-// Reset registration form when switching to reg tab
-function resetRegForm() {
-  regGoStep(1);
-  ['regDisplayName','regUsername','regEmail','regPass','regPass2'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
-  document.getElementById('regGrade').value = '';
-  document.querySelectorAll('.reg-grade-card').forEach(c => c.classList.remove('selected'));
-  document.querySelectorAll('#regGenderPicker .gender-btn').forEach(b => { b.classList.remove('selected'); b.setAttribute('aria-pressed','false'); });
-  const termsRow = document.getElementById('regTermsRow');
-  if (termsRow) termsRow.classList.remove('accepted');
-  document.getElementById('authErr').style.display = 'none';
-}
-
-// ══ AUTH / SETTINGS TABS ══
-function switchAuthTab(tab){
-  document.getElementById('loginForm').classList.toggle('on',tab==='login');
-  document.getElementById('regForm').classList.toggle('on',tab==='reg');
-  document.getElementById('tabLogin').classList.toggle('active',tab==='login');
-  document.getElementById('tabReg').classList.toggle('active',tab==='reg');
-  if (tab === 'reg') resetRegForm();
-}
-function switchSettingsTab(tab){const parentsSection=document.getElementById('settingsParentsSection');const adminSection=document.getElementById('settingsAdminSection');const parentsBtn=document.getElementById('parentsTabBtn');const adminBtn=document.getElementById('adminTabBtn');if(tab==='parents'){parentsSection.style.display='block';adminSection.style.display='none';document.getElementById('pgateWrap').style.display='block';document.getElementById('settingsContent').style.display='none';if(parentsBtn)parentsBtn.classList.add('active');if(adminBtn)adminBtn.classList.remove('active');}else{parentsSection.style.display='none';adminSection.style.display='block';if(parentsBtn)parentsBtn.classList.remove('active');if(adminBtn)adminBtn.classList.add('active');const gc2=st.specialGlowColor||'#00d362';const bc2=st.specialBadgeColor||'#00d362';document.getElementById('glowColorCustom').value=gc2;document.getElementById('badgeColorCustom').value=bc2;updateGlowPreview(gc2);updateBadgePreview(bc2);highlightSelected('glowColorPicker',gc2);highlightSelected('badgeColorPicker',bc2);}}
-function highlightSelected(pickerId,color){const picker=document.getElementById(pickerId);if(!picker)return;picker.querySelectorAll('div[data-color]').forEach(el=>{el.style.border=el.dataset.color.toLowerCase()===color.toLowerCase()?'3px solid #fff':'3px solid transparent';el.style.transform=el.dataset.color.toLowerCase()===color.toLowerCase()?'scale(1.2)':'scale(1)';});}
-function pickGlowColor(color){st.specialGlowColor=color;document.getElementById('glowColorCustom').value=color;updateGlowPreview(color);highlightSelected('glowColorPicker',color);}
-function pickBadgeColor(color){st.specialBadgeColor=color;document.getElementById('badgeColorCustom').value=color;updateBadgePreview(color);highlightSelected('badgeColorPicker',color);}
-function updateGlowPreview(color){const el=document.getElementById('glowPreview');if(!el)return;el.textContent=window._displayName||'השם שלך';el.style.color=color;el.style.animation='none';el.style.textShadow=`0 0 8px ${color},0 0 20px ${color}99,0 0 40px ${color}66,0 0 60px ${color}33`;}
-function updateBadgePreview(color){const el=document.getElementById('badgePreview');if(!el)return;const uname=(window._username||'').toLowerCase();const special=SPECIAL_USERS[uname];el.textContent=(special?.badge||'⚡')+' '+(special?.title||'מיוחד');el.style.setProperty('--sc',color);el.style.color=color;el.style.borderColor=color;el.style.boxShadow=`0 0 12px ${color}40`;}
-function saveAdminSettings(){save();updateHome();showToast('✨ המראה שלך עודכן!');}
-function resetAdminSettings(){const uname=(window._username||'').toLowerCase();const special=SPECIAL_USERS[uname];if(special){st.specialGlowColor=special.glowColor||'#00d362';st.specialBadgeColor=special.badgeColor||special.color;save();updateHome();switchSettingsTab('admin');showToast('↩️ אופס לברירת מחדל!');}}
-
-// ══ INIT ══
-load();createStars();
-</script>
 <!-- ══ TERMS MODAL ══ -->
 <div id="termsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9000;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid rgba(255,255,255,.12);border-radius:20px;padding:28px;max-width:460px;width:100%;max-height:80vh;overflow-y:auto;position:relative;">
+  <div style="background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid rgba(255,255,255,.12);border-radius:20px;padding:28px;max-width:460px;width:100%;max-height:80vh;overflow-y:auto;">
     <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:var(--a4);margin-bottom:16px;text-align:center;">📋 תנאי שימוש</div>
     <div style="font-size:.88rem;color:var(--txt2);line-height:1.8;direction:rtl;">
       <p style="margin-bottom:12px;color:var(--txt);font-weight:700;">ברוכים הבאים ל-Brain Spark ⚡</p>
@@ -1611,6 +541,12 @@ load();createStars();
     <button onclick="closeTermsModal()" style="width:100%;margin-top:18px;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--a4),var(--a5));color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;">✅ הבנתי, סגור</button>
   </div>
 </div>
+
+<!-- ══ INIT ══ -->
+<script>
+  load();
+  createStars();
+</script>
 
 <script src="profile-fields.js"></script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}</script>
