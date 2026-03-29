@@ -1,20 +1,113 @@
 // ══ QUESTION GENERATION ══
 
+// ── Grade-aware word story banks ──
+// Each story returns: { text, answer, op, nums (the exact operands), validOps (all valid equations), exampleAnswer, hint, multiStep?, steps? }
+// validOps: array of { a, op, b } objects — ALL equations that correctly produce the answer for THIS question
+
 const WORD_STORIES = {
-  easy: [
-    ({a,b},th) => ({ text:`לדני יש ${a} ${th.loot} מ${th.name}. החבר שלו נתן לו עוד ${b}. כמה יש לו עכשיו?`, answer:a+b, op:'+', nums:[a,b], exampleAnswer:`יש לו ${a+b} ${th.loot} בסך הכל.`, hint:`חבר: ${a} + ${b}` }),
-    ({a,b},th) => ({ text:`בחנות ${th.name} יש ${a} ${th.loot} על המדף העליון ו-${b} על המדף התחתון. כמה יש בחנות?`, answer:a+b, op:'+', nums:[a,b], exampleAnswer:`יש בחנות ${a+b} ${th.loot}.`, hint:`חבר: ${a} + ${b}` }),
-    ({a,b},th) => ({ text:`לשירה היו ${a+b} ${th.loot}. השתמשה ב-${b}. כמה נשאר?`, answer:a, op:'-', nums:[a+b,b], exampleAnswer:`נשאר ${a} ${th.loot}.`, hint:`חסר: ${a+b} - ${b}` })
-  ],
-  medium: [
-    ({a,b},th) => ({ text:`קבוצת ${th.name} אספה ${a} ${th.loot} ביום ראשון ו-${b} ביום שני. כמה אספה בסך הכל?`, answer:a+b, op:'+', nums:[a,b], exampleAnswer:`הקבוצה אספה ${a+b} ${th.loot}.`, hint:`חבר שני הימים` }),
-    ({a,b},th) => ({ text:`ב${th.name} יש ${a} שחקנים. לכל אחד יש ${b} ${th.loot}. כמה בסך הכל?`, answer:a*b, op:'×', nums:[a,b], exampleAnswer:`יש ${a*b} ${th.loot} בסך הכל.`, hint:`כפל: ${a} × ${b}` }),
-    ({a,b,c},th) => ({ text:`לאלי היו ${a} ${th.loot}. קנה עוד ${b} ואז נתן ${c} לחבר. כמה יש לו?`, answer:a+b-c, op:'+', nums:[a,b,c], multiStep:true, steps:[`שלב 1: ${a} + ${b} = ${a+b}`,`שלב 2: ${a+b} - ${c} = ${a+b-c}`], exampleAnswer:`יש לו ${a+b-c} ${th.loot}.`, hint:`קודם חבר, אחר כך חסר` })
-  ],
-  hard: [
-    ({a,b,c},th) => ({ text:`לדוד יש ${a} ${th.loot}. אחיו נתן עוד ${b}. אחר כך חילק בין ${c} חברים. כמה קיבל כל חבר?`, answer:(a+b)/c, op:'+', nums:[a,b,c], multiStep:true, steps:[`שלב 1: ${a} + ${b} = ${a+b}`,`שלב 2: ${a+b} ÷ ${c} = ${(a+b)/c}`], exampleAnswer:`כל חבר קיבל ${(a+b)/c} ${th.loot}.`, hint:`קודם חבר, אחר כך חלק` }),
-    ({a,b,c},th) => ({ text:`${a} שחקנים אספו ${b} ${th.loot} כל אחד. אחר כך מצאו עוד ${c}. כמה בסך הכל?`, answer:a*b+c, op:'×', nums:[a,b,c], multiStep:true, steps:[`שלב 1: ${a} × ${b} = ${a*b}`,`שלב 2: ${a*b} + ${c} = ${a*b+c}`], exampleAnswer:`יש ${a*b+c} ${th.loot}.`, hint:`קודם כפל, אחר כך חבר` })
-  ]
+  // ── Grade 2: only + and - , single step, small numbers ──
+  grade2: {
+    easy: [
+      ({a,b},th) => ({ text:`לדני יש ${a} ${th.loot}. החבר שלו נתן לו עוד ${b}. כמה יש לו עכשיו?`,
+        answer:a+b, nums:[a,b], validOps:[{a,op:'+',b}],
+        exampleAnswer:`יש לו ${a+b} ${th.loot} בסך הכל.`, hint:`חבר: ${a} + ${b}` }),
+      ({a,b},th) => ({ text:`בחנות ${th.name} יש ${a} ${th.loot} על המדף העליון ו-${b} על המדף התחתון. כמה יש בחנות?`,
+        answer:a+b, nums:[a,b], validOps:[{a,op:'+',b},{a:b,op:'+',b:a}],
+        exampleAnswer:`יש בחנות ${a+b} ${th.loot}.`, hint:`חבר: ${a} + ${b}` }),
+      ({a,b},th) => ({ text:`לשירה היו ${a+b} ${th.loot}. השתמשה ב-${b}. כמה נשאר?`,
+        answer:a, nums:[a+b,b], validOps:[{a:a+b,op:'-',b}],
+        exampleAnswer:`נשאר ${a} ${th.loot}.`, hint:`חסר: ${a+b} - ${b}` }),
+      ({a,b},th) => ({ text:`בגן יש ${a} ילדים ובכיתה יש ${b} ילדים. כמה ילדים יש בסך הכל?`,
+        answer:a+b, nums:[a,b], validOps:[{a,op:'+',b},{a:b,op:'+',b:a}],
+        exampleAnswer:`יש ${a+b} ילדים.`, hint:`חבר: ${a} + ${b}` }),
+    ],
+    medium: [
+      ({a,b},th) => ({ text:`לרון היו ${a+b} ${th.loot}. נתן ${b} לאחותו. כמה נשאר לו?`,
+        answer:a, nums:[a+b,b], validOps:[{a:a+b,op:'-',b}],
+        exampleAnswer:`נשאר לרון ${a} ${th.loot}.`, hint:`חסר: ${a+b} - ${b}` }),
+      ({a,b},th) => ({ text:`קבוצת ${th.name} אספה ${a} ${th.loot} ביום ראשון ו-${b} ביום שני. כמה אספה בסך הכל?`,
+        answer:a+b, nums:[a,b], validOps:[{a,op:'+',b},{a:b,op:'+',b:a}],
+        exampleAnswer:`הקבוצה אספה ${a+b} ${th.loot}.`, hint:`חבר שני הימים` }),
+      ({a,b},th) => ({ text:`היו ${a+b} ${th.loot} בקופסה. הוצאו ${b}. כמה נשארו?`,
+        answer:a, nums:[a+b,b], validOps:[{a:a+b,op:'-',b}],
+        exampleAnswer:`נשארו ${a} ${th.loot}.`, hint:`חסר: ${a+b} - ${b}` }),
+    ],
+    hard: [
+      ({a,b},th) => ({ text:`בחנות ${th.name} היו ${a+b} ${th.loot}. נמכרו ${b} ואז הגיעו עוד ${b} חדשים. כמה יש עכשיו?`,
+        answer:a+b, nums:[a+b,b,b], validOps:[{a:a+b,op:'-',b},{a:(a+b)-b,op:'+',b}],
+        multiStep:true, steps:[`שלב 1: ${a+b} - ${b} = ${a}`,`שלב 2: ${a} + ${b} = ${a+b}`],
+        exampleAnswer:`יש עכשיו ${a+b} ${th.loot}.`, hint:`קודם חסר, אחר כך חבר` }),
+    ],
+  },
+
+  // ── Grade 3: + - × ÷ , some multi-step ──
+  grade3: {
+    easy: [
+      ({a,b},th) => ({ text:`${a} ילדים, לכל אחד ${b} ${th.loot}. כמה בסך הכל?`,
+        answer:a*b, nums:[a,b], validOps:[{a,op:'×',b},{a:b,op:'×',b:a}],
+        exampleAnswer:`יש ${a*b} ${th.loot} בסך הכל.`, hint:`כפל: ${a} × ${b}` }),
+      ({a,b},th) => ({ text:`${a*b} ${th.loot} מחולקים ל-${a} ילדים שווה בשווה. כמה קיבל כל ילד?`,
+        answer:b, nums:[a*b,a], validOps:[{a:a*b,op:'÷',b:a}],
+        exampleAnswer:`כל ילד קיבל ${b} ${th.loot}.`, hint:`חלק: ${a*b} ÷ ${a}` }),
+      ({a,b},th) => ({ text:`קבוצת ${th.name} אספה ${a} ${th.loot} ביום ראשון ו-${b} ביום שני. כמה בסך הכל?`,
+        answer:a+b, nums:[a,b], validOps:[{a,op:'+',b},{a:b,op:'+',b:a}],
+        exampleAnswer:`הקבוצה אספה ${a+b} ${th.loot}.`, hint:`חבר: ${a} + ${b}` }),
+    ],
+    medium: [
+      ({a,b},th) => ({ text:`ב${th.name} יש ${a} שחקנים. לכל אחד יש ${b} ${th.loot}. כמה בסך הכל?`,
+        answer:a*b, nums:[a,b], validOps:[{a,op:'×',b},{a:b,op:'×',b:a}],
+        exampleAnswer:`יש ${a*b} ${th.loot} בסך הכל.`, hint:`כפל: ${a} × ${b}` }),
+      ({a,b,c},th) => ({ text:`לאלי היו ${a} ${th.loot}. קנה עוד ${b} ואז נתן ${c} לחבר. כמה יש לו?`,
+        answer:a+b-c, nums:[a,b,c], validOps:[{a,op:'+',b},{a:a+b,op:'-',b:c}],
+        multiStep:true, steps:[`שלב 1: ${a} + ${b} = ${a+b}`,`שלב 2: ${a+b} - ${c} = ${a+b-c}`],
+        exampleAnswer:`יש לו ${a+b-c} ${th.loot}.`, hint:`קודם חבר, אחר כך חסר` }),
+    ],
+    hard: [
+      ({a,b,c},th) => ({ text:`${a} שחקנים אספו ${b} ${th.loot} כל אחד. אחר כך מצאו עוד ${c}. כמה בסך הכל?`,
+        answer:a*b+c, nums:[a,b,c], validOps:[{a,op:'×',b},{a:a*b,op:'+',b:c}],
+        multiStep:true, steps:[`שלב 1: ${a} × ${b} = ${a*b}`,`שלב 2: ${a*b} + ${c} = ${a*b+c}`],
+        exampleAnswer:`יש ${a*b+c} ${th.loot}.`, hint:`קודם כפל, אחר כך חבר` }),
+      ({a,b,c},th) => ({ text:`היו ${a*b} ${th.loot}. חילקו ל-${a} ילדים. כל ילד נתן ${c} בחזרה. כמה נשאר לכל ילד?`,
+        answer:b-c, nums:[a*b,a,c], validOps:[{a:a*b,op:'÷',b:a},{a:b,op:'-',b:c}],
+        multiStep:true, steps:[`שלב 1: ${a*b} ÷ ${a} = ${b}`,`שלב 2: ${b} - ${c} = ${b-c}`],
+        exampleAnswer:`נשאר לכל ילד ${b-c} ${th.loot}.`, hint:`קודם חלק, אחר כך חסר` }),
+    ],
+  },
+
+  // ── Grades 4-6: all ops, multi-step, bigger numbers ──
+  grade456: {
+    easy: [
+      ({a,b},th) => ({ text:`ב${th.name} יש ${a} ${th.loot}. הגיעו עוד ${b}. כמה יש עכשיו?`,
+        answer:a+b, nums:[a,b], validOps:[{a,op:'+',b},{a:b,op:'+',b:a}],
+        exampleAnswer:`יש עכשיו ${a+b} ${th.loot}.`, hint:`חבר: ${a} + ${b}` }),
+      ({a,b},th) => ({ text:`${a} ילדים, לכל אחד ${b} ${th.loot}. כמה בסך הכל?`,
+        answer:a*b, nums:[a,b], validOps:[{a,op:'×',b},{a:b,op:'×',b:a}],
+        exampleAnswer:`יש ${a*b} ${th.loot}.`, hint:`כפל: ${a} × ${b}` }),
+      ({a,b},th) => ({ text:`${a*b} ${th.loot} מחולקים ל-${b} קבוצות שוות. כמה בכל קבוצה?`,
+        answer:a, nums:[a*b,b], validOps:[{a:a*b,op:'÷',b}],
+        exampleAnswer:`יש ${a} ${th.loot} בכל קבוצה.`, hint:`חלק: ${a*b} ÷ ${b}` }),
+    ],
+    medium: [
+      ({a,b,c},th) => ({ text:`לדוד יש ${a} ${th.loot}. אחיו נתן עוד ${b}. אחר כך חילק בין ${c} חברים. כמה קיבל כל חבר?`,
+        answer:(a+b)/c, nums:[a,b,c], validOps:[{a,op:'+',b},{a:a+b,op:'÷',b:c}],
+        multiStep:true, steps:[`שלב 1: ${a} + ${b} = ${a+b}`,`שלב 2: ${a+b} ÷ ${c} = ${(a+b)/c}`],
+        exampleAnswer:`כל חבר קיבל ${(a+b)/c} ${th.loot}.`, hint:`קודם חבר, אחר כך חלק` }),
+      ({a,b,c},th) => ({ text:`${a} שחקנים אספו ${b} ${th.loot} כל אחד. אחר כך מצאו עוד ${c}. כמה בסך הכל?`,
+        answer:a*b+c, nums:[a,b,c], validOps:[{a,op:'×',b},{a:a*b,op:'+',b:c}],
+        multiStep:true, steps:[`שלב 1: ${a} × ${b} = ${a*b}`,`שלב 2: ${a*b} + ${c} = ${a*b+c}`],
+        exampleAnswer:`יש ${a*b+c} ${th.loot}.`, hint:`קודם כפל, אחר כך חבר` }),
+    ],
+    hard: [
+      ({a,b,c,d},th) => ({ text:`${a} שחקנים אספו ${b} ${th.loot} כל אחד. ${c} שחקנים נוספים אספו ${d} כל אחד. כמה בסך הכל?`,
+        answer:a*b+c*d, nums:[a,b,c,d], validOps:[{a,op:'×',b},{a:c,op:'×',b:d},{a:a*b,op:'+',b:c*d}],
+        multiStep:true, steps:[`שלב 1: ${a} × ${b} = ${a*b}`,`שלב 2: ${c} × ${d} = ${c*d}`,`שלב 3: ${a*b} + ${c*d} = ${a*b+c*d}`],
+        exampleAnswer:`יש ${a*b+c*d} ${th.loot} בסך הכל.`, hint:`כפל כל קבוצה בנפרד, אחר כך חבר` }),
+      ({a,b,c},th) => ({ text:`חנות ${th.name} קנתה ${a} ארגזים עם ${b} ${th.loot} בכל ארגז. מכרה ${c}. כמה נשאר?`,
+        answer:a*b-c, nums:[a,b,c], validOps:[{a,op:'×',b},{a:a*b,op:'-',b:c}],
+        multiStep:true, steps:[`שלב 1: ${a} × ${b} = ${a*b}`,`שלב 2: ${a*b} - ${c} = ${a*b-c}`],
+        exampleAnswer:`נשאר ${a*b-c} ${th.loot}.`, hint:`קודם כפל, אחר כך חסר` }),
+    ],
+  },
 };
 
 function brainrotLabel() { return rnd(0,3)===0 ? pick(BRAINROT_LABELS) : ''; }
@@ -87,29 +180,109 @@ function genDiv(diff, th) {
   return { type:'num', cat:'div', diff, label:th.label, gameLabel:brainrotLabel(), text:`${a} ÷ ${b} = ?`, answer:q, pts:ptsForQ('div',diff), hint:{type:'groups',a:q,b,emoji}, showMul:true, mulA:q, mulB:b, mulEmoji:emoji, dir:'ltr' };
 }
 
+// ── Pick the right story bank for the current grade ──
+function _getWordBank(diff) {
+  const grade = window._grade || 'ב';
+  if (grade === 'ב') return WORD_STORIES.grade2[diff] || WORD_STORIES.grade2.easy;
+  if (grade === 'ג') return WORD_STORIES.grade3[diff] || WORD_STORIES.grade3.easy;
+  return WORD_STORIES.grade456[diff] || WORD_STORIES.grade456.easy;
+}
+
+// ── Number ranges for word problems per grade ──
+function _wordNums(diff) {
+  const grade = window._grade || 'ב';
+  if (grade === 'ב') {
+    if (diff==='easy')   return { a:rnd(2,10),  b:rnd(2,10) };
+    if (diff==='medium') return { a:rnd(5,20),  b:rnd(5,20) };
+    return                      { a:rnd(10,30), b:rnd(3,15) };
+  }
+  if (grade === 'ג') {
+    const smallMul = () => { const a=rnd(2,8), b=rnd(2,8); return {a,b,c:rnd(2,Math.min(a*b-1,10))}; };
+    if (diff==='easy')   return { a:rnd(2,6),   b:rnd(2,6) };
+    if (diff==='medium') { const r=smallMul(); return r; }
+    const c=rnd(2,5), b=rnd(2,6), a=c*rnd(2,4);
+    return { a, b, c };
+  }
+  // grades 4-6
+  if (diff==='easy')   return { a:rnd(3,8),   b:rnd(3,8) };
+  if (diff==='medium') { const c=rnd(2,6), b=rnd(2,8), a=c*rnd(2,5); return {a,b,c}; }
+  const d=rnd(2,6), c=rnd(2,5), b=rnd(2,8), a=c*rnd(2,4);
+  return { a, b, c, d };
+}
+
 function genWord(diff, th) {
   const loot = pick(THEME_LOOT[th.name] || ['פריטים']);
   th = Object.assign({}, th, { loot });
-  const bank = WORD_STORIES[diff] || WORD_STORIES.easy;
+  const bank = _getWordBank(diff);
   let tried=0, story=null;
-  while (tried < 8) {
+  while (tried < 10) {
     tried++;
     const tmpl = pick(bank);
-    let nums = {};
-    if (diff==='easy')        nums = { a:rnd(2,12), b:rnd(2,12) };
-    else if (diff==='medium') nums = { a:rnd(3,15), b:rnd(3,15), c:rnd(2,8) };
-    else { const c=rnd(2,5); const b=rnd(2,8); const a=c*rnd(2,4); nums={a,b,c}; }
+    const nums = _wordNums(diff);
     try {
       story = tmpl(nums, th);
       if (!Number.isInteger(story.answer) || story.answer <= 0) continue;
+      // For multi-step, all intermediate steps must also be positive integers
+      if (story.multiStep && story.validOps) {
+        let ok = true;
+        let running = story.validOps[0] ? evalOp(story.validOps[0].a, story.validOps[0].op, story.validOps[0].b) : 0;
+        for (const step of story.validOps) {
+          const r = evalOp(step.a, step.op, step.b);
+          if (!Number.isFinite(r) || !Number.isInteger(r) || r <= 0) { ok=false; break; }
+        }
+        if (!ok) continue;
+      }
       break;
     } catch(e) { continue; }
   }
   if (!story) {
     const a=rnd(2,12), b=rnd(2,12);
-    story = { text:`ב${th.name} יש ${a} ${loot} ועוד ${b}. כמה יש בסך הכל?`, answer:a+b, op:'+', nums:[a,b], exampleAnswer:`יש ${a+b} ${loot}.`, hint:'חבר' };
+    story = { text:`ב${th.name} יש ${a} ${loot} ועוד ${b}. כמה יש בסך הכל?`, answer:a+b,
+      nums:[a,b], validOps:[{a,op:'+',b},{a:b,op:'+',b:a}],
+      exampleAnswer:`יש ${a+b} ${loot}.`, hint:'חבר' };
   }
-  return { type:'word', cat:'word', diff, label:th.label, gameLabel:brainrotLabel(), text:story.text, answer:story.answer, pts:ptsForQ('word',diff), nums4expr:story.nums||[], op4expr:story.op||'+', exampleAnswer:story.exampleAnswer||`${story.answer}`, multiStep:story.multiStep||false, steps:story.steps||[], hint:{type:'word',op:story.op,hint:story.hint,steps:story.steps}, showMul:false, dir:'rtl' };
+  return {
+    type:'word', cat:'word', diff, label:th.label, gameLabel:brainrotLabel(),
+    text:story.text, answer:story.answer,
+    pts:ptsForQ('word',diff),
+    validOps: story.validOps || [],        // ← the valid equation(s) for this question
+    multiStep: story.multiStep || false,
+    steps: story.steps || [],
+    exampleAnswer: story.exampleAnswer || `${story.answer}`,
+    hint:{ type:'word', hint:story.hint, steps:story.steps||[] },
+    showMul:false, dir:'rtl'
+  };
+}
+
+// ── Helper: evaluate a user-typed equation ──
+function evalOp(a, op, b) {
+  if (op==='+') return a+b;
+  if (op==='-') return a-b;
+  if (op==='×'||op==='*') return a*b;
+  if (op==='÷'||op==='/') return b!==0 ? a/b : NaN;
+  return NaN;
+}
+
+// ── Check if a user equation {a, op, b} matches any valid equation for this question ──
+// Returns: 'correct' | 'right-answer-wrong-equation' | 'wrong'
+function checkWordEquation(userA, userOp, userB, q) {
+  if (isNaN(userA) || isNaN(userB) || !userOp) return 'wrong';
+  const userResult = evalOp(userA, userOp, userB);
+  const validOps = q.validOps || [];
+
+  // Check for exact match with any valid equation (order-insensitive for + and ×)
+  for (const v of validOps) {
+    const isCommutative = (v.op === '+' || v.op === '×');
+    if (v.op === userOp) {
+      if (v.a === userA && v.b === userB) return 'correct';
+      if (isCommutative && v.a === userB && v.b === userA) return 'correct';
+    }
+  }
+
+  // Wrong equation but happens to equal the answer
+  if (Number.isInteger(userResult) && userResult === q.answer) return 'right-answer-wrong-equation';
+
+  return 'wrong';
 }
 
 function genShapes(diff, th) {
