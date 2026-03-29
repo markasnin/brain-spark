@@ -1070,17 +1070,19 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
           <div style="font-size:.75rem;color:var(--txt2);display:flex;align-items:center;gap:4px;opacity:.8;">💡 חיבור מייל מאפשר שחזור סיסמה בעתיד</div>
           <div class="auth-err" id="profileFieldsErr" style="width:100%"></div>
         </div>
-        <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
-          <div class="set-label">כיתה <span style="font-size:.78rem;color:var(--a1)">(ישנה את רמת השאלות!)</span></div>
-          <div style="display:flex;gap:8px;width:100%">
-            <select class="auth-sel" id="setGrade" style="flex:1;margin-bottom:0">
-              <option value="א">כיתה א</option><option value="ב">כיתה ב</option>
-              <option value="ג">כיתה ג</option><option value="ד">כיתה ד</option>
-              <option value="ה">כיתה ה</option><option value="ו">כיתה ו</option>
-            </select>
-            <button onclick="fbChangeGrade()" style="padding:8px 14px;background:rgba(30,144,255,.2);border:1px solid var(--a4);color:var(--a4);border-radius:9px;cursor:pointer;font-family:'Rubik',sans-serif;">עדכן</button>
-          </div>
-        </div>
+<div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+  <div class="set-label">כיתה <span style="font-size:.78rem;color:var(--a1)">(ישנה את רמת השאלות!)</span></div>
+  <input type="hidden" id="setGrade" value="">
+  <div class="reg-grade-grid" id="setGradeGrid">
+    <div class="reg-grade-card rg1" onclick="selectSetGrade('א')" data-grade="א"><span class="rgc-emoji">🌱</span><div class="rgc-name">כיתה א</div><div class="rgc-sub">חיבור וחיסור</div></div>
+    <div class="reg-grade-card rg2" onclick="selectSetGrade('ב')" data-grade="ב"><span class="rgc-emoji">📊</span><div class="rgc-name">כיתה ב</div><div class="rgc-sub">+ כפל</div></div>
+    <div class="reg-grade-card rg3" onclick="selectSetGrade('ג')" data-grade="ג"><span class="rgc-emoji">⚡</span><div class="rgc-name">כיתה ג</div><div class="rgc-sub">+ חילוק</div></div>
+    <div class="reg-grade-card rg4" onclick="selectSetGrade('ד')" data-grade="ד"><span class="rgc-emoji">🔮</span><div class="rgc-name">כיתה ד</div><div class="rgc-sub">שברים</div></div>
+    <div class="reg-grade-card rg5" onclick="selectSetGrade('ה')" data-grade="ה"><span class="rgc-emoji">🏆</span><div class="rgc-name">כיתה ה</div><div class="rgc-sub">מספרים גדולים</div></div>
+    <div class="reg-grade-card rg6" onclick="selectSetGrade('ו')" data-grade="ו"><span class="rgc-emoji">🚀</span><div class="rgc-name">כיתה ו</div><div class="rgc-sub">רמה מקסימלית</div></div>
+  </div>
+  <button onclick="fbChangeGrade()" style="width:100%;padding:11px;background:rgba(30,144,255,.2);border:1px solid var(--a4);color:var(--a4);border-radius:12px;cursor:pointer;font-family:'Rubik',sans-serif;font-weight:700;font-size:.95rem;">✅ עדכן כיתה</button>
+</div>
         <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
           <div class="set-label">שינוי סיסמה</div>
           <input class="set-inp" id="oldPass" style="width:100%" type="password" placeholder="סיסמה ישנה">
@@ -1296,6 +1298,7 @@ function updateHome(){
   buildRecommendation();buildGrid();loadMiniLeaderboard();
   const dn=document.getElementById('newDisplayName');if(dn)dn.placeholder=playerDisplayName;
   const sg=document.getElementById('setGrade');if(sg&&window._grade)sg.value=window._grade;
+  if(window._grade)selectSetGrade(window._grade);
 }
 
 function lockCat(id,locked){const el=document.getElementById(id);if(!el)return;if(locked)el.classList.add('locked');else el.classList.remove('locked');}
@@ -1495,6 +1498,13 @@ if (badge && badge.textContent.includes('תפוס')) {
   }
 
   _regCurrentStep = step;
+}
+
+function selectSetGrade(grade) {
+  document.getElementById('setGrade').value = grade;
+  document.querySelectorAll('#setGradeGrid .reg-grade-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.grade === grade);
+  });
 }
 
 function selectRegGrade(grade) {
