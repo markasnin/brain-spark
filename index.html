@@ -160,20 +160,15 @@ window.fbLogin = async function() {
   const pass = document.getElementById('loginPass').value;
   const err = document.getElementById('loginErr');
   err.style.display='none';
+  if (!username || !pass) { err.textContent='מלא שם משתמש וסיסמה'; err.style.display='block'; return; }
   try {
     document.getElementById('loginBtn').disabled=true;
     document.getElementById('loginBtn').textContent='נכנס...';
-    // Look up the user's email by username
-    const { collection:col, getDocs:gd, query:qr, where:wh, db:dbInst } = window._fb;
     const clean = username.trim().toLowerCase().replace(/[^\u05d0-\u05eaa-z0-9]/g,'');
-    const snap = await gd(qr(col(dbInst,'users'), wh('username','==',clean)));
-    let loginEmail;
-    if (!snap.empty) {
-      const d = snap.docs[0].data();
-      loginEmail = d.contactEmail || (Array.from(clean).map(c=>c.charCodeAt(0).toString(36)).join('') + '@brainspark.local');
-    } else {
-      loginEmail = Array.from(clean).map(c=>c.charCodeAt(0).toString(36)).join('') + '@brainspark.local';
-    }
+    const snap = await getDocs(query(collection(db,'users'), where('username','==',clean)));
+    if (snap.empty) throw new Error('not found');
+    const userData = snap.docs[0].data();
+    const loginEmail = userData.contactEmail || (clean + '@brainspark.local');
     await signInWithEmailAndPassword(auth, loginEmail, pass);
   } catch(e) {
     document.getElementById('loginBtn').disabled=false;
