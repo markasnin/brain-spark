@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#07050f">
 <meta charset="UTF-8">
@@ -896,6 +895,15 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
         <span id="badgePreview" class="special-badge" style="--sc:#00d362;">⚡ התג שלך</span>
       </div>
     </div>
+    <div class="set-section">
+      <div class="set-title" style="color:#ffd32a;">🏷️ תווית כיתה מותאמת</div>
+      <div style="font-size:.82rem;color:var(--txt2);margin-bottom:10px;">הטקסט שיופיע בתגית הכיתה שלך במקום שם הכיתה הרגיל</div>
+      <input class="auth-inp" id="gradeLabelInp" type="text" placeholder="לדוגמה: 👑 המנהל" style="margin-bottom:8px;direction:rtl;">
+      <div style="padding:10px;background:rgba(0,0,0,.3);border-radius:12px;text-align:center;">
+        <div style="font-size:.8rem;color:var(--txt2);margin-bottom:6px;">תצוגה מקדימה:</div>
+        <div id="gradeLabelPreview" class="grade-chip" style="display:inline-flex;color:#00d362;border-color:#00d36240;background:#00d36215;font-family:'Fredoka',sans-serif;">👑 המנהל</div>
+      </div>
+    </div>
     <button onclick="saveAdminSettings()" style="width:100%;padding:14px;border-radius:14px;border:none;cursor:pointer;background:linear-gradient(135deg,#00d2d3,#9b59b6);color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;margin-top:6px;">✨ שמור מראה</button>
     <button onclick="resetAdminSettings()" style="width:100%;padding:11px;border-radius:14px;border:1.5px solid rgba(255,255,255,.15);background:none;color:var(--txt2);font-family:'Rubik',sans-serif;font-size:.9rem;cursor:pointer;margin-top:8px;">↩️ אפס לברירת מחדל</button>
   </div>
@@ -915,14 +923,14 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
 <div class="streak-fire" id="strkFire"><div class="sf-val" id="sfVal">🔥 3</div><div class="sf-lbl" id="sfLbl">ברצף!</div></div>
 <script>
 const LEVELS=[{n:'מתמטיקאי מתחיל',xp:50,e:'🌱'},{n:'סוחר המספרים',xp:120,e:'📊'},{n:'גיבור חשבון',xp:250,e:'⚡'},{n:'קוסם המספרים',xp:450,e:'🔮'},{n:'אלוף חשבון',xp:700,e:'🏆'},{n:'מייסטרו מתמטיקה',xp:1000,e:'🌟'},{n:'אגדת המספרים',xp:1400,e:'💫'},{n:'לאינסוף ומעבר!',xp:Infinity,e:'🚀'}];
-const SPECIAL_USERS={'asasin':{title:'אלוהי המספרים 👑⚡',badge:'⚡👑',color:'#00d2d3',glowColor:'#00d362',badgeColor:'#00d2d3',scoreDisplay:(n)=>'♾️',streakDisplay:(n)=>'♾️',pinTop:true},'יאן':{title:'V.I.P 💎',badge:'💎',color:'#00d362',glowColor:'#00d362',badgeColor:'#00d362',scoreDisplay:(n)=>`💎 ${n.toLocaleString()}`,streakDisplay:(n)=>`🔥 ${n} ברצף 💎`,pinTop:false}};
+const SPECIAL_USERS={'asasin':{title:'אלוהי המספרים 👑⚡',badge:'⚡👑',color:'#00d2d3',glowColor:'#00d362',badgeColor:'#00d2d3',scoreDisplay:(n)=>'♾️',streakDisplay:(n)=>'♾️',pinTop:true,allUnlocked:true,defaultGradeLabel:'👑 המנהל'},'יאן':{title:'V.I.P 💎',badge:'💎',color:'#00d362',glowColor:'#00d362',badgeColor:'#00d362',scoreDisplay:(n)=>`💎 ${n.toLocaleString()}`,streakDisplay:(n)=>`🔥 ${n} ברצף 💎`,pinTop:false,allUnlocked:false,defaultGradeLabel:null}};
 const BRAINROT_LABELS=['תרגיל הבריינרוט','הסיגמה של המתמטיקה','ריצה W','לא L','פתרון הגיוסי','מבחן הסקיבידי','המצב גריז'];
 const GAME_THEMES=[{name:'מיינקראפט',items:['⛏️','💎','🪨','🌲','🔥','🐷','🧱'],label:'⛏️ מיינקראפט'},{name:'רובלוקס',items:['🎮','🏗️','🤖','🎲','💰','🌈','🎯'],label:'🎮 רובלוקס'},{name:'פוקימון',items:['⚡','🔥','💧','🌿','👾','🌀','💥'],label:'⚡ פוקימון'},{name:'מריו',items:['🍄','⭐','🪙','🎯','🌟','🎪','🚩'],label:'🍄 מריו'},{name:'פורטנייט',items:['🏆','💥','🔫','🎯','⭐','🌟','🏅'],label:'🏆 פורטנייט'},{name:'כדורגל',items:['⚽','🏃','🥅','🏅','🎯','⭐','🌟'],label:'⚽ כדורגל'},{name:'חייזרים',items:['👾','🛸','🌌','⭐','💫','🔭','🚀'],label:'👾 חייזרים'}];
 const THEME_LOOT={'מיינקראפט':['יהלומים','גוש אבן','עצי עץ','קוביות זהב'],'רובלוקס':['רובוקסים','בניות','כלי נשק','מטבעות'],'פוקימון':['כרטיסי פוקימון','פוקיבולים','תגים','מדליות'],'מריו':['מטבעות','פטריות','כוכבים','מפתחות'],'פורטנייט':['חומרי בנייה','נשקים','תחמושת','ניצחונות'],'כדורגל':['שערים','כרטיסים','ניקוד','כרטיסי שחקן'],'חייזרים':['ספינות','לייזרים','כוכבים','תחנות חלל']};
 const WORD_STORIES={easy:[({a,b},th)=>({text:`לדני יש ${a} ${th.loot} מ${th.name}. החבר שלו נתן לו עוד ${b}. כמה יש לו עכשיו?`,answer:a+b,op:'+',nums:[a,b],exampleAnswer:`יש לו ${a+b} ${th.loot} בסך הכל.`,hint:`חבר: ${a} + ${b}`}),({a,b},th)=>({text:`בחנות ${th.name} יש ${a} ${th.loot} על המדף העליון ו-${b} על המדף התחתון. כמה יש בחנות?`,answer:a+b,op:'+',nums:[a,b],exampleAnswer:`יש בחנות ${a+b} ${th.loot}.`,hint:`חבר: ${a} + ${b}`}),({a,b},th)=>({text:`לשירה היו ${a+b} ${th.loot}. השתמשה ב-${b}. כמה נשאר?`,answer:a,op:'-',nums:[a+b,b],exampleAnswer:`נשאר ${a} ${th.loot}.`,hint:`חסר: ${a+b} - ${b}`})],medium:[({a,b},th)=>({text:`קבוצת ${th.name} אספה ${a} ${th.loot} ביום ראשון ו-${b} ביום שני. כמה אספה בסך הכל?`,answer:a+b,op:'+',nums:[a,b],exampleAnswer:`הקבוצה אספה ${a+b} ${th.loot}.`,hint:`חבר שני הימים`}),({a,b},th)=>({text:`ב${th.name} יש ${a} שחקנים. לכל אחד יש ${b} ${th.loot}. כמה בסך הכל?`,answer:a*b,op:'×',nums:[a,b],exampleAnswer:`יש ${a*b} ${th.loot} בסך הכל.`,hint:`כפל: ${a} × ${b}`}),({a,b,c},th)=>({text:`לאלי היו ${a} ${th.loot}. קנה עוד ${b} ואז נתן ${c} לחבר. כמה יש לו?`,answer:a+b-c,op:'+',nums:[a,b,c],multiStep:true,steps:[`שלב 1: ${a} + ${b} = ${a+b}`,`שלב 2: ${a+b} - ${c} = ${a+b-c}`],exampleAnswer:`יש לו ${a+b-c} ${th.loot}.`,hint:`קודם חבר, אחר כך חסר`})],hard:[({a,b,c},th)=>({text:`לדוד יש ${a} ${th.loot}. אחיו נתן עוד ${b}. אחר כך חילק בין ${c} חברים. כמה קיבל כל חבר?`,answer:(a+b)/c,op:'+',nums:[a,b,c],multiStep:true,steps:[`שלב 1: ${a} + ${b} = ${a+b}`,`שלב 2: ${a+b} ÷ ${c} = ${(a+b)/c}`],exampleAnswer:`כל חבר קיבל ${(a+b)/c} ${th.loot}.`,hint:`קודם חבר, אחר כך חלק`}),({a,b,c},th)=>({text:`${a} שחקנים אספו ${b} ${th.loot} כל אחד. אחר כך מצאו עוד ${c}. כמה בסך הכל?`,answer:a*b+c,op:'×',nums:[a,b,c],multiStep:true,steps:[`שלב 1: ${a} × ${b} = ${a*b}`,`שלב 2: ${a*b} + ${c} = ${a*b+c}`],exampleAnswer:`יש ${a*b+c} ${th.loot}.`,hint:`קודם כפל, אחר כך חבר`})]};
 
 let cfg={ptsEasy:5,ptsMed:10,ptsHard:18,ptsWordBonus:8,ptsWrong:1,ptsHint:2,maxAttempts:3,hintTime:180,streakBonus3:5,streakBonus5:10,streakBonus10:20};
-let st={score:0,level:0,xp:0,streak:0,maxStreak:0,learnedTopics:[],dailyDone:false,dailyDate:'',history:[],examTopics:['add','sub','mul'],examDiff:'mix',totalSolved:0,correctCount:0,specialGlowColor:null,specialBadgeColor:null};
+let st={score:0,level:0,xp:0,streak:0,maxStreak:0,learnedTopics:[],dailyDone:false,dailyDate:'',history:[],examTopics:['add','sub','mul'],examDiff:'mix',totalSolved:0,correctCount:0,specialGlowColor:null,specialBadgeColor:null,specialGradeLabel:null};
 let qs={pool:[],idx:0,cat:'add',diff:'easy',current:null,attempts:0,hintUsed:false,hintSecs:180,hintInterval:null,isDaily:false,isDailyIdx:0,isMistakes:false,isExam:false,examPool:[],examIdx:0,examScore:0,examTimer:null,examSecs:600,done:false};
 
 // ══ GRADE CONFIG SYSTEM ══
@@ -940,8 +948,16 @@ async function loadGradeConfig(grade){
 }
 function applyGradeConfig(){
   const gc=window.GRADE_CONFIG;if(!gc)return;
-  const toUnlock=gc.availableLearnTopics||[];
-  toUnlock.forEach(t=>{if(!st.learnedTopics.includes(t))st.learnedTopics.push(t);});
+  const uname=(window._username||'').toLowerCase();
+  const special=SPECIAL_USERS[uname];
+  // Special users with allUnlocked get every topic unlocked regardless of grade
+  if(special?.allUnlocked){
+    const allTopics=['division','shapes','fractions','measurement'];
+    allTopics.forEach(t=>{if(!st.learnedTopics.includes(t))st.learnedTopics.push(t);});
+  } else {
+    const toUnlock=gc.availableLearnTopics||[];
+    toUnlock.forEach(t=>{if(!st.learnedTopics.includes(t))st.learnedTopics.push(t);});
+  }
   st.examTopics=st.examTopics.filter(t=>(gc.availableExamTopics||[]).includes(t));
   if(st.examTopics.length===0)st.examTopics=(gc.availableExamTopics||['add']).slice(0,2);
 }
@@ -972,7 +988,12 @@ const ALL_CATS=[
 ];
 function buildGrid(){
   const gc=window.GRADE_CONFIG;
-  const available=gc?gc.availableCategories:['add','sub','mul','word'];
+  const uname=(window._username||'').toLowerCase();
+  const special=SPECIAL_USERS[uname];
+  // Special users with allUnlocked see every category
+  const available=special?.allUnlocked
+    ?['add','sub','mul','div','word','shapes','fractions']
+    :(gc?gc.availableCategories:['add','sub','mul','word']);
   const grid=document.getElementById('mainGrid');grid.innerHTML='';
   ALL_CATS.forEach(cat=>{
     if(!cat.special&&!available.includes(cat.id))return;
@@ -1004,7 +1025,20 @@ function updateHome(){
   if(special){const glowColor=st.specialGlowColor||special.glowColor||'#00d362';const badgeColor=st.specialBadgeColor||special.badgeColor||special.color;document.getElementById('playerName').innerHTML=`<span class="name-glow-blue" style="color:${glowColor};animation:none;text-shadow:0 0 8px ${glowColor},0 0 20px ${glowColor}99,0 0 40px ${glowColor}66">${playerDisplayName}</span><span class="special-badge" style="--sc:${badgeColor}">${special.badge} ${special.title}</span>`;document.getElementById('levelDisplay').textContent=`${special.badge} ${special.title}`;}
   else{document.getElementById('playerName').innerHTML=`⭐ ${playerDisplayName}${st.level>0?`<span class="nickname-badge">${lv.n}</span>`:''}`;document.getElementById('levelDisplay').textContent=`${lv.e} רמה ${st.level+1} — ${lv.n}`;}
   const gbw=document.getElementById('gradeBadgeWrap');
-  if(gc){gbw.innerHTML=`<div class="grade-chip" style="color:${gc.gradeColor};border-color:${gc.gradeColor}40;background:${gc.gradeColor}15;">${gc.gradeEmoji} ${gc.gradeName}</div>${gc.tip?`<div style="font-size:.78rem;color:var(--txt2);margin-top:5px;">${gc.tip}</div>`:''}`;}
+  if(special?.allUnlocked||special?.defaultGradeLabel){
+    // Special user grade label — use custom saved label or default, styled with their glow color
+    const glowColor=st.specialGlowColor||special.glowColor||'#00d362';
+    const gradeLabel=st.specialGradeLabel||special.defaultGradeLabel||'';
+    if(gradeLabel){
+      gbw.innerHTML=`<div class="grade-chip" style="color:${glowColor};border-color:${glowColor}40;background:${glowColor}15;font-family:'Fredoka',sans-serif;">${gradeLabel}</div>`;
+    } else {
+      gbw.innerHTML='';
+    }
+  } else if(gc){
+    gbw.innerHTML=`<div class="grade-chip" style="color:${gc.gradeColor};border-color:${gc.gradeColor}40;background:${gc.gradeColor}15;">${gc.gradeEmoji} ${gc.gradeName}</div>${gc.tip?`<div style="font-size:.78rem;color:var(--txt2);margin-top:5px;">${gc.tip}</div>`:''}`;
+  } else {
+    gbw.innerHTML='';
+  }
   else gbw.innerHTML='';
   const pct=st.level>=LEVELS.length-1?100:Math.round(st.xp/lv.xp*100);
   document.getElementById('xpBar').style.width=pct+'%';
@@ -1159,14 +1193,20 @@ function openFriendProfile(d,uid){const lv=LEVELS[Math.min(d.st?.level||0,LEVELS
 
 // ══ AUTH / SETTINGS TABS ══
 function switchAuthTab(tab){document.getElementById('loginForm').classList.toggle('on',tab==='login');document.getElementById('regForm').classList.toggle('on',tab==='reg');document.getElementById('tabLogin').classList.toggle('active',tab==='login');document.getElementById('tabReg').classList.toggle('active',tab==='reg');}
-function switchSettingsTab(tab){const parentsSection=document.getElementById('settingsParentsSection');const adminSection=document.getElementById('settingsAdminSection');const parentsBtn=document.getElementById('parentsTabBtn');const adminBtn=document.getElementById('adminTabBtn');if(tab==='parents'){parentsSection.style.display='block';adminSection.style.display='none';document.getElementById('pgateWrap').style.display='block';document.getElementById('settingsContent').style.display='none';if(parentsBtn)parentsBtn.classList.add('active');if(adminBtn)adminBtn.classList.remove('active');}else{parentsSection.style.display='none';adminSection.style.display='block';if(parentsBtn)parentsBtn.classList.remove('active');if(adminBtn)adminBtn.classList.add('active');const gc2=st.specialGlowColor||'#00d362';const bc2=st.specialBadgeColor||'#00d362';document.getElementById('glowColorCustom').value=gc2;document.getElementById('badgeColorCustom').value=bc2;updateGlowPreview(gc2);updateBadgePreview(bc2);highlightSelected('glowColorPicker',gc2);highlightSelected('badgeColorPicker',bc2);}}
+function switchSettingsTab(tab){const parentsSection=document.getElementById('settingsParentsSection');const adminSection=document.getElementById('settingsAdminSection');const parentsBtn=document.getElementById('parentsTabBtn');const adminBtn=document.getElementById('adminTabBtn');if(tab==='parents'){parentsSection.style.display='block';adminSection.style.display='none';document.getElementById('pgateWrap').style.display='block';document.getElementById('settingsContent').style.display='none';if(parentsBtn)parentsBtn.classList.add('active');if(adminBtn)adminBtn.classList.remove('active');}else{parentsSection.style.display='none';adminSection.style.display='block';if(parentsBtn)parentsBtn.classList.remove('active');if(adminBtn)adminBtn.classList.add('active');const gc2=st.specialGlowColor||'#00d362';const bc2=st.specialBadgeColor||'#00d362';document.getElementById('glowColorCustom').value=gc2;document.getElementById('badgeColorCustom').value=bc2;updateGlowPreview(gc2);updateBadgePreview(bc2);highlightSelected('glowColorPicker',gc2);highlightSelected('badgeColorPicker',bc2);
+  const uname=(window._username||'').toLowerCase();const special=SPECIAL_USERS[uname];
+  const currentLabel=st.specialGradeLabel||special?.defaultGradeLabel||'';
+  const gradeLabelInp=document.getElementById('gradeLabelInp');
+  if(gradeLabelInp){gradeLabelInp.value=currentLabel;updateGradeLabelPreview(currentLabel);gradeLabelInp.oninput=()=>updateGradeLabelPreview(gradeLabelInp.value);}
+}}
 function highlightSelected(pickerId,color){const picker=document.getElementById(pickerId);if(!picker)return;picker.querySelectorAll('div[data-color]').forEach(el=>{el.style.border=el.dataset.color.toLowerCase()===color.toLowerCase()?'3px solid #fff':'3px solid transparent';el.style.transform=el.dataset.color.toLowerCase()===color.toLowerCase()?'scale(1.2)':'scale(1)';});}
 function pickGlowColor(color){st.specialGlowColor=color;document.getElementById('glowColorCustom').value=color;updateGlowPreview(color);highlightSelected('glowColorPicker',color);}
 function pickBadgeColor(color){st.specialBadgeColor=color;document.getElementById('badgeColorCustom').value=color;updateBadgePreview(color);highlightSelected('badgeColorPicker',color);}
 function updateGlowPreview(color){const el=document.getElementById('glowPreview');if(!el)return;el.textContent=window._displayName||'השם שלך';el.style.color=color;el.style.animation='none';el.style.textShadow=`0 0 8px ${color},0 0 20px ${color}99,0 0 40px ${color}66,0 0 60px ${color}33`;}
 function updateBadgePreview(color){const el=document.getElementById('badgePreview');if(!el)return;const uname=(window._username||'').toLowerCase();const special=SPECIAL_USERS[uname];el.textContent=(special?.badge||'⚡')+' '+(special?.title||'מיוחד');el.style.setProperty('--sc',color);el.style.color=color;el.style.borderColor=color;el.style.boxShadow=`0 0 12px ${color}40`;}
-function saveAdminSettings(){save();updateHome();showToast('✨ המראה שלך עודכן!');}
-function resetAdminSettings(){const uname=(window._username||'').toLowerCase();const special=SPECIAL_USERS[uname];if(special){st.specialGlowColor=special.glowColor||'#00d362';st.specialBadgeColor=special.badgeColor||special.color;save();updateHome();switchSettingsTab('admin');showToast('↩️ אופס לברירת מחדל!');}}
+function updateGradeLabelPreview(text){const el=document.getElementById('gradeLabelPreview');if(!el)return;const glowColor=st.specialGlowColor||'#00d362';el.textContent=text||'(ריק — יוסתר)';el.style.color=glowColor;el.style.borderColor=glowColor+'40';el.style.background=glowColor+'15';}
+function saveAdminSettings(){const inp=document.getElementById('gradeLabelInp');if(inp)st.specialGradeLabel=inp.value.trim()||null;save();updateHome();showToast('✨ המראה שלך עודכן!');}
+function resetAdminSettings(){const uname=(window._username||'').toLowerCase();const special=SPECIAL_USERS[uname];if(special){st.specialGlowColor=special.glowColor||'#00d362';st.specialBadgeColor=special.badgeColor||special.color;st.specialGradeLabel=special.defaultGradeLabel||null;save();updateHome();switchSettingsTab('admin');showToast('↩️ אופס לברירת מחדל!');}}
 
 // ══ INIT ══
 load();createStars();
