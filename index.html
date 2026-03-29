@@ -135,7 +135,8 @@ window.fbRegister = async function() {
   if (!termsAccepted){err.textContent='יש לאשר את תנאי השימוש כדי להמשיך';err.style.display='block';document.getElementById('regTermsRow').style.animation='shk .4s';setTimeout(()=>document.getElementById('regTermsRow').style.animation='',400);return;}
   if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)){err.textContent='כתובת מייל לא תקינה';err.style.display='block';return;}
 const cleanU = cleanUsername(username);
-const fakeEmail = contactEmail ? contactEmail.toLowerCase() : cleanU + '@brainspark.local';
+const encodedU = Array.from(cleanU).map(c=>c.charCodeAt(0).toString(36)).join('');
+const fakeEmail = contactEmail ? contactEmail.toLowerCase() : encodedU + '@brainspark.local';
 try {
     document.getElementById('authBtn').disabled=true;
     document.getElementById('authBtn').textContent='נרשם...';
@@ -159,7 +160,8 @@ window.fbLogin = async function() {
   const pass = document.getElementById('loginPass').value;
   const err = document.getElementById('loginErr');
   err.style.display='none';
-  const fakeEmail = username.toLowerCase().replace(/[^a-z0-9]/g,'') + '@brainspark.local';
+  const clean = username.trim().toLowerCase().replace(/[^\u05d0-\u05eaa-z0-9]/g,'');
+  const fakeEmail = Array.from(clean).map(c=>c.charCodeAt(0).toString(36)).join('') + '@brainspark.local';
   try {
     document.getElementById('loginBtn').disabled=true;
     document.getElementById('loginBtn').textContent='נכנס...';
