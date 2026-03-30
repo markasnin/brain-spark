@@ -33,6 +33,7 @@ async function selectGrade(grade) {
 
 // ── Category ──
 function openCat(cat) {
+  if (cat === 'word') { showToast('🔒 מילוליות — בקרוב!'); return; }
   if (LOCKED_TOPICS[cat] && !st.learnedTopics.includes(LOCKED_TOPICS[cat])) { showToast('🔒 קודם למד את הנושא הזה!'); return; }
   const gc = window.GRADE_CONFIG;
   if (gc && !gc.availableCategories.includes(cat)) { showToast('🔒 נושא זה לא זמין בכיתה שלך'); return; }
