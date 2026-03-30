@@ -56,6 +56,8 @@ const LEVELS = [
   { n: 'אלוף חשבון',     xp: 700,      e: '🏆' },
   { n: 'מייסטרו מתמטיקה',xp: 1000,     e: '🌟' },
   { n: 'אגדת המספרים',   xp: 1400,     e: '💫' },
+  { n: 'גאון חשבון',   xp: 1700,     e: '🧠' }, 
+  { n: 'גאון על',   xp: 2000,     e: '💯' }, 
   { n: 'לאינסוף ומעבר!', xp: Infinity, e: '🚀' }
 ];
 
@@ -83,7 +85,7 @@ const ALL_CATS = [
   { id: 'mistakes', cls: 'mistakes',icon: '🔄', name: 'טעויות',     sub: 'שיפור עצמי',    special: 'mistakes' },
   { id: 'exam',     cls: 'test',    icon: '🏆', name: 'מבחן',       sub: 'בחר נושאים',    special: 'exam' },
   { id: 'friends',  cls: '',        icon: '👥', name: 'חברים',      sub: 'לוח תוצאות',    borderColor: '#2ed573', special: 'friends' },
-  { id: 'settings', cls: 'settings',icon: '⚙️', name: 'הגדרות',     sub: 'הורים',          special: 'settings' },
+  { id: 'settings', cls: 'settings',icon: '⚙️', name: 'הגדרות',     sub: '',          special: 'settings' },
 ];
 
 const CAT_NAMES = {
