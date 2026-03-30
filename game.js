@@ -229,10 +229,6 @@ function submitAns() {
 
 async function showWordFb(writtenText, q) {
   const example = q.exampleAnswer || `${q.answer}`;
-  if (!writtenText) {
-    showFb('ok', `🎉 נכון! (${q.answer})`, `✅ המשוואה נכונה!<br><br>📝 טיפ: בפעם הבאה כתוב גם משפט תשובה:<br>🌟 דוגמה: "${example}"`);
-    return;
-  }
 
   // Show loading state while AI grades
   showFb('ok', `🎉 נכון! בודק את המשפט שלך...`, `<div class="ai-loading">🤖 <span class="ai-dots">מעריך</span></div>`);
