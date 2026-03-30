@@ -77,7 +77,7 @@ const ALL_CATS = [
   { id: 'sub',      cls: 'sub',     icon: '➖', name: 'חיסור',      sub: 'עם ובלי לווה' },
   { id: 'mul',      cls: 'mul',     icon: '✖️', name: 'כפל',        sub: 'לוח הכפל' },
   { id: 'div',      cls: 'div',     icon: '➗', name: 'חילוק',      sub: 'חלוקה שווה' },
-  { id: 'word',     cls: 'word',    icon: '📖', name: 'מילוליות',   sub: 'בעיות עם סיפור' },
+  { id: 'word',     cls: 'word',    icon: '📖', name: 'מילוליות',   sub: 'סגור- אנחנו עובדים על זה!' },
   { id: 'shapes',   cls: '',        icon: '📐', name: 'גיאומטריה', sub: 'צורות וצלעות',  borderColor: '#ff9ff3' },
   { id: 'fractions',cls: '',        icon: '½',  name: 'שברים',      sub: 'חלקים של שלם',  borderColor: '#54a0ff' },
   { id: 'learn',    cls: 'learn',   icon: '🎓', name: 'בואו נלמד!', sub: 'חומר חדש',      special: 'learn' },
