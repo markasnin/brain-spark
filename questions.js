@@ -6,40 +6,6 @@
 
 const WORD_STORIES = {
 
-  // ── Grade 1: only + and -, very simple, small numbers ──
-  grade1: {
-    easy: [
-      ({a,b},th) => ({ text:`לדני יש ${a} ${th.loot}. קיבל עוד ${b}. כמה יש לו?`,
-        answer:a+b, validOps:[{a,op:'+',b},{a:b,op:'+',b:a}],
-        exampleAnswer:`יש לו ${a+b} ${th.loot}.`, hint:`חבר: ${a} + ${b}` }),
-      ({a,b},th) => ({ text:`על המדף יש ${a+b} ${th.loot}. נפלו ${b}. כמה נשארו?`,
-        answer:a, validOps:[{a:a+b,op:'-',b}],
-        exampleAnswer:`נשארו ${a} ${th.loot}.`, hint:`חסר: ${a+b} - ${b}` }),
-      ({a,b},th) => ({ text:`בכיתה יש ${a} ילדים ועוד ${b} הגיעו. כמה ילדים יש עכשיו?`,
-        answer:a+b, validOps:[{a,op:'+',b},{a:b,op:'+',b:a}],
-        exampleAnswer:`יש ${a+b} ילדים.`, hint:`חבר: ${a} + ${b}` }),
-      ({a,b},th) => ({ text:`לשירה היו ${a+b} ${th.loot}. נתנה ${b} לחברה. כמה נשאר?`,
-        answer:a, validOps:[{a:a+b,op:'-',b}],
-        exampleAnswer:`נשאר לשירה ${a} ${th.loot}.`, hint:`חסר: ${a+b} - ${b}` }),
-    ],
-    medium: [
-      ({a,b},th) => ({ text:`בסל יש ${a} ${th.loot} אדומים ו-${b} כחולים. כמה ${th.loot} יש בסל?`,
-        answer:a+b, validOps:[{a,op:'+',b},{a:b,op:'+',b:a}],
-        exampleAnswer:`יש ${a+b} ${th.loot} בסל.`, hint:`חבר: ${a} + ${b}` }),
-      ({a,b},th) => ({ text:`היו ${a+b} ${th.loot} בקופסה. לקחו ${b}. כמה נשארו?`,
-        answer:a, validOps:[{a:a+b,op:'-',b}],
-        exampleAnswer:`נשארו ${a} ${th.loot}.`, hint:`חסר: ${a+b} - ${b}` }),
-    ],
-    hard: [
-      ({a,b},th) => ({ text:`לרון יש ${a} ${th.loot} ולדנה יש ${b}. כמה יש להם ביחד?`,
-        answer:a+b, validOps:[{a,op:'+',b},{a:b,op:'+',b:a}],
-        exampleAnswer:`יש להם ${a+b} ${th.loot} ביחד.`, hint:`חבר: ${a} + ${b}` }),
-      ({a,b},th) => ({ text:`בחנות היו ${a+b} ${th.loot}. נמכרו ${b}. כמה נשאר?`,
-        answer:a, validOps:[{a:a+b,op:'-',b}],
-        exampleAnswer:`נשאר ${a} ${th.loot} בחנות.`, hint:`חסר: ${a+b} - ${b}` }),
-    ],
-  },
-
   // ── Grade 2: only + and -, single step, small numbers ──
   grade2: {
     easy: [
@@ -109,7 +75,7 @@ const WORD_STORIES = {
     ],
   },
 
-  // ── Grades 4-6: all ops, multi-step, bigger numbers, real-world contexts ──
+  // ── Grades 4-6: all ops, multi-step, bigger numbers ──
   grade456: {
     easy: [
       ({a,b},th) => ({ text:`ב${th.name} יש ${a} ${th.loot}. הגיעו עוד ${b}. כמה יש עכשיו?`,
@@ -137,10 +103,6 @@ const WORD_STORIES = {
         answer:a*b-c, validOps:[{a,op:'×',b},{a:a*b,op:'-',b:c}],
         multiStep:true, steps:[`שלב 1: ${a} × ${b} = ${a*b}`,`שלב 2: ${a*b} - ${c} = ${a*b-c}`],
         exampleAnswer:`נשאר ${a*b-c} ${th.loot}.`, hint:`קודם כפל, אחר כך חסר` }),
-      ({a,b,c},th) => ({ text:`ב${th.name} יש ${a} קבוצות עם ${b} ${th.loot} בכל קבוצה. הגיעו עוד ${c} ${th.loot} והם חולקו שווה בשווה בין כל הקבוצות. כמה ${th.loot} יש עכשיו בכל קבוצה?`,
-        answer:b+c/a, validOps:[{a:c,op:'÷',b:a},{a:b,op:'+',b:c/a}],
-        multiStep:true, steps:[`שלב 1: ${c} ÷ ${a} = ${c/a}`,`שלב 2: ${b} + ${c/a} = ${b+c/a}`],
-        exampleAnswer:`יש ${b+c/a} ${th.loot} בכל קבוצה.`, hint:`קודם חלק, אחר כך חבר` }),
     ],
   },
 };
@@ -218,7 +180,6 @@ function genDiv(diff, th) {
 // ── Pick the right story bank for the current grade ──
 function _getWordBank(diff) {
   const grade = window._grade || 'ב';
-  if (grade === 'א') return WORD_STORIES.grade1[diff] || WORD_STORIES.grade1.easy;
   if (grade === 'ב') return WORD_STORIES.grade2[diff] || WORD_STORIES.grade2.easy;
   if (grade === 'ג') return WORD_STORIES.grade3[diff] || WORD_STORIES.grade3.easy;
   return WORD_STORIES.grade456[diff] || WORD_STORIES.grade456.easy;
@@ -227,11 +188,6 @@ function _getWordBank(diff) {
 // ── Number ranges per grade ──
 function _wordNums(diff) {
   const grade = window._grade || 'ב';
-  if (grade === 'א') {
-    if (diff==='easy')   return { a:rnd(1,5),  b:rnd(1,5)  };
-    if (diff==='medium') return { a:rnd(3,10), b:rnd(3,10) };
-    return                      { a:rnd(5,15), b:rnd(3,10) };
-  }
   if (grade === 'ב') {
     if (diff==='easy')   return { a:rnd(2,10),  b:rnd(2,10) };
     if (diff==='medium') return { a:rnd(5,20),  b:rnd(5,20) };
@@ -242,15 +198,10 @@ function _wordNums(diff) {
     if (diff==='medium') { const a=rnd(2,7), b=rnd(2,7), c=rnd(2,Math.min(a*b-1,8)); return {a,b,c}; }
     const c=rnd(2,5), b=rnd(2,6), a=c*rnd(2,4); return {a,b,c};
   }
-  // grades 4-6: bigger numbers, ensure divisibility for division steps
+  // grades 4-6
   if (diff==='easy')   return { a:rnd(3,8), b:rnd(3,8) };
-  if (diff==='medium') {
-    const c = rnd(2,5), b = rnd(2,7), a = c * rnd(2,4);
-    return {a, b, c};
-  }
-  // hard: generate numbers that keep multi-step answers positive integers
-  const c = rnd(2,4), b = rnd(3,8), a = c * rnd(2,5);
-  return {a, b, c};
+  if (diff==='medium') { const c=rnd(2,5), b=rnd(2,7), a=c*rnd(2,4); return {a,b,c}; }
+  const c=rnd(2,5), b=rnd(2,7), a=c*rnd(2,4); return {a,b,c};
 }
 
 function genWord(diff, th) {
@@ -331,6 +282,10 @@ function checkWordEquation(userA, userOp, userB, q) {
 }
 
 function genShapes(diff, th) {
+  if (window.genShapesInteractive) {
+    return window.genShapesInteractive(diff);
+  }
+  // Fallback if shapes.js not loaded
   const shapes = [
     {q:'כמה צלעות יש למשולש?',a:3},{q:'כמה פינות יש לריבוע?',a:4},
     {q:'כמה צלעות יש למלבן?',a:4},{q:'כמה פינות יש לעיגול?',a:0},
