@@ -9,10 +9,10 @@ window.GRADE_CONFIG = {
   gradeEmoji: '⚡',
   gradeColor: '#1e90ff',
 
-  availableCategories: ['add', 'sub', 'mul', 'div', 'word'],
+  availableCategories: ['add', 'sub', 'mul', 'div', 'word', 'shapes'],
   // division unlocked from the start for grade 3+
-  availableLearnTopics: ['division'],
-  availableExamTopics: ['add', 'sub', 'mul', 'div', 'word'],
+  availableLearnTopics: ['division', 'shapes'],
+  availableExamTopics: ['add', 'sub', 'mul', 'div', 'word', 'shapes'],
 
   ranges: {
     add: {
@@ -57,5 +57,6 @@ window.GRADE_CONFIG = {
         hint:{type:'groups',a:q,b,emoji}, showMul:true, mulA:q, mulB:b, mulEmoji:emoji, dir:'ltr' };
     },
     word: null,
+    shapes: null,
   },
 };
