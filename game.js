@@ -126,6 +126,8 @@ function submitAns() {
   if (q.type === 'word') {
     const userAns = parseInt(ansInpEl.value);
     if (isNaN(userAns)) { showToast('✏️ הכנס מספר בתשובה הסופית!'); return; }
+    const wordInp = document.getElementById('wordInp');
+    if (!wordInp?.value?.trim()) { showToast('✏️ כתוב משפט תשובה!'); return; }
 
     const userA  = parseFloat(document.getElementById('exprNumA')?.value);
     const userB  = parseFloat(document.getElementById('exprNumB')?.value);
