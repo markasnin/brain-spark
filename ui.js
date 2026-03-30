@@ -128,7 +128,7 @@ function buildGrid() {
     grid.appendChild(div);
   });
   lockCat('divBtn',       !st.learnedTopics.includes('division'));
-  lockCat('shapesBtn',    !st.learnedTopics.includes('shapes'));
+  // shapes unlocked from grade 2+ via availableCategories
   lockCat('fractionsBtn', !st.learnedTopics.includes('fractions'));
 }
 
