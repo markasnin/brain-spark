@@ -144,7 +144,7 @@ function submitAns() {
       endQ();
 
     } else if (eqResult === 'right-answer-wrong-equation') {
-      // ⚠️ Right number but wrong equation → no points, correct them
+      // ❌ Right number but wrong equation → counts as wrong attempt, no points
       qs.attempts++;
       inp.classList.add('bad');
       document.getElementById('ad'+(qs.attempts-1)).classList.add('used');
@@ -154,17 +154,20 @@ function submitAns() {
 
       const correctEq = q.validOps && q.validOps[0];
       const opNames = {'+':'חיבור', '-':'חיסור', '×':'כפל', '÷':'חילוק'};
-      const eqHint = correctEq
-        ? `<br><br>💡 הפעולה הנכונה היא <strong>${opNames[correctEq.op]||correctEq.op}</strong>:<br><strong>${correctEq.a} ${correctEq.op} ${correctEq.b} = ${q.answer}</strong>`
-        : '';
 
       if (qs.attempts >= cfg.maxAttempts) {
-        showFb('bad', `❌ המספר ${q.answer} נכון — אבל המשוואה שגויה`, `📊 ניסית משוואה שנותנת ${q.answer} אבל היא לא נכונה לשאלה!${eqHint}`);
+        const eqHint = correctEq
+          ? `<br><br>💡 הפעולה הנכונה: <strong>${correctEq.a} ${correctEq.op} ${correctEq.b} = ${q.answer}</strong>`
+          : '';
+        showFb('bad', `❌ לא הצלחת`, `המספר ${q.answer} נכון — אבל המשוואה לא מתאימה לשאלה!${eqHint}<br><br>${q.steps?.map(s=>`→ ${s}`).join('<br>')||''}`);
         recordHistory(q, userAns, false);
         endQ();
       } else {
-        showFb('part', `⚠️ המספר נכון — אבל המשוואה שגויה!`, `📊 ${q.answer} נכון, אבל המשוואה שלך לא מתאימה לשאלה!${eqHint}<br><br>נשארו ${cfg.maxAttempts - qs.attempts} ניסיון/ות`);
-        setTimeout(()=>{ document.getElementById('fbBox').classList.remove('on'); inp.focus(); }, 2500);
+        const eqHint = correctEq
+          ? `💡 רמז: הפעולה הנכונה היא <strong>${opNames[correctEq.op]||correctEq.op}</strong>`
+          : '💡 חשוב שוב איזו פעולה מתאימה לשאלה';
+        showFb('part', `⚠️ המספר נכון — אבל המשוואה שגויה!`, `${q.answer} נכון, אבל המשוואה שלך לא מתאימה לשאלה.<br>${eqHint}<br><br>נשארו ${cfg.maxAttempts - qs.attempts} ניסיון/ות`);
+        setTimeout(()=>{ document.getElementById('fbBox').classList.remove('on'); inp.focus(); }, 2800);
       }
 
     } else {
@@ -220,31 +223,73 @@ function submitAns() {
   }
 }
 
-function showWordFb(writtenText, q) {
+async function showWordFb(writtenText, q) {
   const example = q.exampleAnswer || `${q.answer}`;
   if (!writtenText) {
     showFb('ok', `🎉 נכון! (${q.answer})`, `✅ המשוואה נכונה!<br><br>📝 טיפ: בפעם הבאה כתוב גם משפט תשובה:<br>🌟 דוגמה: "${example}"`);
     return;
   }
-  let score = 0, issues = [], praises = [];
-  if (writtenText.includes(String(q.answer))) { score += 40; praises.push('כוללת את המספר הנכון'); }
-  else issues.push(`חסר המספר ${q.answer}`);
-  if (writtenText.trim().split(/\s+/).length >= 4) { score += 25; praises.push('משפט מלא'); }
-  else issues.push('המשפט קצר מדי');
-  const ctxWords = ['כל','יש','קיבל','נשאר','בסך','ביחד'];
-  if (ctxWords.some(w => writtenText.includes(w))) { score += 20; praises.push('יש הקשר לשאלה'); }
-  else issues.push('התייחס לנושא השאלה');
-  if (writtenText.trim().match(/[.!?]$/)) { score += 15; praises.push('משפט מסודר'); }
-  else issues.push('שכחת נקודה בסוף');
-  score = Math.min(score, 100);
-  const barColor = score>=80 ? 'var(--a3)' : score>=50 ? 'var(--a2)' : 'var(--a1)';
-  const qualityBar = `<div class="quality-bar"><div class="quality-label"><span>איכות משפט</span><span style="color:${barColor}">${score}/100</span></div><div class="quality-outer"><div class="quality-inner" style="width:${score}%;background:${barColor}"></div></div></div>`;
-  if (score >= 80)
-    showFb('ok', `🌟 מצוין! חישוב + משפט מושלם!`, `${praises.map(p=>`✅ ${p}`).join('<br>')}${qualityBar}`);
-  else if (score >= 50)
-    showFb('ok', `✅ נכון! המשפט יכול להיות טוב יותר`, `${issues.map(i=>`⚠️ ${i}`).join('<br>')}<br><br>🌟 דוגמה: "${example}"${qualityBar}`);
-  else
-    showFb('ok', `✅ נכון! אבל כדאי לשפר את המשפט`, `${issues.map(i=>`❌ ${i}`).join('<br>')}<br><br>🌟 דוגמה: "${example}"${qualityBar}`);
+
+  // Show loading state while AI grades
+  showFb('ok', `🎉 נכון! בודק את המשפט שלך...`, `<div class="ai-loading">🤖 <span class="ai-dots">מעריך</span></div>`);
+
+  try {
+    const prompt = `אתה מורה מתמטיקה ישראלי המעריך משפט תשובה של תלמיד.
+
+שאלה: "${q.text}"
+התשובה הנכונה (מספר): ${q.answer}
+משפט התשובה של התלמיד: "${writtenText}"
+דוגמה למשפט מושלם: "${example}"
+
+העריך את משפט התשובה של התלמיד. תן ציון מ-0 עד 100 ופידבק קצר בעברית.
+קריטריונים לציון:
+- האם המספר הנכון (${q.answer}) מופיע? (40 נקודות)
+- האם המשפט עונה על השאלה בצורה הגיונית ומובנת? (30 נקודות)
+- האם המשפט שלם ומנוסח בצורה ברורה? (20 נקודות)
+- האם יש נקודה או סימן פיסוק בסוף? (10 נקודות)
+
+ענה אך ורק ב-JSON תקני, ללא טקסט נוסף, ללא backticks:
+{"score":NUMBER,"praises":["שבח1","שבח2"],"issues":["בעיה1"],"oneLiner":"משפט פידבק אחד קצר"}`;
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await resp.json();
+    const raw = data.content?.find(b => b.type === 'text')?.text || '{}';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const res = JSON.parse(clean);
+
+    const score = Math.min(Math.max(parseInt(res.score) || 0, 0), 100);
+    const praises = res.praises || [];
+    const issues = res.issues || [];
+    const oneLiner = res.oneLiner || '';
+    const barColor = score>=80 ? 'var(--a3)' : score>=50 ? 'var(--a2)' : 'var(--a1)';
+    const qualityBar = `<div class="quality-bar"><div class="quality-label"><span>איכות משפט</span><span style="color:${barColor}">${score}/100</span></div><div class="quality-outer"><div class="quality-inner" style="width:${score}%;background:${barColor}"></div></div></div>`;
+
+    let body = '';
+    if (praises.length) body += praises.map(p=>`✅ ${p}`).join('<br>') + '<br>';
+    if (issues.length)  body += issues.map(i=>`⚠️ ${i}`).join('<br>') + '<br>';
+    if (score < 80 && example) body += `<br>🌟 דוגמה: "${example}"`;
+    body += qualityBar;
+    if (oneLiner) body += `<br><span style="color:var(--txt2);font-size:.8rem">🤖 ${oneLiner}</span>`;
+
+    const title = score>=80 ? `🌟 מצוין! חישוב + משפט מושלם!`
+                : score>=50 ? `✅ נכון! המשפט יכול להיות טוב יותר`
+                :             `✅ נכון! אבל כדאי לשפר את המשפט`;
+    showFb('ok', title, body);
+
+  } catch(e) {
+    // Fallback to simple check if AI fails
+    const hasAnswer = writtenText.includes(String(q.answer));
+    showFb('ok', `🎉 נכון! (${q.answer})`,
+      `${hasAnswer ? '✅ המשפט כולל את המספר הנכון' : `⚠️ כדאי לכלול את המספר ${q.answer} במשפט`}<br><br>🌟 דוגמה: "${example}"`);
+  }
 }
 
 function buildExpl(q){if(q.cat==='word'){let s=`התשובה: <strong>${q.answer}</strong>`;if(q.steps?.length)s+=`<br><br>${q.steps.map(st=>`→ ${st}`).join('<br>')}`;s+=`<br><br>🌟 "${q.exampleAnswer||q.answer}"`;return s;}if(q.cat==='mul')return`התשובה: ${q.answer}<br>${q.mulA} × ${q.mulB} = ${q.answer}`;if(q.cat==='div')return`התשובה: ${q.answer}<br>${q.mulB} × ${q.answer} = ${q.mulB*q.answer}`;return`התשובה: ${q.answer}`;}
