@@ -56,8 +56,6 @@ const LEVELS = [
   { n: 'אלוף חשבון',     xp: 700,      e: '🏆' },
   { n: 'מייסטרו מתמטיקה',xp: 1000,     e: '🌟' },
   { n: 'אגדת המספרים',   xp: 1400,     e: '💫' },
-  { n: 'גאון חשבון',   xp: 1700,     e: '🧠' }, 
-  { n: 'גאון על',   xp: 2000,     e: '💯' }, 
   { n: 'לאינסוף ומעבר!', xp: Infinity, e: '🚀' }
 ];
 
@@ -77,7 +75,7 @@ const ALL_CATS = [
   { id: 'sub',      cls: 'sub',     icon: '➖', name: 'חיסור',      sub: 'עם ובלי לווה' },
   { id: 'mul',      cls: 'mul',     icon: '✖️', name: 'כפל',        sub: 'לוח הכפל' },
   { id: 'div',      cls: 'div',     icon: '➗', name: 'חילוק',      sub: 'חלוקה שווה' },
-  { id: 'word',     cls: 'word',    icon: '📖', name: 'מילוליות',   sub: 'סגור- אנחנו עובדים על זה!' },
+  { id: 'word',     cls: 'word',    icon: '📖', name: 'מילוליות',   sub: 'בעיות עם סיפור' },
   { id: 'shapes',   cls: '',        icon: '📐', name: 'גיאומטריה', sub: 'צורות וצלעות',  borderColor: '#ff9ff3' },
   { id: 'fractions',cls: '',        icon: '½',  name: 'שברים',      sub: 'חלקים של שלם',  borderColor: '#54a0ff' },
   { id: 'learn',    cls: 'learn',   icon: '🎓', name: 'בואו נלמד!', sub: 'חומר חדש',      special: 'learn' },
@@ -85,7 +83,7 @@ const ALL_CATS = [
   { id: 'mistakes', cls: 'mistakes',icon: '🔄', name: 'טעויות',     sub: 'שיפור עצמי',    special: 'mistakes' },
   { id: 'exam',     cls: 'test',    icon: '🏆', name: 'מבחן',       sub: 'בחר נושאים',    special: 'exam' },
   { id: 'friends',  cls: '',        icon: '👥', name: 'חברים',      sub: 'לוח תוצאות',    borderColor: '#2ed573', special: 'friends' },
-  { id: 'settings', cls: 'settings',icon: '⚙️', name: 'הגדרות',     sub: '',          special: 'settings' },
+  { id: 'settings', cls: 'settings',icon: '⚙️', name: 'הגדרות',     sub: 'הורים',          special: 'settings' },
 ];
 
 const CAT_NAMES = {
@@ -94,7 +92,7 @@ const CAT_NAMES = {
   shapes: '📐 גיאומטריה', fractions: '½ שברים'
 };
 
-const LOCKED_TOPICS = { div: 'division', shapes: 'shapes', fractions: 'fractions' };
+const LOCKED_TOPICS = { div: 'division', fractions: 'fractions' }; // shapes unlocked from grade 2+
 
 // ══ BRAINROT / GAME THEMES ══
 const BRAINROT_LABELS = [
