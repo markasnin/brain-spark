@@ -10,9 +10,9 @@ window.GRADE_CONFIG = {
   gradeEmoji: '📊',
   gradeColor: '#ffd32a',
 
-  availableCategories: ['add', 'sub', 'mul', 'word'],
-  availableLearnTopics: ['mul', 'word'],
-  availableExamTopics: ['add', 'sub', 'mul', 'word'],
+  availableCategories: ['add', 'sub', 'mul', 'word', 'shapes'],
+  availableLearnTopics: ['mul', 'word', 'shapes'],
+  availableExamTopics: ['add', 'sub', 'mul', 'word', 'shapes'],
 
   ranges: {
     add: {
@@ -43,5 +43,6 @@ window.GRADE_CONFIG = {
     sub: null,
     mul: null,
     word: null,
+    shapes: null,
   },
 };
