@@ -4,6 +4,7 @@ const FILES = [
   './style.css',
   './special-users.js',
   './config.js',
+  './shapes.js',
   './questions.js',
   './game.js',
   './lessons.js',
