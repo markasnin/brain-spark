@@ -11,7 +11,7 @@ window.GRADE_CONFIG = {
   gradeColor: '#ffd32a',
 
   availableCategories: ['add', 'sub', 'mul', 'word'],
-  availableLearnTopics: [],
+  availableLearnTopics: ['mul', 'word'],
   availableExamTopics: ['add', 'sub', 'mul', 'word'],
 
   ranges: {
