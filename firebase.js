@@ -55,6 +55,153 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
+// ── LOGIN ──
+window.fbLogin = async function() {
+  const usernameVal = document.getElementById('loginUsername').value.trim();
+  const pass        = document.getElementById('loginPass').value;
+  const err         = document.getElementById('loginErr');
+  const btn         = document.getElementById('loginBtn');
+  err.style.display = 'none';
+
+  if (!usernameVal || !pass) {
+    err.textContent = 'נא למלא שם משתמש וסיסמה';
+    err.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'נכנס...';
+
+  try {
+    // Look up the user's login email by username
+    const snap = await getDocs(query(collection(db, 'users'), where('username', '==', cleanUsername(usernameVal))));
+    if (snap.empty) {
+      err.textContent = 'שם משתמש לא קיים';
+      err.style.display = 'block';
+      btn.disabled = false; btn.textContent = '🚀 כניסה';
+      return;
+    }
+    const userDoc = snap.docs[0].data();
+    const email = userDoc.loginEmail || userDoc.email;
+    if (!email) {
+      err.textContent = 'לא נמצא מייל לחשבון זה';
+      err.style.display = 'block';
+      btn.disabled = false; btn.textContent = '🚀 כניסה';
+      return;
+    }
+    await signInWithEmailAndPassword(auth, email, pass);
+    // onAuthStateChanged handles navigation
+  } catch(e) {
+    const msg = (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')
+      ? 'סיסמה שגויה'
+      : e.code === 'auth/user-not-found'
+      ? 'משתמש לא קיים'
+      : e.code === 'auth/too-many-requests'
+      ? 'יותר מדי ניסיונות, נסה שוב מאוחר יותר'
+      : 'שגיאה: ' + e.message;
+    err.textContent = msg;
+    err.style.display = 'block';
+    btn.disabled = false; btn.textContent = '🚀 כניסה';
+  }
+};
+
+// ── REGISTER ──
+window.fbRegister = async function() {
+  const displayName = document.getElementById('regDisplayName').value.trim();
+  const username    = cleanUsername(document.getElementById('regUsername').value);
+  const grade       = document.getElementById('regGrade').value;
+  const gender      = window.getSelectedGender ? window.getSelectedGender('reg') : '';
+  const email       = document.getElementById('regEmail').value.trim();
+  const pass        = document.getElementById('regPass').value;
+  const pass2       = document.getElementById('regPass2').value;
+  const err         = document.getElementById('authErr');
+  const btn         = document.getElementById('authBtn');
+  const termsChecked = document.getElementById('regTermsChk')?.classList.contains('checked');
+
+  err.style.display = 'none';
+
+  if (!displayName || displayName.length < 2) { err.textContent='נא להכניס שם תצוגה'; err.style.display='block'; return; }
+  if (!username || username.length < 2)        { err.textContent='שם משתמש חייב לפחות 2 תווים'; err.style.display='block'; return; }
+  if (!grade)                                  { err.textContent='נא לבחור כיתה'; err.style.display='block'; return; }
+  if (pass.length < 6)                         { err.textContent='סיסמה לפחות 6 תווים'; err.style.display='block'; return; }
+  if (pass !== pass2)                          { err.textContent='הסיסמאות לא תואמות'; err.style.display='block'; return; }
+  if (!termsChecked)                           { err.textContent='נא לאשר את תנאי השימוש'; err.style.display='block'; return; }
+
+  // Email is optional — generate a synthetic one if not provided
+  const loginEmail = email || (username + '@brainspark.local');
+
+  btn.disabled = true; btn.textContent = 'יוצר חשבון...';
+
+  try {
+    // Check username uniqueness first
+    const snap = await getDocs(query(collection(db, 'users'), where('username', '==', username)));
+    if (!snap.empty) {
+      err.textContent = 'שם משתמש זה תפוס, נסה אחר';
+      err.style.display = 'block';
+      btn.disabled = false; btn.textContent = '✅ צור חשבון!';
+      return;
+    }
+
+    const cred = await createUserWithEmailAndPassword(auth, loginEmail, pass);
+    const uid  = cred.user.uid;
+
+    // Save initial user document to Firestore
+    await setDoc(doc(db, 'users', uid), {
+      displayName,
+      username,
+      grade,
+      gender:       gender || '',
+      contactEmail: email ? email.toLowerCase() : '',
+      loginEmail:   loginEmail.toLowerCase(),
+      termsAccepted: true,
+      friends: [],
+      st,
+      cfg,
+      lastSaved: Date.now(),
+    });
+
+    window._displayName = displayName;
+    window._username    = username;
+    window._grade       = grade;
+    window._gender      = gender;
+    if (email) window._contactEmail = email.toLowerCase();
+
+    // onAuthStateChanged fires and handles navigation
+  } catch(e) {
+    const msg = e.code === 'auth/email-already-in-use'
+      ? 'שם משתמש זה כבר קיים, נסה אחר'
+      : e.code === 'auth/invalid-email'
+      ? 'מייל לא תקין'
+      : 'שגיאה: ' + e.message;
+    err.textContent = msg;
+    err.style.display = 'block';
+    btn.disabled = false; btn.textContent = '✅ צור חשבון!';
+  }
+};
+
+// ── LOGOUT ──
+window.fbLogout = async function() {
+  if (!confirm('להתנתק?')) return;
+  try {
+    if (window.fbSave) window.fbSave();
+    await signOut(auth);
+    window._fbUser      = null;
+    window._username    = null;
+    window._displayName = null;
+    window._grade       = null;
+    window._friends     = [];
+    Object.assign(st, {
+      score:0, level:0, xp:0, streak:0, maxStreak:0,
+      learnedTopics:[], dailyDone:false, dailyDate:'',
+      history:[], examTopics:['add','sub','mul'], examDiff:'mix',
+      totalSolved:0, correctCount:0, minigames:{},
+      specialGlowColor:null, specialBadgeColor:null
+    });
+  } catch(e) {
+    console.error('Logout error:', e);
+  }
+};
+
 // ── LOAD USER DATA ──
 window.fbLoad = async function(uid) {
   console.log('[BrainSpark] fbLoad START, uid=', uid);
@@ -226,31 +373,82 @@ window.fbSaveProfileSettings = async function() {
     if (email)  { update.contactEmail = email.toLowerCase(); window._contactEmail = email.toLowerCase(); }
     if (Object.keys(update).length > 0)
       await updateDoc(doc(db, 'users', window._fbUser.uid), update);
-
-    // Try updating Firebase Auth email too
-    if (email && window._fbUser) {
-      try {
-        const { updateEmail } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
-        await updateEmail(window._fbUser, email.toLowerCase());
-      } catch(e) {
-        if (e.code === 'auth/requires-recent-login') {
-          const pass = prompt('כדי לעדכן מייל, הכנס סיסמה:');
-          if (pass) {
-            try {
-              const { reauthenticateWithCredential: reauth, EmailAuthProvider: EAP, updateEmail: ue }
-                = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
-              const cred = EAP.credential(window._fbUser.email, pass);
-              await reauth(window._fbUser, cred);
-              await ue(window._fbUser, email.toLowerCase());
-            } catch(e2) { console.log('reauth error:', e2.code, e2.message); }
-          }
-        } else { console.log('updateEmail error:', e.code, e.message); }
-      }
-    }
     showToast('✅ פרטים עודכנו!');
   } catch(e) {
     if (err) { err.textContent='שגיאה בשמירה'; err.style.display='block'; }
   }
+};
+
+// ── REGISTRATION UI HELPERS ──
+window.toggleRegTerms = function() {
+  const chk = document.getElementById('regTermsChk');
+  if (chk) chk.classList.toggle('checked');
+};
+
+window.showTermsModal = function() {
+  const m = document.getElementById('termsModal');
+  if (m) m.style.display = 'flex';
+};
+
+window.closeTermsModal = function() {
+  const m = document.getElementById('termsModal');
+  if (m) m.style.display = 'none';
+};
+
+window.selectRegGrade = function(grade) {
+  document.getElementById('regGrade').value = grade;
+  document.querySelectorAll('.reg-grade-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.grade === grade);
+  });
+};
+
+let _usernameCheckTimer = null;
+window.scheduleUsernameCheck = function(immediate) {
+  clearTimeout(_usernameCheckTimer);
+  _usernameCheckTimer = setTimeout(async () => {
+    const val = cleanUsername(document.getElementById('regUsername').value);
+    const badge = document.getElementById('regUsernameBadge');
+    if (!badge) return;
+    if (!val || val.length < 2) { badge.style.display='none'; return; }
+    try {
+      const snap = await getDocs(query(collection(db, 'users'), where('username', '==', val)));
+      badge.style.display = 'inline';
+      if (snap.empty) {
+        badge.textContent = '✅ זמין!';
+        badge.style.color = 'var(--a3)';
+      } else {
+        badge.textContent = '❌ תפוס';
+        badge.style.color = 'var(--a1)';
+      }
+    } catch(e) { badge.style.display='none'; }
+  }, immediate ? 0 : 600);
+};
+
+window.regGoStep = function(step) {
+  const err = document.getElementById('authErr');
+  err.style.display = 'none';
+  if (step === 2) {
+    const name = document.getElementById('regDisplayName').value.trim();
+    const user = cleanUsername(document.getElementById('regUsername').value);
+    if (!name || name.length < 2) { err.textContent='נא להכניס שם תצוגה'; err.style.display='block'; return; }
+    if (!user || user.length < 2) { err.textContent='שם משתמש חייב לפחות 2 תווים'; err.style.display='block'; return; }
+  }
+  if (step === 3) {
+    const grade = document.getElementById('regGrade').value;
+    if (!grade) { err.textContent='נא לבחור כיתה'; err.style.display='block'; return; }
+  }
+  [1,2,3].forEach(i => {
+    document.getElementById('regStep'+i).classList.toggle('on', i===step);
+    document.getElementById('rdot'+i).classList.toggle('active', i<=step);
+    if (i < 3) document.getElementById('rline'+i).classList.toggle('active', i<step);
+  });
+};
+
+window.switchAuthTab = function(tab) {
+  document.getElementById('loginForm').classList.toggle('on', tab==='login');
+  document.getElementById('regForm').classList.toggle('on', tab==='reg');
+  document.getElementById('tabLogin').classList.toggle('active', tab==='login');
+  document.getElementById('tabReg').classList.toggle('active', tab==='reg');
 };
 
 // ── FRIENDS ──
