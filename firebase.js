@@ -79,7 +79,7 @@ window.fbLogin = async function() {
   btn.textContent = 'נכנס...';
 
   try {
-    // Try synthetic email first (no Firestore query needed = no permissions error)
+    // Build synthetic email directly — avoids pre-auth Firestore query (permissions error)
     const syntheticEmail = cleanUsername(usernameVal) + '@brainspark.local';
     try {
       await signInWithEmailAndPassword(auth, syntheticEmail, pass);
@@ -97,9 +97,9 @@ window.fbLogin = async function() {
         btn.disabled = false; btn.textContent = '🚀 כניסה';
         return;
       }
-      // user-not-found = registered with a real email, fall through to Firestore lookup
+      // user-not-found on synthetic = registered with real email, fall through
     }
-
+    // Fallback for real-email accounts (only works if Firestore rules allow public reads)
     const snap = await getDocs(query(collection(db, 'users'), where('username', '==', cleanUsername(usernameVal))));
     if (snap.empty) {
       err.textContent = 'שם משתמש לא קיים';
@@ -410,7 +410,7 @@ window.toggleRegTerms = function() {
   const chk = document.getElementById('regTermsChk');
   const row = document.getElementById('regTermsRow');
   if (chk) chk.classList.toggle('checked');
-  if (row) row.classList.toggle('accepted', chk ? chk.classList.contains('checked') : false);
+  if (row) row.classList.toggle('accepted', !!(chk && chk.classList.contains('checked')));
 };
 
 window.showTermsModal = function() {
@@ -448,7 +448,10 @@ window.scheduleUsernameCheck = function(immediate) {
         badge.textContent = '❌ תפוס';
         badge.style.color = 'var(--a1)';
       }
-    } catch(e) { badge.style.display='none'; }
+    } catch(e) {
+      // Firestore rules block unauthenticated reads — silently hide badge
+      badge.style.display = 'none';
+    }
   }, immediate ? 0 : 600);
 };
 
