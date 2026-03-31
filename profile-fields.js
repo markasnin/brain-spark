@@ -11,6 +11,13 @@ window.GENDER_OPTIONS = [
   { value: 'other', label: 'לא רוצה להגיד', emoji: '🌟' },
 ];
 
+// ── Apply gender colour theme to <body> ─────────
+window.applyGenderTheme = function(gender) {
+  document.body.classList.remove('theme-boy', 'theme-girl');
+  if (gender === 'boy')  document.body.classList.add('theme-boy');
+  if (gender === 'girl') document.body.classList.add('theme-girl');
+};
+
 // ── Render gender picker (returns HTML string) ──
 window.renderGenderPicker = function(idPrefix, selectedValue = '') {
   return `
@@ -94,6 +101,11 @@ window.fbSaveProfileSettings = async function() {
 
   try {
     await window.fbSaveProfileFields(window._fbUser.uid, gender, email, null);
+    // Update local state and apply theme immediately
+    if (gender) {
+      window._gender = gender;
+      window.applyGenderTheme(gender);
+    }
     showToast('✅ פרטים עודכנו!');
   } catch(e) {
     if (err) { err.textContent = 'שגיאה בשמירה'; err.style.display = 'block'; }
