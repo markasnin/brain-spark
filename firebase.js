@@ -23,6 +23,12 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Access globals from non-module scripts
+// config.js exposes st and cfg on window - reference them via window to be safe
+// We use a getter so we always have the latest reference
+const getState = () => window.st;
+const getCfg   = () => window.cfg;
+
 // Expose to non-module scripts
 window._fb = {
   auth, db, doc, setDoc, getDoc, updateDoc,
@@ -155,8 +161,8 @@ window.fbRegister = async function() {
       loginEmail:   loginEmail.toLowerCase(),
       termsAccepted: true,
       friends: [],
-      st,
-      cfg,
+      st:  window.st,
+      cfg: window.cfg,
       lastSaved: Date.now(),
     });
 
@@ -190,7 +196,7 @@ window.fbLogout = async function() {
     window._displayName = null;
     window._grade       = null;
     window._friends     = [];
-    Object.assign(st, {
+    Object.assign(window.st, {
       score:0, level:0, xp:0, streak:0, maxStreak:0,
       learnedTopics:[], dailyDone:false, dailyDate:'',
       history:[], examTopics:['add','sub','mul'], examDiff:'mix',
@@ -228,30 +234,30 @@ window.fbLoad = async function(uid) {
       console.log('[BrainSpark] cloud _savedAt=', cloudSaved, 'local _savedAt=', localSaved);
       const useSt = (localSaved > cloudSaved) ? localSt : cloudSt;
       console.log('[BrainSpark] using:', localSaved > cloudSaved ? 'LOCAL' : 'CLOUD', 'score=', useSt.score);
-      Object.assign(st, useSt);
-      if (d.cfg) Object.assign(cfg, d.cfg);
-      if (!st.minigames) st.minigames = {};
-      try { localStorage.setItem('yanMath2', JSON.stringify({st, cfg})); } catch(e) {}
+      Object.assign(window.st, useSt);
+      if (d.cfg) Object.assign(window.cfg, d.cfg);
+      if (!window.st.minigames) window.st.minigames = {};
+      try { localStorage.setItem('yanMath2', JSON.stringify({st: window.st, cfg: window.cfg})); } catch(e) {}
     } else {
       console.log('[BrainSpark] NO cloud doc — using localStorage only');
       try {
         const localRaw = JSON.parse(localStorage.getItem('yanMath2') || '{}');
-        if (localRaw.st)  Object.assign(st,  localRaw.st);
-        if (localRaw.cfg) Object.assign(cfg, localRaw.cfg);
+        if (localRaw.st)  Object.assign(window.st,  localRaw.st);
+        if (localRaw.cfg) Object.assign(window.cfg, localRaw.cfg);
       } catch(e) {}
     }
     if (!window._friends) window._friends = [];
-    if (!st.history)      st.history = [];
+    if (!window.st.history)      window.st.history = [];
     if (!st.minigames)    st.minigames = {};
     const today = new Date().toDateString();
-    if (st.dailyDate !== today) { st.dailyDone = false; st.dailyDate = today; }
-    console.log('[BrainSpark] fbLoad DONE. st.score=', st.score, 'grade=', window._grade);
+    if (window.st.dailyDate !== today) { window.st.dailyDone = false; window.st.dailyDate = today; }
+    console.log('[BrainSpark] fbLoad DONE. st.score=', window.st.score, 'grade=', window._grade);
   } catch(e) {
     console.error('[BrainSpark] fbLoad ERROR:', e.code, e.message);
     try {
       const localRaw = JSON.parse(localStorage.getItem('yanMath2') || '{}');
-      if (localRaw.st)  Object.assign(st,  localRaw.st);
-      if (localRaw.cfg) Object.assign(cfg, localRaw.cfg);
+      if (localRaw.st)  Object.assign(window.st,  localRaw.st);
+      if (localRaw.cfg) Object.assign(window.cfg, localRaw.cfg);
     } catch(e2) {}
   }
 };
@@ -525,14 +531,14 @@ window.fbSave = function() {
     console.log('[BrainSpark] fbSave skipped — not logged in');
     return;
   }
-  st._savedAt = Date.now();
-  try { localStorage.setItem('yanMath2', JSON.stringify({st, cfg})); } catch(e) {}
+  if (window.st) window.st._savedAt = Date.now();
+  try { localStorage.setItem('yanMath2', JSON.stringify({st: window.st, cfg: window.cfg})); } catch(e) {}
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(async () => {
     try {
-      console.log('[BrainSpark] fbSave START, uid=', window._fbUser.uid, 'score=', st.score);
+      console.log('[BrainSpark] fbSave START, uid=', window._fbUser.uid, 'score=', window.st && window.st.score);
       await setDoc(doc(db, 'users', window._fbUser.uid), {
-        st, cfg,
+        st: window.st, cfg: window.cfg,
         displayName:  window._displayName  || '',
         username:     window._username     || '',
         grade:        window._grade        || '',
