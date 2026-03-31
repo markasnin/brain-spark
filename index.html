@@ -395,10 +395,11 @@
         <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
           <div class="set-label">מי אני?</div>
           <div id="setGenderPicker" class="gender-picker">
-            <button type="button" class="gender-btn" data-value="boy"   onclick="selectGender('set','boy')"   aria-pressed="false"><span class="gender-emoji">👦</span><span class="gender-label">ילד</span></button>
-            <button type="button" class="gender-btn" data-value="girl"  onclick="selectGender('set','girl')"  aria-pressed="false"><span class="gender-emoji">👧</span><span class="gender-label">ילדה</span></button>
-            <button type="button" class="gender-btn" data-value="other" onclick="selectGender('set','other')" aria-pressed="false"><span class="gender-emoji">🌟</span><span class="gender-label">לא רוצה להגיד</span></button>
+            <button type="button" class="gender-btn" data-value="boy"   onclick="selectGender('set','boy');   window.applyGenderTheme&&window.applyGenderTheme('boy')"   aria-pressed="false"><span class="gender-emoji">👦</span><span class="gender-label">ילד</span></button>
+            <button type="button" class="gender-btn" data-value="girl"  onclick="selectGender('set','girl');  window.applyGenderTheme&&window.applyGenderTheme('girl')"  aria-pressed="false"><span class="gender-emoji">👧</span><span class="gender-label">ילדה</span></button>
+            <button type="button" class="gender-btn" data-value="other" onclick="selectGender('set','other'); window.applyGenderTheme&&window.applyGenderTheme('other')" aria-pressed="false"><span class="gender-emoji">🌟</span><span class="gender-label">לא רוצה להגיד</span></button>
           </div>
+          <button onclick="fbSaveProfileSettings()" style="margin-top:6px;padding:9px 18px;background:rgba(30,144,255,.2);border:1px solid var(--a4);color:var(--a4);border-radius:9px;cursor:pointer;font-family:'Rubik',sans-serif;font-weight:700;font-size:.9rem;">🎨 שמור מגדר וצבעים</button>
         </div>
         <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
           <div class="set-label">מייל לשחזור סיסמה <span style="font-size:.75rem;color:var(--a3)">(לא חובה)</span></div>
