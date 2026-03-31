@@ -50,9 +50,9 @@ onAuthStateChanged(auth, async (user) => {
       document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
       document.getElementById('grade-select-scr').classList.add('on');
     } else {
-      await loadGradeConfig(window._grade);
+      await window.loadGradeConfig(window._grade);
       document.getElementById('home').classList.add('on');
-      updateHome();
+      window.updateHome();
     }
   } else {
     window._fbUser = null;
@@ -79,8 +79,8 @@ window.fbLogin = async function() {
   btn.textContent = 'נכנס...';
 
   try {
-    // Build synthetic email directly — avoids pre-auth Firestore query (permissions error)
-    const syntheticEmail = cleanUsername(usernameVal) + '@brainspark.local';
+    // Build synthetic email directly — no pre-auth Firestore query needed
+    const syntheticEmail = window.cleanUsername(usernameVal) + '@brainspark.local';
     try {
       await signInWithEmailAndPassword(auth, syntheticEmail, pass);
       return; // success — onAuthStateChanged handles navigation
@@ -99,8 +99,8 @@ window.fbLogin = async function() {
       }
       // user-not-found on synthetic = registered with real email, fall through
     }
-    // Fallback for real-email accounts (only works if Firestore rules allow public reads)
-    const snap = await getDocs(query(collection(db, 'users'), where('username', '==', cleanUsername(usernameVal))));
+    // Fallback for real-email registrations
+    const snap = await getDocs(query(collection(db, 'users'), where('username', '==', window.cleanUsername(usernameVal))));
     if (snap.empty) {
       err.textContent = 'שם משתמש לא קיים';
       err.style.display = 'block';
@@ -133,7 +133,7 @@ window.fbLogin = async function() {
 // ── REGISTER ──
 window.fbRegister = async function() {
   const displayName = document.getElementById('regDisplayName').value.trim();
-  const username    = cleanUsername(document.getElementById('regUsername').value);
+  const username    = window.cleanUsername(document.getElementById('regUsername').value);
   const grade       = document.getElementById('regGrade').value;
   const gender      = window.getSelectedGender ? window.getSelectedGender('reg') : '';
   const email       = document.getElementById('regEmail').value.trim();
@@ -288,7 +288,7 @@ window.fbSaveUsername = async function() {
   const err  = document.getElementById('setupErr');
   const btn  = document.getElementById('setupBtn');
   err.style.display = 'none';
-  const clean = cleanUsername(val);
+  const clean = window.cleanUsername(val);
   if (!clean || clean.length < 2) { err.textContent='שם משתמש חייב להיות לפחות 2 תווים'; err.style.display='block'; return; }
   btn.disabled = true; btn.textContent = 'שומר...';
   try {
@@ -300,9 +300,9 @@ window.fbSaveUsername = async function() {
     if (!window._grade) {
       document.getElementById('grade-select-scr').classList.add('on');
     } else {
-      await loadGradeConfig(window._grade);
+      await window.loadGradeConfig(window._grade);
       document.getElementById('home').classList.add('on');
-      updateHome();
+      window.updateHome();
     }
   } catch(e) {
     try {
@@ -328,7 +328,7 @@ window.fbSendPasswordReset = async function() {
   }
   try {
     await sendPasswordResetEmail(auth, contactEmail);
-    showToast(`✅ קישור לאיפוס סיסמה נשלח ל-${contactEmail}`);
+    window.showToast(`✅ קישור לאיפוס סיסמה נשלח ל-${contactEmail}`);
   } catch(e) {
     err.textContent = (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-email')
       ? 'המייל לא מזוהה על ידי Firebase. עדכן את המייל בהגדרות ושמור שוב — ואז נסה מחדש.'
@@ -348,7 +348,7 @@ window.fbChangePassword = async function() {
     const cred = EmailAuthProvider.credential(window._fbUser.email, oldPass);
     await reauthenticateWithCredential(window._fbUser, cred);
     await updatePassword(window._fbUser, newPass);
-    showToast('✅ סיסמה עודכנה!');
+    window.showToast('✅ סיסמה עודכנה!');
     document.getElementById('oldPass').value = '';
     document.getElementById('newPass').value  = '';
   } catch(e) {
@@ -365,8 +365,8 @@ window.fbChangeDisplayName = async function() {
   if (!newName || newName.length < 2) { err.textContent='שם חייב להיות לפחות 2 תווים'; err.style.display='block'; return; }
   window._displayName = newName;
   window.fbSave();
-  updateHome();
-  showToast('✅ שם עודכן!');
+  window.updateHome();
+  window.showToast('✅ שם עודכן!');
 };
 
 // ── CHANGE GRADE ──
@@ -376,9 +376,9 @@ window.fbChangeGrade = async function() {
   if (!confirm(`לעבור לכיתה ${grade}? זה ישנה את רמת השאלות!`)) return;
   window._grade = grade;
   window.fbSave();
-  await loadGradeConfig(grade);
-  updateHome();
-  showToast(`✅ עברת לכיתה ${grade}!`);
+  await window.loadGradeConfig(grade);
+  window.updateHome();
+  window.showToast(`✅ עברת לכיתה ${grade}!`);
 };
 
 // ── SAVE PROFILE SETTINGS (email + gender) ──
@@ -399,7 +399,7 @@ window.fbSaveProfileSettings = async function() {
     if (email)  { update.contactEmail = email.toLowerCase(); window._contactEmail = email.toLowerCase(); }
     if (Object.keys(update).length > 0)
       await updateDoc(doc(db, 'users', window._fbUser.uid), update);
-    showToast('✅ פרטים עודכנו!');
+    window.showToast('✅ פרטים עודכנו!');
   } catch(e) {
     if (err) { err.textContent='שגיאה בשמירה'; err.style.display='block'; }
   }
@@ -434,7 +434,7 @@ let _usernameCheckTimer = null;
 window.scheduleUsernameCheck = function(immediate) {
   clearTimeout(_usernameCheckTimer);
   _usernameCheckTimer = setTimeout(async () => {
-    const val = cleanUsername(document.getElementById('regUsername').value);
+    const val = window.cleanUsername(document.getElementById('regUsername').value);
     const badge = document.getElementById('regUsernameBadge');
     if (!badge) return;
     if (!val || val.length < 2) { badge.style.display='none'; return; }
@@ -448,10 +448,7 @@ window.scheduleUsernameCheck = function(immediate) {
         badge.textContent = '❌ תפוס';
         badge.style.color = 'var(--a1)';
       }
-    } catch(e) {
-      // Firestore rules block unauthenticated reads — silently hide badge
-      badge.style.display = 'none';
-    }
+    } catch(e) { badge.style.display='none'; }
   }, immediate ? 0 : 600);
 };
 
@@ -460,7 +457,7 @@ window.regGoStep = function(step) {
   err.style.display = 'none';
   if (step === 2) {
     const name = document.getElementById('regDisplayName').value.trim();
-    const user = cleanUsername(document.getElementById('regUsername').value);
+    const user = window.cleanUsername(document.getElementById('regUsername').value);
     if (!name || name.length < 2) { err.textContent='נא להכניס שם תצוגה'; err.style.display='block'; return; }
     if (!user || user.length < 2) { err.textContent='שם משתמש חייב לפחות 2 תווים'; err.style.display='block'; return; }
   }
@@ -484,7 +481,7 @@ window.switchAuthTab = function(tab) {
 
 // ── FRIENDS ──
 window.fbSearchUser = async function() {
-  const q   = cleanUsername(document.getElementById('friendSearch').value);
+  const q   = window.cleanUsername(document.getElementById('friendSearch').value);
   const res = document.getElementById('friendResults');
   res.innerHTML = '<div style="color:var(--txt2)">מחפש...</div>';
   try {
@@ -504,7 +501,7 @@ window.fbAddFriend = async function(uid, name) {
   if (window._friends.includes(uid)) return;
   window._friends.push(uid);
   window.fbSave();
-  showToast(`✅ ${name} נוסף לחברים!`);
+  window.showToast(`✅ ${name} נוסף לחברים!`);
   openFriends();
 };
 
@@ -512,7 +509,7 @@ window.fbRemoveFriend = async function(uid, name) {
   if (!confirm(`להסיר את ${name} מהחברים?`)) return;
   window._friends = (window._friends||[]).filter(id => id !== uid);
   window.fbSave();
-  showToast(`🗑️ ${name} הוסר מהחברים`);
+  window.showToast(`🗑️ ${name} הוסר מהחברים`);
   renderFriendsList();
   loadMiniLeaderboard();
 };
