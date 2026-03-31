@@ -45,12 +45,40 @@ window.RocketGame = (function () {
   };
 
   // ── Question generator ────────────────────────────────────
+
+  // ── Grade-aware question generator ───────────────────────
+  function _gradePool(diff) {
+    const gc = window.GRADE_CONFIG;
+    const avail = (gc && gc.availableCategories) || ['add','sub'];
+    const math = ['add','sub','mul','div'].filter(c => avail.includes(c));
+    let pool;
+    if (diff === 'easy')   pool = math.filter(c => c === 'add' || c === 'sub');
+    else if (diff === 'medium') pool = math.filter(c => c !== 'div');
+    else pool = math;
+    return (pool.length ? pool : math.length ? math : ['add']);
+  }
   function makeQ(diff) {
-    if (window.genQ) return window.genQ(_pick(diff==='easy'?['add','sub']:diff==='medium'?['add','sub','mul']:['mul','div']), diff);
-    const r=_rnd;
-    if (diff==='easy')   { const a=r(2,15),b=r(2,15); return {text:`${a} + ${b}`,answer:a+b}; }
-    if (diff==='medium') { const a=r(2,9),b=r(2,9);   return {text:`${a} × ${b}`,answer:a*b}; }
-    const b=r(2,8),q=r(2,8); return {text:`${b*q} ÷ ${b}`,answer:q};
+    const pool = _gradePool(diff);
+    const cat  = pool[Math.floor(Math.random() * pool.length)];
+    if (window.genQ) { try { return window.genQ(cat, diff); } catch(e) {} }
+    const r = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+    const gr = window._grade || '\u05d1';
+    const sm = (gr==='\u05d0'||gr==='\u05d1');
+    const md = (gr==='\u05d2'||gr==='\u05d3');
+    if (cat==='add') { const m=sm?15:md?60:250; const a=r(1,m),b=r(1,m); return {text:`${a} + ${b} = ?`, answer:a+b}; }
+    if (cat==='sub') { const m=sm?15:md?60:250; const a=r(3,m),b=r(1,a); return {text:`${a} - ${b} = ?`, answer:a-b}; }
+    if (cat==='mul') { const m=sm?5:md?9:12;    const a=r(2,m),b=r(2,m); return {text:`${a} \u00d7 ${b} = ?`, answer:a*b}; }
+    const m=md?9:12; const b=r(2,m),q=r(1,m);  return {text:`${b*q} \u00f7 ${b} = ?`, answer:q};
+  }
+
+
+  function helpBtn(msg) {
+    const safe = msg.replace(/'/g,"&#39;").replace(/"/g,"&quot;");
+    return `<div style="text-align:center;margin-bottom:10px">
+      <button onclick="window._showHelp('${safe}')" style="padding:6px 18px;background:rgba(255,211,42,.15);border:1px solid #ffd43b88;color:#ffd43b;border-radius:20px;font-family:'Rubik',sans-serif;font-size:.8rem;cursor:pointer;font-weight:700">
+        💡 איך משחקים?
+      </button>
+    </div>`;
   }
 
   // ── Canvas rocket animation ───────────────────────────────
@@ -126,6 +154,7 @@ window.RocketGame = (function () {
   function renderCockpit(el) {
     el.innerHTML = `
       <div style="font-family:'Fredoka',sans-serif;font-size:1.6rem;color:#a5d8ff;text-align:center;margin-bottom:8px">🚀 מרוץ החלל</div>
+      ${helpBtn("🚀 מרוץ החלל\n\n• תדלק → פתור תרגיל קל לדלק\n• גש לכוכב → פתור תרגיל לכבוש\n• אסטרואידים פוגעים בפתאום — פתור מהר!\n• טעות = חיים פחות\n• הבס את הבוס הסופי לנצחון! 👾")}
       ${spaceCard(`
         <canvas id="rocketCanvas" width="400" height="220" style="width:100%;border-radius:12px;display:block"></canvas>
       `)}
