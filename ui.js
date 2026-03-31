@@ -424,6 +424,14 @@ function switchAuthTab(tab) {
   if (tab==='reg') resetRegForm();
 }
 
+
+// ══ GENDER THEME ══
+window.applyGenderTheme = function(gender) {
+  document.body.classList.remove("theme-boy", "theme-girl");
+  if (gender === "boy")  document.body.classList.add("theme-boy");
+  if (gender === "girl") document.body.classList.add("theme-girl");
+};
+
 // ══ STARS ══
 function createStars() {
   const bg = document.getElementById('bg');
