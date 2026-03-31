@@ -41,6 +41,7 @@ function save() {
   try { localStorage.setItem('yanMath2', JSON.stringify({st, cfg})); } catch(e) {}
   if (window.fbSave) window.fbSave();
 }
+window.save = save; // export so minigames can call window.save()
 
 function sortLeaderboard(results) {
   return results.sort((a, b) => {
