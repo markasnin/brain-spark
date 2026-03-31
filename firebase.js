@@ -79,14 +79,12 @@ window.fbLogin = async function() {
   btn.textContent = 'נכנס...';
 
   try {
-    // First try the synthetic email (used by most users who registered without a real email).
-    // This avoids a pre-auth Firestore query which is blocked by security rules.
+    // Try synthetic email first (no Firestore query needed = no permissions error)
     const syntheticEmail = cleanUsername(usernameVal) + '@brainspark.local';
     try {
       await signInWithEmailAndPassword(auth, syntheticEmail, pass);
-      return; // onAuthStateChanged handles navigation
+      return; // success — onAuthStateChanged handles navigation
     } catch(innerErr) {
-      // If it's wrong-password the username exists but password is wrong — stop here
       if (innerErr.code === 'auth/wrong-password' || innerErr.code === 'auth/invalid-credential') {
         err.textContent = 'סיסמה שגויה';
         err.style.display = 'block';
@@ -99,11 +97,9 @@ window.fbLogin = async function() {
         btn.disabled = false; btn.textContent = '🚀 כניסה';
         return;
       }
-      // user-not-found on synthetic email means they registered with a real email.
-      // Fall through to Firestore lookup (only works if security rules allow it).
+      // user-not-found = registered with a real email, fall through to Firestore lookup
     }
 
-    // Fallback: look up the real email from Firestore (requires permissive rules)
     const snap = await getDocs(query(collection(db, 'users'), where('username', '==', cleanUsername(usernameVal))));
     if (snap.empty) {
       err.textContent = 'שם משתמש לא קיים';
@@ -120,7 +116,6 @@ window.fbLogin = async function() {
       return;
     }
     await signInWithEmailAndPassword(auth, email, pass);
-    // onAuthStateChanged handles navigation
   } catch(e) {
     const msg = (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')
       ? 'סיסמה שגויה'
@@ -400,7 +395,7 @@ window.fbSaveProfileSettings = async function() {
   }
   try {
     const update = {};
-    if (gender) { update.gender = gender; window._gender = gender; }
+    if (gender) { update.gender = gender; window._gender = gender; if (window.applyGenderTheme) window.applyGenderTheme(gender); }
     if (email)  { update.contactEmail = email.toLowerCase(); window._contactEmail = email.toLowerCase(); }
     if (Object.keys(update).length > 0)
       await updateDoc(doc(db, 'users', window._fbUser.uid), update);
@@ -413,7 +408,9 @@ window.fbSaveProfileSettings = async function() {
 // ── REGISTRATION UI HELPERS ──
 window.toggleRegTerms = function() {
   const chk = document.getElementById('regTermsChk');
+  const row = document.getElementById('regTermsRow');
   if (chk) chk.classList.toggle('checked');
+  if (row) row.classList.toggle('accepted', chk ? chk.classList.contains('checked') : false);
 };
 
 window.showTermsModal = function() {
