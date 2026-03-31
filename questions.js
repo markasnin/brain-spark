@@ -282,10 +282,11 @@ function checkWordEquation(userA, userOp, userB, q) {
 }
 
 function genShapes(diff, th) {
+  // Use interactive shapes engine if loaded
   if (window.genShapesInteractive) {
     return window.genShapesInteractive(diff);
   }
-  // Fallback if shapes.js not loaded
+  // Fallback (shapes.js not loaded yet)
   const shapes = [
     {q:'כמה צלעות יש למשולש?',a:3},{q:'כמה פינות יש לריבוע?',a:4},
     {q:'כמה צלעות יש למלבן?',a:4},{q:'כמה פינות יש לעיגול?',a:0},
