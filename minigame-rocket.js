@@ -8,6 +8,19 @@
 window.RocketGame = (function () {
   'use strict';
 
+  // ── Persistent state (saved via main st.minigames) ──────────
+  function mgSave(data) {
+    if (!window.st) return;
+    if (!window.st.minigames) window.st.minigames = {};
+    window.st.minigames['rocket'] = data;
+    if (window.save) window.save();
+    else if (window.fbSave) window.fbSave();
+  }
+  function mgLoad() {
+    return (window.st && window.st.minigames && window.st.minigames['rocket']) || null;
+  }
+
+
   const _rnd  = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
   const _pick = arr  => arr[Math.floor(Math.random()*arr.length)];
 
