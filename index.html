@@ -1,560 +1,122 @@
-<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#07050f">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Brain Spark ⚡</title>
-<link rel="stylesheet" href="style.css">
+// ══ GAME CONFIG ══
+// Default point values, streak bonuses, etc.
+// These are overridden by per-user settings saved in Firestore.
 
-<!-- Grade config loader slot -->
-<script id="gradeScript"></script>
+let cfg = {
+  ptsEasy: 5,
+  ptsMed: 10,
+  ptsHard: 18,
+  ptsWordBonus: 8,
+  ptsWrong: 1,
+  ptsHint: 2,
+  maxAttempts: 3,
+  hintTime: 180,
+  streakBonus3: 5,
+  streakBonus5: 10,
+  streakBonus10: 20
+};
 
-<!-- ══ LOAD ORDER ══
-  1. special-users.js  — SPECIAL_USERS object (edit to add/remove VIPs)
-  2. config.js         — cfg, st, qs, LEVELS, GRADE_FILES, ALL_CATS, themes
-  3. questions.js      — genQ, genPool, genAdd/Sub/Mul/Div/Word/Shapes/Frac
-  4. game.js           — loadQ, submitAns, streak, points, exam, daily, history
-  5. lessons.js        — openLearn, openLesson, LESSONS
-  6. ui.js             — show, updateHome, buildGrid, settings, friends UI
-  7. firebase.js       — Firebase init + all async Firebase functions (module)
--->
-<script src="special-users.js"></script>
-<script src="config.js"></script>
-<script src="questions.js"></script>
-<script src="game.js"></script>
-<script src="lessons.js"></script>
-<script src="ui.js"></script>
-<script type="module" src="firebase.js"></script>
+// ══ PLAYER STATE ══
+let st = {
+  score: 0,
+  level: 0,
+  xp: 0,
+  streak: 0,
+  maxStreak: 0,
+  learnedTopics: [],
+  dailyDone: false,
+  dailyDate: '',
+  history: [],
+  examTopics: ['add', 'sub', 'mul'],
+  examDiff: 'mix',
+  totalSolved: 0,
+  correctCount: 0,
+  specialGlowColor: null,
+  specialBadgeColor: null
+};
 
-</head>
-<body>
-<div id="bg"></div>
+// ══ QUESTION SESSION STATE ══
+let qs = {
+  pool: [], idx: 0, cat: 'add', diff: 'easy',
+  current: null, attempts: 0, hintUsed: false,
+  hintSecs: 180, hintInterval: null,
+  isDaily: false, isDailyIdx: 0,
+  isMistakes: false,
+  isExam: false, examPool: [], examIdx: 0,
+  examScore: 0, examTimer: null, examSecs: 600,
+  done: false
+};
 
-<!-- ══ AUTH ══ -->
-<div class="scr on" id="auth-scr">
-  <div class="logo">⚡ Brain Spark</div>
-  <div class="logo-sub">Math Arena</div>
-  <div style="margin-bottom:28px"></div>
-  <div class="auth-card">
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">כניסה</button>
-      <button class="auth-tab" id="tabReg" onclick="switchAuthTab('reg')">הרשמה</button>
-    </div>
-    <div class="auth-form on" id="loginForm">
-      <div class="auth-err" id="loginErr"></div>
-      <label class="auth-label">שם משתמש</label>
-      <input class="auth-inp" id="loginUsername" type="text" placeholder="שם משתמש" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
-      <label class="auth-label">סיסמה</label>
-      <input class="auth-inp" id="loginPass" type="password" placeholder="סיסמה" autocomplete="current-password" onkeydown="if(event.key==='Enter')fbLogin()">
-      <button class="auth-btn" id="loginBtn" onclick="fbLogin()">🚀 כניסה</button>
-    </div>
-    <div class="auth-form" id="regForm">
-      <div class="auth-err" id="authErr"></div>
-      <div class="reg-stepper" id="regStepper">
-        <div class="reg-step-dot active" id="rdot1">1</div>
-        <div class="reg-step-line" id="rline1"></div>
-        <div class="reg-step-dot" id="rdot2">2</div>
-        <div class="reg-step-line" id="rline2"></div>
-        <div class="reg-step-dot" id="rdot3">3</div>
-      </div>
-      <!-- Step 1 -->
-      <div class="reg-step-panel on" id="regStep1">
-        <div class="reg-step-title">👋 ?שלום! מי את/ה?</div>
-        <div class="reg-step-sub">השם שלך יופיע על לוח הניקוד</div>
-        <label class="auth-label">שם תצוגה</label>
-        <input class="auth-inp" id="regDisplayName" type="text" placeholder="לדוגמה: דוד 🔥" autocomplete="given-name" onkeydown="if(event.key==='Enter')document.getElementById('regUsername').focus()">
-        <label class="auth-label">שם משתמש לכניסה</label>
-        <input class="auth-inp" id="regUsername" type="text" placeholder="באנגלית/עברית, ללא רווחים" autocomplete="username"
-          oninput="scheduleUsernameCheck()" onblur="scheduleUsernameCheck(true)" onkeydown="if(event.key==='Enter')regGoStep(2)">
-        <span id="regUsernameBadge" style="display:none"></span>
-        <button class="reg-next-btn" onclick="regGoStep(2)">המשך ←</button>
-      </div>
-      <!-- Step 2 -->
-      <div class="reg-step-panel" id="regStep2">
-        <div class="reg-step-title">🎯 קצת עלייך</div>
-        <div class="reg-step-sub">בחר כיתה ומי אתה</div>
-        <label class="auth-label">מי אני?</label>
-        <div id="regGenderPicker" class="gender-picker" style="margin-bottom:16px;">
-          <button type="button" class="gender-btn" data-value="boy"   onclick="selectGender('reg','boy')"   aria-pressed="false"><span class="gender-emoji">👦</span><span class="gender-label">ילד</span></button>
-          <button type="button" class="gender-btn" data-value="girl"  onclick="selectGender('reg','girl')"  aria-pressed="false"><span class="gender-emoji">👧</span><span class="gender-label">ילדה</span></button>
-          <button type="button" class="gender-btn" data-value="other" onclick="selectGender('reg','other')" aria-pressed="false"><span class="gender-emoji">🌟</span><span class="gender-label">לא רוצה להגיד</span></button>
-        </div>
-        <label class="auth-label">באיזו כיתה אתה?</label>
-        <div class="reg-grade-grid">
-          <div class="reg-grade-card rg1" onclick="selectRegGrade('א')" data-grade="א"><span class="rgc-emoji">🌱</span><div class="rgc-name">כיתה א</div><div class="rgc-sub">חיבור וחיסור</div></div>
-          <div class="reg-grade-card rg2" onclick="selectRegGrade('ב')" data-grade="ב"><span class="rgc-emoji">📊</span><div class="rgc-name">כיתה ב</div><div class="rgc-sub">+ כפל</div></div>
-          <div class="reg-grade-card rg3" onclick="selectRegGrade('ג')" data-grade="ג"><span class="rgc-emoji">⚡</span><div class="rgc-name">כיתה ג</div><div class="rgc-sub">+ חילוק</div></div>
-          <div class="reg-grade-card rg4" onclick="selectRegGrade('ד')" data-grade="ד"><span class="rgc-emoji">🔮</span><div class="rgc-name">כיתה ד</div><div class="rgc-sub">שברים</div></div>
-          <div class="reg-grade-card rg5" onclick="selectRegGrade('ה')" data-grade="ה"><span class="rgc-emoji">🏆</span><div class="rgc-name">כיתה ה</div><div class="rgc-sub">מספרים גדולים</div></div>
-          <div class="reg-grade-card rg6" onclick="selectRegGrade('ו')" data-grade="ו"><span class="rgc-emoji">🚀</span><div class="rgc-name">כיתה ו</div><div class="rgc-sub">רמה מקסימלית</div></div>
-        </div>
-        <input type="hidden" id="regGrade" value="">
-        <button class="reg-next-btn" onclick="regGoStep(3)">המשך ←</button>
-        <div class="reg-back-link" onclick="regGoStep(1)">← חזרה</div>
-      </div>
-      <!-- Step 3 -->
-      <div class="reg-step-panel" id="regStep3">
-        <div class="reg-step-title">🔐 עוד רגע ונגמר!</div>
-        <div class="reg-step-sub">הגן על החשבון שלך</div>
-        <label class="auth-label">מייל <span style="color:var(--a3);font-size:.76rem;">(לא חובה)</span></label>
-        <input class="auth-inp" id="regEmail" type="email" placeholder="example@mail.com" dir="ltr" autocomplete="email">
-        <div class="email-note" style="margin-top:-6px;margin-bottom:13px;">מומלץ לחבר מייל לשחזור סיסמה בעתיד</div>
-        <label class="auth-label">סיסמה (לפחות 6 תווים)</label>
-        <input class="auth-inp" id="regPass" type="password" placeholder="סיסמה" autocomplete="new-password" onkeydown="if(event.key==='Enter')document.getElementById('regPass2').focus()">
-        <label class="auth-label">אשר סיסמה</label>
-        <input class="auth-inp" id="regPass2" type="password" placeholder="חזור על הסיסמה" autocomplete="new-password" onkeydown="if(event.key==='Enter')fbRegister()">
-        <div class="terms-row" id="regTermsRow" onclick="toggleRegTerms()">
-          <div class="terms-chk" id="regTermsChk"><span class="terms-chk-inner">✓</span></div>
-          <div class="terms-text">אני מסכים/ה ל<a onclick="event.stopPropagation();showTermsModal()">תנאי השימוש</a> ומדיניות הפרטיות של Brain Spark</div>
-        </div>
-        <button class="auth-btn" id="authBtn" onclick="fbRegister()">✅ צור חשבון!</button>
-        <div class="reg-back-link" onclick="regGoStep(2)">← חזרה</div>
-      </div>
-    </div>
-  </div>
-</div>
+// ══ LEVELS ══
+const LEVELS = [
+  { n: 'מתמטיקאי מתחיל', xp: 50,       e: '🌱' },
+  { n: 'סוחר המספרים',   xp: 120,      e: '📊' },
+  { n: 'גיבור חשבון',    xp: 250,      e: '⚡' },
+  { n: 'קוסם המספרים',   xp: 450,      e: '🔮' },
+  { n: 'אלוף חשבון',     xp: 700,      e: '🏆' },
+  { n: 'מייסטרו מתמטיקה',xp: 1000,     e: '🌟' },
+  { n: 'אגדת המספרים',   xp: 1400,     e: '💫' },
+  { n: 'לאינסוף ומעבר!', xp: Infinity, e: '🚀' }
+];
 
-<!-- ══ USERNAME SETUP ══ -->
-<div class="scr" id="username-setup-scr">
-  <div class="logo" style="font-size:2.4rem;animation:none">⚡ Brain Spark</div>
-  <div class="logo-sub" style="margin-bottom:32px">Math Arena</div>
-  <div class="auth-card" style="text-align:center">
-    <div style="font-size:3rem;margin-bottom:12px">👤</div>
-    <div style="font-family:'Fredoka',sans-serif;font-size:1.6rem;font-weight:700;color:var(--a2);margin-bottom:8px">בחר שם משתמש</div>
-    <div style="font-size:.9rem;color:var(--txt2);margin-bottom:22px;line-height:1.6">שם המשתמש שלך מזהה אותך במשחק.<br>אפשר לחפש אותך לפיו ולהוסיף אותך כחבר!</div>
-    <div class="auth-err" id="setupErr"></div>
-    <input class="auth-inp" id="setupUsername" type="text" placeholder="לדוגמה: דוד או david123" autocomplete="username" onkeydown="if(event.key==='Enter')fbSaveUsername()">
-    <button class="auth-btn" id="setupBtn" onclick="fbSaveUsername()">✅ שמור והמשך</button>
-  </div>
-</div>
+// ══ GRADE FILE MAP ══
+const GRADE_FILES = {
+  'א': 'grade1.js',
+  'ב': 'grade2.js',
+  'ג': 'grade3.js',
+  'ד': 'grade4.js',
+  'ה': 'grade5.js',
+  'ו': 'grade6.js'
+};
 
-<!-- ══ GRADE SELECT ══ -->
-<div class="scr" id="grade-select-scr">
-  <div class="logo" style="font-size:2.4rem;animation:none">⚡ Brain Spark</div>
-  <div class="logo-sub" style="margin-bottom:8px">Math Arena</div>
-  <div style="font-family:'Fredoka',sans-serif;font-size:1.6rem;color:var(--a2);margin-bottom:6px;margin-top:20px;text-align:center;">באיזו כיתה אתה? 🎯</div>
-  <div style="font-size:.9rem;color:var(--txt2);margin-bottom:4px;text-align:center;">השאלות יותאמו בדיוק לרמה שלך</div>
-  <div class="grade-grid">
-    <div class="grade-btn g1" onclick="selectGrade('א')"><span class="ge">🌱</span><div class="gn">כיתה א</div><div class="gs">חיבור וחיסור</div><span class="g-tag">מתחילים</span></div>
-    <div class="grade-btn g2" onclick="selectGrade('ב')"><span class="ge">📊</span><div class="gn">כיתה ב</div><div class="gs">+ כפל ומילוליות</div><span class="g-tag">בסיס חזק</span></div>
-    <div class="grade-btn g3" onclick="selectGrade('ג')"><span class="ge">⚡</span><div class="gn">כיתה ג</div><div class="gs">+ חילוק</div><span class="g-tag">מתקדמים</span></div>
-    <div class="grade-btn g4" onclick="selectGrade('ד')"><span class="ge">🔮</span><div class="gn">כיתה ד</div><div class="gs">+ שברים וגיאומטריה</div><span class="g-tag">אתגר</span></div>
-    <div class="grade-btn g5" onclick="selectGrade('ה')"><span class="ge">🏆</span><div class="gn">כיתה ה</div><div class="gs">מספרים גדולים</div><span class="g-tag">מקצוענים</span></div>
-    <div class="grade-btn g6" onclick="selectGrade('ו')"><span class="ge">🚀</span><div class="gn">כיתה ו</div><div class="gs">רמה מקסימלית</div><span class="g-tag">אלופים</span></div>
-  </div>
-</div>
+// ══ CATEGORY DEFINITIONS ══
+const ALL_CATS = [
+  { id: 'add',      cls: 'add',     icon: '➕', name: 'חיבור',      sub: 'מספרים גדולים' },
+  { id: 'sub',      cls: 'sub',     icon: '➖', name: 'חיסור',      sub: 'עם ובלי לווה' },
+  { id: 'mul',      cls: 'mul',     icon: '✖️', name: 'כפל',        sub: 'לוח הכפל' },
+  { id: 'div',      cls: 'div',     icon: '➗', name: 'חילוק',      sub: 'חלוקה שווה' },
+  { id: 'word',     cls: 'word',    icon: '📖', name: 'מילוליות',   sub: 'בעיות עם סיפור' },
+  { id: 'shapes',   cls: '',        icon: '📐', name: 'גיאומטריה', sub: 'צורות וצלעות',  borderColor: '#ff9ff3' },
+  { id: 'fractions',cls: '',        icon: '½',  name: 'שברים',      sub: 'חלקים של שלם',  borderColor: '#54a0ff' },
+  { id: 'minigames',cls: 'mul',    icon: '🎮', name: 'מיני-משחקים', sub: 'דיג, מבוך, חלל', borderColor: '#ffd43b', special: 'minigames' },
+  { id: 'learn',    cls: 'learn',   icon: '🎓', name: 'בואו נלמד!', sub: 'חומר חדש',      special: 'learn' },
+  { id: 'history',  cls: 'history', icon: '📊', name: 'היסטוריה',   sub: 'כל הפתרונות',   special: 'history' },
+  { id: 'mistakes', cls: 'mistakes',icon: '🔄', name: 'טעויות',     sub: 'שיפור עצמי',    special: 'mistakes' },
+  { id: 'exam',     cls: 'test',    icon: '🏆', name: 'מבחן',       sub: 'בחר נושאים',    special: 'exam' },
+  { id: 'friends',  cls: '',        icon: '👥', name: 'חברים',      sub: 'לוח תוצאות',    borderColor: '#2ed573', special: 'friends' },
+  { id: 'settings', cls: 'settings',icon: '⚙️', name: 'הגדרות',     sub: 'הורים',          special: 'settings' },
+];
 
-<!-- ══ HOME ══ -->
-<div class="scr" id="home">
-  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:420px;margin-bottom:4px">
-    <div class="logo" style="font-size:2.4rem;animation:none">⚡ Brain Spark</div>
-    <button class="logout-btn" onclick="fbLogout()">התנתק</button>
-  </div>
-  <div class="pcard" style="margin-top:10px">
-    <div class="pname" id="playerName">⭐ שחקן</div>
-    <div class="plevel" id="levelDisplay">רמה 1</div>
-    <div id="gradeBadgeWrap"></div>
-    <div class="xp-outer"><div class="xp-inner" id="xpBar" style="width:0%"></div></div>
-    <div class="xp-txt" id="xpTxt">0 / 50 נקודות לרמה הבאה</div>
-    <div class="streak-badge" id="streakBadge" style="display:none">🔥 <span id="streakCount">0</span> ברצף!</div>
-  </div>
-  <div class="lb-card" id="homeLbCard">
-    <div class="lb-title">🏆 לוח חברים</div>
-    <div id="homeLbList"><div style="color:var(--txt2);font-size:.85rem;text-align:center;padding:8px">טוען...</div></div>
-    <button onclick="openFriends()" style="width:100%;margin-top:10px;padding:9px;border-radius:10px;border:1px solid rgba(30,144,255,.3);background:rgba(30,144,255,.08);color:var(--a4);font-family:'Rubik',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;">👥 כל החברים ←</button>
-  </div>
-  <div class="recommend" id="recommendBox" style="display:none">
-    <div class="recommend-icon">💡</div>
-    <div class="recommend-text" id="recommendText"></div>
-  </div>
-  <div class="daily-banner" id="dailyBanner" onclick="startDaily()">
-    <div style="font-size:2rem">📅</div>
-    <div>
-      <div style="font-weight:700;font-size:1rem;color:var(--a2)">משימה יומית!</div>
-      <div style="font-size:.82rem;color:var(--txt2)" id="dailyDesc">2 שאלות מיוחדות מחכות לך</div>
-    </div>
-  </div>
-  <div class="sec-label">קטגוריות</div>
-  <div class="grid" id="mainGrid"></div>
-</div>
+const CAT_NAMES = {
+  add: '➕ חיבור', sub: '➖ חיסור', mul: '✖️ כפל',
+  div: '➗ חילוק', word: '📖 מילוליות',
+  shapes: '📐 גיאומטריה', fractions: '½ שברים'
+};
 
-<!-- ══ FRIENDS ══ -->
-<div class="scr" id="friends-scr">
-  <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:var(--a4);margin-bottom:6px;">👥 חברים</div>
-  <div style="width:100%;max-width:500px;margin-bottom:18px;">
-    <div style="font-weight:700;font-size:.85rem;color:var(--a2);margin-bottom:10px;letter-spacing:1px;">🏆 לוח תוצאות</div>
-    <div id="leaderboardList" style="display:flex;flex-direction:column;gap:8px;"></div>
-  </div>
-  <div style="width:100%;max-width:500px;background:linear-gradient(135deg,var(--card),var(--card2));border-radius:16px;padding:18px;border:1px solid rgba(255,255,255,.08);margin-bottom:18px;">
-    <div style="font-weight:700;margin-bottom:10px;color:var(--a4)">➕ הוסף חבר</div>
-    <div style="display:flex;gap:8px;">
-      <input class="auth-inp" id="friendSearch" style="margin-bottom:0;flex:1" placeholder="שם משתמש של החבר" type="text" onkeydown="if(event.key==='Enter')fbSearchUser()">
-      <button onclick="fbSearchUser()" style="padding:0 18px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--a4),var(--a5));color:#fff;font-family:'Rubik',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap;">חפש</button>
-    </div>
-    <div id="friendResults"></div>
-  </div>
-  <div style="width:100%;max-width:500px;">
-    <div style="font-weight:700;font-size:.85rem;color:var(--txt2);margin-bottom:10px;letter-spacing:1px;">החברים שלי</div>
-    <div class="friends-list" id="friendsList"></div>
-  </div>
-  <button class="back" onclick="show('home')" style="margin-top:20px;">← חזרה</button>
-</div>
+const LOCKED_TOPICS = { div: 'division', shapes: 'shapes', fractions: 'fractions' };
 
-<!-- ══ FRIEND PROFILE ══ -->
-<div class="scr" id="fprofile-scr">
-  <div class="profile-card" id="fprofileContent"></div>
-  <button class="back" onclick="show('friends-scr')" style="margin-top:16px;">← חזרה לחברים</button>
-</div>
+// ══ BRAINROT / GAME THEMES ══
+const BRAINROT_LABELS = [
+  'תרגיל הבריינרוט', 'הסיגמה של המתמטיקה',
+  'ריצה W', 'לא L', 'פתרון הגיוסי', 'מבחן הסקיבידי', 'המצב גריז'
+];
 
-<!-- ══ DIFFICULTY ══ -->
-<div class="scr" id="diff-scr">
-  <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:var(--a2);margin-bottom:6px;text-align:center;" id="diffTitle"></div>
-  <div style="color:var(--txt2);font-size:.95rem;margin-bottom:24px;text-align:center">בחר רמת קושי:</div>
-  <div class="diffs">
-    <button class="dbtn de" onclick="startCat('easy')"><span style="font-size:1.7rem">🌱</span><div><div>קל</div><small style="color:var(--txt2);font-weight:400">להתחמם</small></div></button>
-    <button class="dbtn dm" onclick="startCat('medium')"><span style="font-size:1.7rem">⚡</span><div><div>בינוני</div><small style="color:var(--txt2);font-weight:400">אתגר מתון</small></div></button>
-    <button class="dbtn dh" onclick="startCat('hard')"><span style="font-size:1.7rem">🔥</span><div><div>קשה</div><small style="color:var(--txt2);font-weight:400">כמו מתמטיקאי אמיתי!</small></div></button>
-    <button class="dbtn dx" onclick="startCat('mix')"><span style="font-size:1.7rem">🎲</span><div><div>תערובת</div><small style="color:var(--txt2);font-weight:400">הפתעות!</small></div></button>
-  </div>
-  <button class="back" onclick="show('home')">← חזרה</button>
-</div>
+const GAME_THEMES = [
+  { name: 'מיינקראפט', items: ['⛏️','💎','🪨','🌲','🔥','🐷','🧱'], label: '⛏️ מיינקראפט' },
+  { name: 'רובלוקס',   items: ['🎮','🏗️','🤖','🎲','💰','🌈','🎯'], label: '🎮 רובלוקס' },
+  { name: 'פוקימון',   items: ['⚡','🔥','💧','🌿','👾','🌀','💥'], label: '⚡ פוקימון' },
+  { name: 'מריו',      items: ['🍄','⭐','🪙','🎯','🌟','🎪','🚩'], label: '🍄 מריו' },
+  { name: 'פורטנייט',  items: ['🏆','💥','🔫','🎯','⭐','🌟','🏅'], label: '🏆 פורטנייט' },
+  { name: 'כדורגל',    items: ['⚽','🏃','🥅','🏅','🎯','⭐','🌟'], label: '⚽ כדורגל' },
+  { name: 'חייזרים',   items: ['👾','🛸','🌌','⭐','💫','🔭','🚀'], label: '👾 חייזרים' }
+];
 
-<!-- ══ QUESTION ══ -->
-<div class="scr" id="minigameScreen"></div>
-<div class="scr" id="q-scr">
-  <div class="qhdr">
-    <div>
-      <div style="font-size:.85rem;color:var(--txt2)" id="qCatLbl"></div>
-      <button class="back" style="padding:5px 12px;font-size:.82rem;margin-top:4px;" onclick="exitToHome()">← יציאה</button>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-start;gap:5px">
-      <div class="qscore">⭐ <span id="qScore">0</span></div>
-      <div class="streak-live" id="streakLive" style="display:none">🔥 <span id="streakLiveCnt">0</span></div>
-    </div>
-  </div>
-  <div class="gcard" id="qCard">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <span class="lbadge" id="qDiffBadge">קל</span>
-      <span class="pts-badge">+<span id="qPtsPreview">5</span> נקודות</span>
-    </div>
-    <div class="q-game-label" id="qGameLabel"></div>
-    <div style="font-size:.82rem;color:var(--txt2);text-align:center;margin-bottom:4px;" id="dailyQLbl"></div>
-    <div class="qtxt" id="qTxt"></div>
-    <div id="mulVis" style="display:none">
-      <div class="mulvis-row" id="mulGrps"></div>
-      <details style="margin-top:6px;"><summary style="cursor:pointer;color:var(--a4);font-size:.85rem;margin-bottom:5px;">📊 לוח הכפל</summary>
-        <div style="overflow-x:auto" id="mulTblWrap"></div>
-      </details>
-    </div>
-    <div id="exprWrap" class="expr-wrap" style="display:none">
-      <div style="font-size:.82rem;color:var(--txt2);margin-bottom:10px;">✏️ כתוב את התרגיל:</div>
-      <div class="expr-display" id="exprDisp">
-        <input type="number" class="expr-num-inp" id="exprNumA" placeholder="?" oninput="updateExprDisp()">
-        <div class="op-picker" style="flex-direction:column;gap:0;margin:0">
-          <div id="exprOpDisplay" style="font-size:2rem;font-weight:900;min-width:40px;text-align:center;color:var(--a2);cursor:pointer;" onclick="document.getElementById('exprOpPicker').style.display=document.getElementById('exprOpPicker').style.display==='none'?'flex':'none'">?</div>
-        </div>
-        <input type="number" class="expr-num-inp" id="exprNumB" placeholder="?" oninput="updateExprDisp()">
-        <div style="font-size:1.6rem;font-weight:900;color:var(--a5)">=</div>
-        <div id="exprResult" style="font-size:1.8rem;font-weight:900;color:var(--a3);min-width:40px;text-align:center;">?</div>
-      </div>
-      <div class="op-picker" id="exprOpPicker" style="display:flex;">
-        <button class="op-btn op-plus"  id="opPlus"  onclick="pickOp('+')" title="חיבור"><span>+</span><div class="op-sel-ring"></div></button>
-        <button class="op-btn op-minus" id="opMinus" onclick="pickOp('-')" title="חיסור"><span>−</span><div class="op-sel-ring"></div></button>
-        <button class="op-btn op-times" id="opTimes" onclick="pickOp('×')" title="כפל"><span>×</span><div class="op-sel-ring"></div></button>
-        <button class="op-btn op-div"   id="opDiv"   onclick="pickOp('÷')" title="חילוק"><span>÷</span><div class="op-sel-ring"></div></button>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-        <button onclick="clearExpr()" style="padding:5px 14px;background:rgba(255,71,87,.15);border:1px solid var(--a1);color:var(--a1);border-radius:8px;cursor:pointer;font-size:.82rem;font-family:'Rubik',sans-serif;">🗑️ נקה</button>
-        <div style="font-size:.82rem;font-weight:700" id="exprFb"></div>
-      </div>
-    </div>
-    <div id="numAnsWrap">
-      <div class="ans-row"><input type="number" class="ans-inp" id="ansInp" placeholder="?" onkeydown="if(event.key==='Enter')submitAns()"><div class="ans-eq">=</div></div>
-    </div>
-    <div id="wordAnsWrap" style="display:none">
-      <textarea class="word-inp" id="wordInp" placeholder="כתוב תשובה מלאה במשפט..."></textarea>
-    </div>
-    <div class="atts" id="attsRow">
-      <span style="color:var(--txt2);font-size:.82rem">ניסיונות:</span>
-      <div class="adot" id="ad0"></div><div class="adot" id="ad1"></div><div class="adot" id="ad2"></div>
-    </div>
-    <div class="hint-box" id="hintBox"><div class="hint-title">💡 רמז</div><div id="hintContent"></div><div style="font-size:.78rem;color:var(--a1);margin-top:6px">עלות: -2 נקודות</div></div>
-    <div class="fb-box" id="fbBox"><div class="fb-title" id="fbTitle"></div><div id="fbText"></div></div>
-    <div class="qbtns" id="qBtns">
-      <button class="qbtn bsubmit" onclick="submitAns()">✅ בדוק</button>
-      <button class="qbtn bhint" id="hintBtn" onclick="useHint()" disabled>💡 רמז (<span id="hintTmr">3:00</span>)</button>
-      <button class="qbtn bskip" onclick="skipQ()">⏭️ דלג</button>
-    </div>
-    <div class="qbtns" id="nextBtns" style="display:none">
-      <button class="qbtn bnext" onclick="nextQ()">➡️ הבא</button>
-      <button class="qbtn bmore" id="moreBtn" style="display:none" onclick="genMore()">✨ צור עוד</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ LEARN ══ -->
-<div class="scr" id="learn-scr">
-  <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:var(--a6);margin-bottom:20px;">🎓 בואו נלמד!</div>
-  <div class="ltopics" id="learnTopics"></div>
-  <button class="back" onclick="show('home')" style="margin-top:18px;">← חזרה</button>
-</div>
-
-<!-- ══ LESSON ══ -->
-<div class="scr" id="lesson-scr">
-  <div class="lesson-c" id="lessonContent"></div>
-  <button class="back" onclick="show('learn-scr')" style="margin-top:14px;">← חזרה</button>
-</div>
-
-<!-- ══ EXAM PRE ══ -->
-<div class="scr" id="exam-pre-scr">
-  <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:#00d2d3;margin-bottom:6px;">🏆 הגדר את המבחן</div>
-  <div style="color:var(--txt2);font-size:.9rem;margin-bottom:18px;">בחר על אילו נושאים להיבחן:</div>
-  <div class="exam-topics-grid" id="examTopicsGrid"></div>
-  <div style="margin:14px 0;width:100%;max-width:440px;">
-    <div style="font-size:.9rem;color:var(--txt2);margin-bottom:10px;font-weight:700;">רמת קושי:</div>
-    <div style="display:flex;gap:9px;flex-wrap:wrap;">
-      <button class="dbtn de" id="exDe" onclick="setExamDiff('easy')"   style="padding:9px 16px;flex:1;min-width:80px;">🌱 קל</button>
-      <button class="dbtn dm" id="exDm" onclick="setExamDiff('medium')" style="padding:9px 16px;flex:1;min-width:80px;">⚡ בינוני</button>
-      <button class="dbtn dh" id="exDh" onclick="setExamDiff('hard')"   style="padding:9px 16px;flex:1;min-width:80px;">🔥 קשה</button>
-      <button class="dbtn dx" id="exDx" onclick="setExamDiff('mix')"    style="padding:9px 16px;flex:1;min-width:80px;">🎲 תערובת</button>
-    </div>
-  </div>
-  <div style="font-size:.88rem;color:var(--txt2);margin-bottom:14px;" id="examPreInfo"></div>
-  <button onclick="startExam()" style="padding:14px 36px;border-radius:99px;border:none;cursor:pointer;background:linear-gradient(135deg,#00d2d3,var(--a4));color:#fff;font-family:'Rubik',sans-serif;font-size:1.05rem;font-weight:700;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform=''">🚀 התחל מבחן!</button>
-  <button class="back" onclick="show('home')">← חזרה</button>
-</div>
-
-<!-- ══ EXAM ══ -->
-<div class="scr" id="exam-scr">
-  <div class="exam-hdr">
-    <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:#00d2d3">🏆 מבחן</div>
-    <div style="display:flex;gap:9px;align-items:center;">
-      <div style="color:var(--txt2);font-size:.85rem" id="examProg">שאלה 1/10</div>
-      <div class="exam-timer" id="examTmr">⏱️ 10:00</div>
-    </div>
-  </div>
-  <div class="prog-bar"><div class="prog-inner" id="examBar" style="width:10%"></div></div>
-  <div id="examQArea" style="width:100%;max-width:580px;"></div>
-  <div id="examResults" style="display:none;width:100%;max-width:560px;"></div>
-</div>
-
-<!-- ══ HISTORY ══ -->
-<div class="scr" id="history-scr">
-  <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:#00d2d3;margin-bottom:16px;">📊 היסטוריה ★</div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:500px;margin-bottom:18px;" id="histStats"></div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;width:100%;max-width:500px;">
-    <button onclick="filterHist('all')" id="hfAll" class="qbtn" style="padding:7px 14px;font-size:.82rem;background:rgba(30,144,255,.2);color:var(--a4);border:1px solid var(--a4);">הכל</button>
-    <button onclick="filterHist('ok')"  id="hfOk"  class="qbtn" style="padding:7px 14px;font-size:.82rem;background:rgba(255,255,255,.06);color:var(--txt2);">✅ נכון</button>
-    <button onclick="filterHist('bad')" id="hfBad" class="qbtn" style="padding:7px 14px;font-size:.82rem;background:rgba(255,255,255,.06);color:var(--txt2);">❌ שגוי</button>
-  </div>
-  <div style="display:flex;flex-direction:column;gap:9px;width:100%;max-width:500px;" id="histList"></div>
-  <button class="back" onclick="show('home')" style="margin-top:16px;">← חזרה</button>
-</div>
-
-<!-- ══ MISTAKES ══ -->
-<div class="scr" id="mistakes-scr">
-  <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:var(--streak);margin-bottom:8px;">🔄 לחזור על טעויות</div>
-  <div style="color:var(--txt2);font-size:.88rem;margin-bottom:18px;">תרגל שוב את מה שלא הצלחת</div>
-  <div style="display:flex;flex-direction:column;gap:9px;width:100%;max-width:500px;" id="mistakesList"></div>
-  <button id="practiceMistakesBtn" style="display:none;margin-top:16px;padding:13px 28px;border-radius:99px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--streak),var(--a1));color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;" onclick="startMistakesPractice()">🔥 תרגל את כל הטעויות!</button>
-  <button class="back" onclick="show('home')" style="margin-top:12px;">← חזרה</button>
-</div>
-
-<!-- ══ SETTINGS ══ -->
-<div class="scr" id="settings-scr">
-  <div id="settingsTopTabs" style="display:none;gap:0;background:rgba(255,255,255,.06);border-radius:12px;overflow:hidden;margin-bottom:20px;width:100%;max-width:500px;">
-    <button class="auth-tab active" id="parentsTabBtn" onclick="switchSettingsTab('parents')" style="flex:1;">🔐 הגדרות הורים</button>
-    <button class="auth-tab" id="adminTabBtn" onclick="switchSettingsTab('admin')" style="flex:1;background:linear-gradient(135deg,#00d2d3,#9b59b6);color:#fff;">👑 הגדרות מנהלים</button>
-  </div>
-  <div id="settingsParentsSection" style="width:100%;max-width:500px;">
-    <div id="pgateWrap">
-      <div class="pgate">
-        <div class="pgate-title">🔐 שטח הורים</div>
-        <div style="font-size:.9rem;color:var(--txt2);margin-bottom:14px;">פתרן תרגיל הזה כדי להיכנס</div>
-        <div class="pgate-q" id="pgateQ"></div>
-        <input type="number" class="pgate-inp" id="pgateInp" placeholder="?" onkeydown="if(event.key==='Enter')checkGate()">
-        <br><button class="pgate-btn" onclick="checkGate()">✅ כניסה</button>
-        <div class="pgate-err" id="pgateErr" style="display:none">❌ לא נכון, נסה שוב</div>
-      </div>
-    </div>
-    <div id="settingsContent" style="display:none;width:100%;">
-      <div style="font-family:'Fredoka',sans-serif;font-size:1.8rem;color:var(--a4);margin-bottom:18px;text-align:center;">⚙️ הגדרות הורים</div>
-      <div class="set-section">
-        <div class="set-title">👤 פרטים אישיים</div>
-        <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
-          <div class="set-label">שם תצוגה</div>
-          <div style="display:flex;gap:8px;width:100%">
-            <input class="set-inp" id="newDisplayName" style="flex:1;width:auto" type="text" placeholder="שם חדש">
-            <button onclick="fbChangeDisplayName()" style="padding:8px 14px;background:rgba(30,144,255,.2);border:1px solid var(--a4);color:var(--a4);border-radius:9px;cursor:pointer;font-family:'Rubik',sans-serif;">עדכן</button>
-          </div>
-          <div class="auth-err" id="nameErr" style="width:100%"></div>
-        </div>
-        <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
-          <div class="set-label">מי אני?</div>
-          <div id="setGenderPicker" class="gender-picker">
-            <button type="button" class="gender-btn" data-value="boy"   onclick="selectGender('set','boy')"   aria-pressed="false"><span class="gender-emoji">👦</span><span class="gender-label">ילד</span></button>
-            <button type="button" class="gender-btn" data-value="girl"  onclick="selectGender('set','girl')"  aria-pressed="false"><span class="gender-emoji">👧</span><span class="gender-label">ילדה</span></button>
-            <button type="button" class="gender-btn" data-value="other" onclick="selectGender('set','other')" aria-pressed="false"><span class="gender-emoji">🌟</span><span class="gender-label">לא רוצה להגיד</span></button>
-          </div>
-        </div>
-        <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
-          <div class="set-label">מייל לשחזור סיסמה <span style="font-size:.75rem;color:var(--a3)">(לא חובה)</span></div>
-          <div style="display:flex;gap:8px;width:100%">
-            <input class="set-inp" id="setContactEmail" style="flex:1;width:auto;direction:ltr;text-align:left" type="email" placeholder="example@mail.com" autocomplete="email">
-            <button onclick="fbSaveProfileSettings()" style="padding:8px 14px;background:rgba(30,144,255,.2);border:1px solid var(--a4);color:var(--a4);border-radius:9px;cursor:pointer;font-family:'Rubik',sans-serif;white-space:nowrap;">שמור</button>
-          </div>
-          <div style="font-size:.75rem;color:var(--txt2);display:flex;align-items:center;gap:4px;opacity:.8;">💡 חיבור מייל מאפשר שחזור סיסמה בעתיד</div>
-          <div class="auth-err" id="profileFieldsErr" style="width:100%"></div>
-        </div>
-        <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
-          <div class="set-label">כיתה <span style="font-size:.78rem;color:var(--a1)">(ישנה את רמת השאלות!)</span></div>
-          <input type="hidden" id="setGrade" value="">
-          <div class="reg-grade-grid" id="setGradeGrid" style="width:100%;grid-template-columns:repeat(3,1fr);">
-            <div class="reg-grade-card rg1" onclick="selectSetGrade('א')" data-grade="א"><span class="rgc-emoji">🌱</span><div class="rgc-name">כיתה א</div><div class="rgc-sub">חיבור וחיסור</div></div>
-            <div class="reg-grade-card rg2" onclick="selectSetGrade('ב')" data-grade="ב"><span class="rgc-emoji">📊</span><div class="rgc-name">כיתה ב</div><div class="rgc-sub">+ כפל</div></div>
-            <div class="reg-grade-card rg3" onclick="selectSetGrade('ג')" data-grade="ג"><span class="rgc-emoji">⚡</span><div class="rgc-name">כיתה ג</div><div class="rgc-sub">+ חילוק</div></div>
-            <div class="reg-grade-card rg4" onclick="selectSetGrade('ד')" data-grade="ד"><span class="rgc-emoji">🔮</span><div class="rgc-name">כיתה ד</div><div class="rgc-sub">שברים</div></div>
-            <div class="reg-grade-card rg5" onclick="selectSetGrade('ה')" data-grade="ה"><span class="rgc-emoji">🏆</span><div class="rgc-name">כיתה ה</div><div class="rgc-sub">מספרים גדולים</div></div>
-            <div class="reg-grade-card rg6" onclick="selectSetGrade('ו')" data-grade="ו"><span class="rgc-emoji">🚀</span><div class="rgc-name">כיתה ו</div><div class="rgc-sub">רמה מקסימלית</div></div>
-          </div>
-          <button onclick="fbChangeGrade()" style="width:100%;padding:11px;background:rgba(30,144,255,.2);border:1px solid var(--a4);color:var(--a4);border-radius:12px;cursor:pointer;font-family:'Rubik',sans-serif;font-weight:700;font-size:.95rem;">✅ עדכן כיתה</button>
-        </div>
-        <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
-          <div class="set-label">שינוי סיסמה</div>
-          <input class="set-inp" id="oldPass" style="width:100%" type="password" placeholder="סיסמה ישנה">
-          <input class="set-inp" id="newPass" style="width:100%;margin-top:6px" type="password" placeholder="סיסמה חדשה">
-          <div class="auth-err" id="passErr" style="width:100%"></div>
-          <button onclick="fbChangePassword()" style="padding:9px 18px;background:rgba(155,89,182,.2);border:1px solid var(--a5);color:var(--a5);border-radius:9px;cursor:pointer;font-family:'Rubik',sans-serif;font-weight:700;">🔑 שנה סיסמה</button>
-          <button onclick="fbSendPasswordReset()" style="padding:9px 18px;margin-top:8px;background:rgba(30,144,255,.15);border:1px solid var(--a4);color:var(--a4);border-radius:9px;cursor:pointer;font-family:'Rubik',sans-serif;font-weight:700;">📧 שכחתי סיסמה — שלח קישור למייל</button>
-          <div style="font-size:.74rem;color:var(--txt2);margin-top:5px;opacity:.75;">💡 יישלח למייל המחובר לחשבון.</div>
-        </div>
-      </div>
-      <div class="set-section">
-        <div class="set-title">⭐ נקודות</div>
-        <div class="set-row"><div><div class="set-label">נקודות לשאלה קלה</div></div><input class="set-inp" id="setPtsEasy" type="number" value="5"></div>
-        <div class="set-row"><div><div class="set-label">נקודות לשאלה בינונית</div></div><input class="set-inp" id="setPtsMed" type="number" value="10"></div>
-        <div class="set-row"><div><div class="set-label">נקודות לשאלה קשה</div></div><input class="set-inp" id="setPtsHard" type="number" value="18"></div>
-        <div class="set-row"><div><div class="set-label">בונוס מילוליות</div></div><input class="set-inp" id="setPtsWordBonus" type="number" value="8"></div>
-      </div>
-      <div class="set-section">
-        <div class="set-title">❌ שגיאות</div>
-        <div class="set-row"><div><div class="set-label">קנס על שגיאה</div></div><input class="set-inp" id="setPtsWrong" type="number" value="1"></div>
-        <div class="set-row"><div><div class="set-label">קנס על רמז</div></div><input class="set-inp" id="setPtsHint" type="number" value="2"></div>
-        <div class="set-row"><div><div class="set-label">מספר ניסיונות</div></div><input class="set-inp" id="setMaxAttempts" type="number" value="3" min="1" max="5"></div>
-      </div>
-      <div class="set-section">
-        <div class="set-title">💡 רמז</div>
-        <div class="set-row"><div><div class="set-label">זמן המתנה לרמז (שניות)</div></div><input class="set-inp" id="setHintTime" type="number" value="180"></div>
-      </div>
-      <div class="set-section">
-        <div class="set-title">🔥 רצף</div>
-        <div class="set-row"><div><div class="set-label">בונוס רצף 3</div></div><input class="set-inp" id="setStreakBonus3" type="number" value="5"></div>
-        <div class="set-row"><div><div class="set-label">בונוס רצף 5</div></div><input class="set-inp" id="setStreakBonus5" type="number" value="10"></div>
-        <div class="set-row"><div><div class="set-label">בונוס רצף 10</div></div><input class="set-inp" id="setStreakBonus10" type="number" value="20"></div>
-      </div>
-      <div class="set-section">
-        <div class="set-title">🧹 ניהול</div>
-        <div class="set-row"><div><div class="set-label">מחק היסטוריה</div><div class="set-sub">מוחק את כל הפתרונות</div></div><button onclick="clearHistory()" style="padding:8px 16px;background:rgba(255,71,87,.2);border:1px solid var(--a1);color:var(--a1);border-radius:9px;cursor:pointer;font-family:'Rubik',sans-serif;">מחק</button></div>
-        <div class="set-row"><div><div class="set-label">אפס הכל</div><div class="set-sub">מוחק ניקוד, רמה, הכל</div></div><button onclick="resetAll()" style="padding:8px 16px;background:rgba(255,71,87,.3);border:2px solid var(--a1);color:var(--a1);border-radius:9px;cursor:pointer;font-family:'Rubik',sans-serif;font-weight:700;">אפס</button></div>
-      </div>
-      <button onclick="saveSettings()" style="width:100%;padding:14px;border-radius:14px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--a3),#1dd1a1);color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;margin-top:6px;">💾 שמור הגדרות</button>
-    </div>
-  </div>
-  <div id="settingsAdminSection" style="display:none;width:100%;max-width:500px;">
-    <div style="font-family:'Fredoka',sans-serif;font-size:1.8rem;margin-bottom:6px;text-align:center;background:linear-gradient(135deg,#00d2d3,#9b59b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">👑 הגדרות מנהלים</div>
-    <div style="font-size:.82rem;color:var(--txt2);text-align:center;margin-bottom:20px;">רק למשתמשים מיוחדים ✨</div>
-    <div class="set-section">
-      <div class="set-title" style="color:#00d362;">🌈 צבע זוהר השם</div>
-      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;" id="glowColorPicker">
-        <div onclick="pickGlowColor('#00d362')" style="width:40px;height:40px;border-radius:50%;background:#00d362;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#00d362"></div>
-        <div onclick="pickGlowColor('#00d2d3')" style="width:40px;height:40px;border-radius:50%;background:#00d2d3;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#00d2d3"></div>
-        <div onclick="pickGlowColor('#ffd32a')" style="width:40px;height:40px;border-radius:50%;background:#ffd32a;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#ffd32a"></div>
-        <div onclick="pickGlowColor('#ff4757')" style="width:40px;height:40px;border-radius:50%;background:#ff4757;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#ff4757"></div>
-        <div onclick="pickGlowColor('#9b59b6')" style="width:40px;height:40px;border-radius:50%;background:#9b59b6;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#9b59b6"></div>
-        <div onclick="pickGlowColor('#1e90ff')" style="width:40px;height:40px;border-radius:50%;background:#1e90ff;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#1e90ff"></div>
-        <div onclick="pickGlowColor('#ff6348')" style="width:40px;height:40px;border-radius:50%;background:#ff6348;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#ff6348"></div>
-        <div onclick="pickGlowColor('#ff9f43')" style="width:40px;height:40px;border-radius:50%;background:#ff9f43;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#ff9f43"></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-        <label style="font-size:.85rem;color:var(--txt2);">צבע מותאם אישית:</label>
-        <input type="color" id="glowColorCustom" value="#00d362" oninput="pickGlowColor(this.value)" style="width:44px;height:44px;border-radius:10px;border:2px solid rgba(255,255,255,.2);background:none;cursor:pointer;padding:2px;">
-      </div>
-      <div style="padding:12px;background:rgba(0,0,0,.3);border-radius:12px;text-align:center;">
-        <div style="font-size:.8rem;color:var(--txt2);margin-bottom:6px;">תצוגה מקדימה:</div>
-        <span id="glowPreview" class="name-glow-blue" style="font-size:1.4rem;">השם שלך</span>
-      </div>
-    </div>
-    <div class="set-section">
-      <div class="set-title" style="color:#9b59b6;">🏷️ צבע התג</div>
-      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;" id="badgeColorPicker">
-        <div onclick="pickBadgeColor('#00d362')" style="width:40px;height:40px;border-radius:50%;background:#00d362;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#00d362"></div>
-        <div onclick="pickBadgeColor('#00d2d3')" style="width:40px;height:40px;border-radius:50%;background:#00d2d3;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#00d2d3"></div>
-        <div onclick="pickBadgeColor('#ffd32a')" style="width:40px;height:40px;border-radius:50%;background:#ffd32a;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#ffd32a"></div>
-        <div onclick="pickBadgeColor('#ff4757')" style="width:40px;height:40px;border-radius:50%;background:#ff4757;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#ff4757"></div>
-        <div onclick="pickBadgeColor('#9b59b6')" style="width:40px;height:40px;border-radius:50%;background:#9b59b6;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#9b59b6"></div>
-        <div onclick="pickBadgeColor('#1e90ff')" style="width:40px;height:40px;border-radius:50%;background:#1e90ff;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#1e90ff"></div>
-        <div onclick="pickBadgeColor('#ff6348')" style="width:40px;height:40px;border-radius:50%;background:#ff6348;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#ff6348"></div>
-        <div onclick="pickBadgeColor('#ff9f43')" style="width:40px;height:40px;border-radius:50%;background:#ff9f43;cursor:pointer;border:3px solid transparent;transition:all .2s;" data-color="#ff9f43"></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-        <label style="font-size:.85rem;color:var(--txt2);">צבע מותאם אישית:</label>
-        <input type="color" id="badgeColorCustom" value="#00d362" oninput="pickBadgeColor(this.value)" style="width:44px;height:44px;border-radius:10px;border:2px solid rgba(255,255,255,.2);background:none;cursor:pointer;padding:2px;">
-      </div>
-      <div style="padding:12px;background:rgba(0,0,0,.3);border-radius:12px;text-align:center;">
-        <div style="font-size:.8rem;color:var(--txt2);margin-bottom:6px;">תצוגה מקדימה:</div>
-        <span id="badgePreview" class="special-badge" style="--sc:#00d362;">⚡ התג שלך</span>
-      </div>
-    </div>
-    <button onclick="saveAdminSettings()" style="width:100%;padding:14px;border-radius:14px;border:none;cursor:pointer;background:linear-gradient(135deg,#00d2d3,#9b59b6);color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;margin-top:6px;">✨ שמור מראה</button>
-    <button onclick="resetAdminSettings()" style="width:100%;padding:11px;border-radius:14px;border:1.5px solid rgba(255,255,255,.15);background:none;color:var(--txt2);font-family:'Rubik',sans-serif;font-size:.9rem;cursor:pointer;margin-top:8px;">↩️ אפס לברירת מחדל</button>
-  </div>
-  <button class="back" onclick="show('home')" style="margin-top:14px;">← חזרה</button>
-</div>
-
-<!-- ══ OVERLAYS ══ -->
-<div class="lvup-ov" id="lvupOv">
-  <div class="lvup-card">
-    <span style="font-size:3.5rem;display:block;margin-bottom:10px" id="lvupIcon">🏆</span>
-    <div style="font-family:'Fredoka',sans-serif;font-size:2.3rem;color:var(--a5)" id="lvupTitle">עלית רמה!</div>
-    <div style="color:var(--txt2);margin:10px 0 20px;font-size:1rem" id="lvupSub"></div>
-    <button onclick="closeLvup()" style="background:linear-gradient(135deg,var(--a4),var(--a5));color:#fff;border:none;padding:13px 30px;border-radius:99px;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;">יאמ! המשך 🚀</button>
-  </div>
-</div>
-<div class="pts-pop" id="ptsPop"><div class="pts-val" id="ptsVal">+10</div><div style="color:var(--txt2);font-size:.9rem">נקודות!</div></div>
-<div class="streak-fire" id="strkFire"><div class="sf-val" id="sfVal">🔥 3</div><div class="sf-lbl" id="sfLbl">ברצף!</div></div>
-
-<!-- ══ TERMS MODAL ══ -->
-<div id="termsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9000;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid rgba(255,255,255,.12);border-radius:20px;padding:28px;max-width:460px;width:100%;max-height:80vh;overflow-y:auto;">
-    <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:var(--a4);margin-bottom:16px;text-align:center;">📋 תנאי שימוש</div>
-    <div style="font-size:.88rem;color:var(--txt2);line-height:1.8;direction:rtl;">
-      <p style="margin-bottom:12px;color:var(--txt);font-weight:700;">ברוכים הבאים ל-Brain Spark ⚡</p>
-      <p style="margin-bottom:12px;">המשחק מיועד לילדים בכיתות א'-ו' לתרגול מתמטיקה בצורה כיפית ומעשירה.</p>
-      <p style="margin-bottom:8px;font-weight:700;color:var(--a2);">פרטיות ואבטחה:</p>
-      <p style="margin-bottom:12px;">• לא נאספים נתונים אישיים מעבר לנדרש להפעלת המשחק.<br>• המייל (אם סופק) ישמש רק לשחזור סיסמה.<br>• לא נשתף מידע עם גורמים חיצוניים.</p>
-      <p style="margin-bottom:8px;font-weight:700;color:var(--a2);">כללי שימוש:</p>
-      <p style="margin-bottom:12px;">• אין לשתף פרטים אישיים עם שחקנים אחרים.<br>• יש להשתמש בשפה מכבדת בפרופיל ובשם המשתמש.<br>• ניתן למחוק את החשבון בכל עת דרך הגדרות ההורים.</p>
-      <p style="font-size:.78rem;opacity:.65;">עדכון אחרון: 2025 • Brain Spark Math Arena</p>
-    </div>
-    <button onclick="closeTermsModal()" style="width:100%;margin-top:18px;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--a4),var(--a5));color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;">✅ הבנתי, סגור</button>
-  </div>
-</div>
-
-<!-- ══ INIT ══ -->
-<script>
-  load();
-  createStars();
-</script>
-
-<script src="profile-fields.js"></script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}</script>
-
-  <script src="minigame-fishing.js"></script>
-  <script src="minigame-dungeon.js"></script>
-  <script src="minigame-rocket.js"></script>
-  <script src="minigames.js"></script>
-</body>
-</html>
+const THEME_LOOT = {
+  'מיינקראפט': ['יהלומים','גוש אבן','עצי עץ','קוביות זהב'],
+  'רובלוקס':   ['רובוקסים','בניות','כלי נשק','מטבעות'],
+  'פוקימון':   ['כרטיסי פוקימון','פוקיבולים','תגים','מדליות'],
+  'מריו':      ['מטבעות','פטריות','כוכבים','מפתחות'],
+  'פורטנייט':  ['חומרי בנייה','נשקים','תחמושת','ניצחונות'],
+  'כדורגל':    ['שערים','כרטיסים','ניקוד','כרטיסי שחקן'],
+  'חייזרים':   ['ספינות','לייזרים','כוכבים','תחנות חלל']
+};
