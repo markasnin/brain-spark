@@ -7,6 +7,19 @@
 
 window.ChefGame = (function () {
   'use strict';
+
+  // ── Persistent state (saved via main st.minigames) ──────────
+  function mgSave(data) {
+    if (!window.st) return;
+    if (!window.st.minigames) window.st.minigames = {};
+    window.st.minigames['chef'] = data;
+    if (window.save) window.save();
+    else if (window.fbSave) window.fbSave();
+  }
+  function mgLoad() {
+    return (window.st && window.st.minigames && window.st.minigames['chef']) || null;
+  }
+
   const _rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
   const _pick = arr => arr[Math.floor(Math.random()*arr.length)];
 
@@ -162,6 +175,7 @@ window.ChefGame = (function () {
     if(window.addPts) window.addPts(st.coins + bonus);
     if(window.showPtsPop && st.coins > 0) window.showPtsPop(st.coins + bonus);
     if(bonus > 0 && window.spawnConf) window.spawnConf(20);
+    mgSave({ coins: st.coins, day: st.day });
   }
 
   // ── Spawn customers ───────────────────────────────────────
@@ -295,7 +309,16 @@ window.ChefGame = (function () {
     wrap.innerHTML = `<div id="chefWrap" style="max-width:420px;margin:0 auto;padding:12px"></div>`;
     document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
     wrap.classList.add('on');
-    restart();
+    const saved = mgLoad();
+    if (saved && saved.day > 1) {
+      st.coins = saved.coins || 0;
+      st.day   = saved.day   || 1;
+    } else {
+      restart();
+      return;
+    }
+    render();
+    setTimeout(startSpawning, 800);
   }
 
   return { open, takeOrder, submit, cancelOrder, hint, endDay, nextDay, restart, exit };
