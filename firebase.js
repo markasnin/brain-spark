@@ -61,58 +61,72 @@ window.fbLoad = async function(uid) {
     const snap = await getDoc(doc(db, 'users', uid));
     if (snap.exists()) {
       const d = snap.data();
-      if (d.displayName)  window._displayName  = d.displayName;
-      if (d.grade)        window._grade        = d.grade;
-      if (d.username)     window._username     = d.username;
-      if (d.friends)      window._friends      = d.friends;
-      if (d.gender)       window._gender       = d.gender;
-      if (d.contactEmail) window._contactEmail = d.contactEmail;
-      if (d.termsAccepted)window._termsAccepted= d.termsAccepted;
+      if (d.displayName)   window._displayName   = d.displayName;
+      if (d.grade)         window._grade         = d.grade;
+      if (d.username)      window._username      = d.username;
+      if (d.friends)       window._friends       = d.friends;
+      if (d.gender)        window._gender        = d.gender;
+      if (d.contactEmail)  window._contactEmail  = d.contactEmail;
+      if (d.termsAccepted) window._termsAccepted = d.termsAccepted;
 
-      // ── Smart merge: Firestore always wins for progress data ──
-      // Take whichever has the higher score (prevents data loss in both directions)
-      if (d.st) {
-        const local = JSON.parse(localStorage.getItem('yanMath2') || '{}').st || {};
-        const cloud = d.st;
-        // Use the version with higher score as base, then merge history from both
-        const useCloud = (cloud.score || 0) >= (local.score || 0);
-        const base = useCloud ? cloud : local;
-        const other = useCloud ? local : cloud;
-        Object.assign(st, base);
-        // Merge history: combine both, deduplicate by timestamp, keep latest 200
-        const allHistory = [...(cloud.history || []), ...(local.history || [])];
-        const seen = new Set();
-        st.history = allHistory
-          .filter(h => { if (!h.ts || seen.has(h.ts)) return false; seen.add(h.ts); return true; })
-          .sort((a, b) => (b.ts || 0) - (a.ts || 0))
-          .slice(0, 200);
-        // Always take the higher streak/maxStreak
-        st.streak    = Math.max(cloud.streak    || 0, local.streak    || 0);
-        st.maxStreak = Math.max(cloud.maxStreak  || 0, local.maxStreak  || 0);
-        // Merge learnedTopics from both
-        const topics = new Set([...(cloud.learnedTopics || []), ...(local.learnedTopics || [])]);
-        st.learnedTopics = [...topics];
-        // Sync localStorage with the merged result
-        try { localStorage.setItem('yanMath2', JSON.stringify({st, cfg})); } catch(e) {}
-      }
+      // ── Firestore is the source of truth ──
+      // Only use localStorage if cloud has a strictly lower score AND
+      // local has more recent activity (user played offline)
+      const cloudSt  = d.st  || {};
+      const localRaw = JSON.parse(localStorage.getItem('yanMath2') || '{}');
+      const localSt  = localRaw.st || {};
+
+      const cloudScore  = cloudSt.score  || 0;
+      const localScore  = localSt.score  || 0;
+      const cloudSaved  = cloudSt._savedAt || 0;
+      const localSaved  = localSt._savedAt || 0;
+
+      // Use whichever was saved more recently (or cloud if equal)
+      const useSt = (localSaved > cloudSaved && localScore >= cloudScore) ? localSt : cloudSt;
+      Object.assign(st, useSt);
+
+      // Always pull cfg from cloud
       if (d.cfg) Object.assign(cfg, d.cfg);
+
+      // Write the winner back to localStorage so offline works
+      try { localStorage.setItem('yanMath2', JSON.stringify({st, cfg})); } catch(e) {}
+    } else {
+      // No cloud data — use localStorage if it exists
+      try {
+        const localRaw = JSON.parse(localStorage.getItem('yanMath2') || '{}');
+        if (localRaw.st)  Object.assign(st,  localRaw.st);
+        if (localRaw.cfg) Object.assign(cfg, localRaw.cfg);
+      } catch(e) {}
     }
     if (!window._friends) window._friends = [];
+    if (!st.history)      st.history = [];
+    if (!st.minigames)    st.minigames = {};
     const today = new Date().toDateString();
     if (st.dailyDate !== today) { st.dailyDone = false; st.dailyDate = today; }
-    if (!st.history) st.history = [];
-  } catch(e) { console.warn('fbLoad error', e); }
+  } catch(e) {
+    console.warn('fbLoad error', e);
+    // If Firebase fails, fall back to localStorage silently
+    try {
+      const localRaw = JSON.parse(localStorage.getItem('yanMath2') || '{}');
+      if (localRaw.st)  Object.assign(st,  localRaw.st);
+      if (localRaw.cfg) Object.assign(cfg, localRaw.cfg);
+    } catch(e2) {}
+  }
 };
+
 
 // ── SAVE USER DATA ──
 let _saveTimer = null;
 window.fbSave = function() {
   if (!window._fbUser) return;
+  // Stamp the save time so devices can compare recency
+  st._savedAt = Date.now();
+  // Always sync localStorage immediately (for offline use)
+  try { localStorage.setItem('yanMath2', JSON.stringify({st, cfg})); } catch(e) {}
+  // Debounce cloud save
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(async () => {
     try {
-      // Always sync localStorage too so both are in step
-      try { localStorage.setItem('yanMath2', JSON.stringify({st, cfg})); } catch(e) {}
       await setDoc(doc(db, 'users', window._fbUser.uid), {
         st, cfg,
         displayName:  window._displayName  || '',
@@ -122,8 +136,9 @@ window.fbSave = function() {
         lastSaved:    Date.now(),
       }, { merge: true });
     } catch(e) { console.warn('fbSave error', e); }
-  }, 1200);
+  }, 800);
 };
+
 
 // ── USERNAME AVAILABILITY CHECK ──
 let _unameCheckTimer = null;
