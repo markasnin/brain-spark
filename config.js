@@ -47,6 +47,10 @@ let qs = {
   done: false
 };
 
+// Export st and cfg to window so firebase.js (ES module) can access them
+window.st  = st;
+window.cfg = cfg;
+
 // ══ LEVELS ══
 const LEVELS = [
   { n: 'מתמטיקאי מתחיל', xp: 50,       e: '🌱' },
