@@ -37,6 +37,7 @@ function load() {
 }
 
 function save() {
+  st._savedAt = Date.now(); // timestamp for cross-device sync comparison
   try { localStorage.setItem('yanMath2', JSON.stringify({st, cfg})); } catch(e) {}
   if (window.fbSave) window.fbSave();
 }
