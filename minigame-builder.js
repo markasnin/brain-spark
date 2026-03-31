@@ -7,6 +7,19 @@
 
 window.BuilderGame = (function () {
   'use strict';
+
+  // ── Persistent state (saved via main st.minigames) ──────────
+  function mgSave(data) {
+    if (!window.st) return;
+    if (!window.st.minigames) window.st.minigames = {};
+    window.st.minigames['builder'] = data;
+    if (window.save) window.save();
+    else if (window.fbSave) window.fbSave();
+  }
+  function mgLoad() {
+    return (window.st && window.st.minigames && window.st.minigames['builder']) || null;
+  }
+
   const _rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
   const _pick = arr => arr[Math.floor(Math.random()*arr.length)];
 
@@ -234,6 +247,7 @@ window.BuilderGame = (function () {
         st.turn++;
         window.showToast && window.showToast('🧱 +' + gained + ' חומרים!');
       }
+      mgSave({ score: st.score, resources: st.resources, turn: st.turn, population: st.population, grid: st.grid.map(r=>r.map(c=>c?{name:c.name,emoji:c.emoji,color:c.color}:null)) });
       if (st.turn >= st.maxTurns) { st.phase = 'win'; render(); return; }
       st.phase = 'city';
     } else {
@@ -278,7 +292,7 @@ window.BuilderGame = (function () {
     wrap.innerHTML = `<div id="builderWrap" style="max-width:420px;margin:0 auto;padding:12px"></div>`;
     document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
     wrap.classList.add('on');
-    restart();
+    const _sv=mgLoad();if(_sv&&_sv.turn>0){st.score=_sv.score||0;st.resources=_sv.resources||20;st.turn=_sv.turn||0;st.population=_sv.population||0;if(_sv.grid)st.grid=_sv.grid.map(r=>r.map(c=>c||null));render();}else{restart();}
   }
 
   return { open, startBuild, selectBuilding, collectResources, submit, cancelBuild, cancelQ, restart, exit };
