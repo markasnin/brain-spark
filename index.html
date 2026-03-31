@@ -550,7 +550,7 @@
 </script>
 
 <script src="profile-fields.js"></script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=4');}</script>
 
   <script src="minigame-fishing.js"></script>
   <script src="minigame-dungeon.js"></script>
@@ -558,5 +558,34 @@
   <script src="minigame-chef.js"></script>
   <script src="minigame-builder.js"></script>
   <script src="minigames.js"></script>
+
+<script>
+// ── PATCH: fix minigames tile onclick and export helpers to window ──
+window.show = function(id) {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  var el = document.getElementById(id);
+  if (el) el.classList.add('on');
+  if (id === 'home' && window.updateHome) window.updateHome();
+};
+// Patch minigames button after DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  // nothing needed here - grid is built dynamically by updateHome
+});
+// Override buildGrid to always include openMinigames
+var _origUpdateHome;
+function _patchUpdateHome() {
+  if (!window.updateHome) { setTimeout(_patchUpdateHome, 100); return; }
+  var orig = window.updateHome;
+  window.updateHome = function() {
+    orig.apply(this, arguments);
+    // Fix minigames button if it ended up with empty onclick
+    var btn = document.getElementById('minigamesBtn');
+    if (btn && !btn.getAttribute('onclick')) {
+      btn.setAttribute('onclick', 'openMinigames()');
+    }
+  };
+}
+_patchUpdateHome();
+</script>
 </body>
 </html>
