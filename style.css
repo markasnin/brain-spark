@@ -5,7 +5,7 @@ body.theme-boy{--a4:#1e90ff;--a5:#00b4d8;--theme-accent:#1e90ff;--theme-accent2:
 body.theme-boy #bg{background:radial-gradient(ellipse at 15% 40%,#001a60 0%,transparent 55%),radial-gradient(ellipse at 85% 15%,#00294d 0%,transparent 50%),radial-gradient(ellipse at 50% 90%,#001040 0%,transparent 60%);}
 body.theme-boy .ans-inp{border-color:#1e90ff;}body.theme-boy .ans-inp:focus{border-color:#00b4d8;box-shadow:0 0 24px rgba(30,144,255,.4);}
 body.theme-boy .xp-inner{background:linear-gradient(90deg,#1e90ff,#00b4d8);}
-body.theme-boy .gender-btn.selected{border-color:#1e90ff;background:rgba(30,144,255,.18);box-shadow:0 0 18px rgba(30,144,255,.3);}
+body.theme-boy .gender-btn.selected{border-color:#1e90ff;background:rgba(30,144,255,.22);box-shadow:0 0 22px rgba(30,144,255,.45),inset 0 0 12px rgba(30,144,255,.08);transform:scale(1.05);}
 body.theme-boy .gender-btn.selected .gender-label{color:#1e90ff;}
 body.theme-boy .logo{background:linear-gradient(135deg,#fff 0%,var(--a2) 35%,#1e90ff 65%,#00b4d8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 /* ── Girl theme (pink) ── */
@@ -13,7 +13,7 @@ body.theme-girl{--a4:#ff6eb4;--a5:#c678dd;--a3:#ff9ed2;--theme-accent:#ff6eb4;--
 body.theme-girl #bg{background:radial-gradient(ellipse at 15% 40%,#3d0050 0%,transparent 55%),radial-gradient(ellipse at 85% 15%,#280040 0%,transparent 50%),radial-gradient(ellipse at 50% 90%,#1a0038 0%,transparent 60%);}
 body.theme-girl .ans-inp{border-color:#ff6eb4;}body.theme-girl .ans-inp:focus{border-color:#c678dd;box-shadow:0 0 24px rgba(255,110,180,.4);}
 body.theme-girl .xp-inner{background:linear-gradient(90deg,#ff6eb4,#c678dd);}
-body.theme-girl .gender-btn.selected{border-color:#ff6eb4;background:rgba(255,110,180,.18);box-shadow:0 0 18px rgba(255,110,180,.3);}
+body.theme-girl .gender-btn.selected{border-color:#ff6eb4;background:rgba(255,110,180,.22);box-shadow:0 0 22px rgba(255,110,180,.45),inset 0 0 12px rgba(255,110,180,.08);transform:scale(1.05);}
 body.theme-girl .gender-btn.selected .gender-label{color:#ff6eb4;}
 body.theme-girl .logo{background:linear-gradient(135deg,#fff 0%,#ffd32a 30%,#ff6eb4 60%,#c678dd 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 body.theme-girl .de{border-color:#ff9ed2;color:#ff9ed2;}body.theme-girl .de:hover{background:rgba(255,158,210,.1);}
@@ -22,7 +22,7 @@ body.theme-girl .daily-banner{border-color:#ff6eb4;}
 body.theme-girl .streak-badge{color:#ff6eb4;border-color:#ff6eb4;background:rgba(255,110,180,.15);}
 body.theme-girl .streak-live{color:#ff6eb4;border-color:#ff6eb4;background:rgba(255,110,180,.15);}
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);color:var(--txt);direction:rtl;overflow-x:hidden;}
+html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);color:var(--txt);direction:rtl;overflow-x:hidden;transition:background .4s,color .4s;}
 #bg{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 15% 40%,#1a0060 0%,transparent 55%),radial-gradient(ellipse at 85% 15%,#001a60 0%,transparent 50%),radial-gradient(ellipse at 50% 90%,#300040 0%,transparent 60%);}
 .star{position:absolute;border-radius:50%;background:#fff;animation:twink var(--d,3s) infinite;}
 @keyframes twink{0%,100%{opacity:.15;}50%{opacity:1;}}
@@ -60,7 +60,7 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
 
 /* ── Gender Picker ── */
 .gender-picker{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
-.gender-btn{flex:1;min-width:90px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 8px;border-radius:14px;border:2px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);cursor:pointer;transition:all .2s;font-family:'Rubik',sans-serif;}
+.gender-btn{flex:1;min-width:90px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 8px;border-radius:14px;border:2px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);cursor:pointer;transition:all .25s cubic-bezier(.34,1.4,.64,1);font-family:'Rubik',sans-serif;}
 .gender-btn:hover{border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.08);}
 .gender-btn.selected{border-color:var(--a5);background:rgba(155,89,182,.18);box-shadow:0 0 18px rgba(155,89,182,.25);}
 .gender-emoji{font-size:1.7rem;line-height:1;}
