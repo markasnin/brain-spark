@@ -41,7 +41,7 @@ function save() {
   try { localStorage.setItem('yanMath2', JSON.stringify({st, cfg})); } catch(e) {}
   if (window.fbSave) window.fbSave();
 }
-window.save = save; // export so minigames can call window.save()
+window.save = save;
 
 function sortLeaderboard(results) {
   return results.sort((a, b) => {
@@ -124,7 +124,7 @@ function buildGrid() {
     div.className = 'cbt' + (cat.cls ? ' '+cat.cls : '');
     if (cat.borderColor) div.style.borderColor = cat.borderColor + '40';
     const onclick = cat.special
-      ? ({'learn':'openLearn()','history':'openHistory()','mistakes':'openMistakes()','exam':'openExamPre()','friends':'openFriends()','settings':'openSettings()'}[cat.special]||'')
+      ? ({'learn':'openLearn()','history':'openHistory()','mistakes':'openMistakes()','exam':'openExamPre()','friends':'openFriends()','settings':'openSettings()','minigames':'openMinigames()'}[cat.special]||'')
       : `openCat('${cat.id}')`;
     div.setAttribute('onclick', onclick);
     div.id = cat.id + 'Btn';
