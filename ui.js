@@ -120,7 +120,7 @@ function buildGrid() {
     div.className = 'cbt' + (cat.cls ? ' '+cat.cls : '');
     if (cat.borderColor) div.style.borderColor = cat.borderColor + '40';
     const onclick = cat.special
-      ? ({'learn':'openLearn()','history':'openHistory()','mistakes':'openMistakes()','exam':'openExamPre()','friends':'openFriends()','settings':'openSettings()'}[cat.special]||'')
+      ? ({'learn':'openLearn()','history':'openHistory()','mistakes':'openMistakes()','exam':'openExamPre()','friends':'openFriends()','settings':'openSettings()','minigames':'openMinigames()'}[cat.special]||'')
       : `openCat('${cat.id}')`;
     div.setAttribute('onclick', onclick);
     div.id = cat.id + 'Btn';
@@ -128,7 +128,7 @@ function buildGrid() {
     grid.appendChild(div);
   });
   lockCat('divBtn',       !st.learnedTopics.includes('division'));
-  // shapes unlocked from grade 2+ via availableCategories
+  lockCat('shapesBtn',    !st.learnedTopics.includes('shapes'));
   lockCat('fractionsBtn', !st.learnedTopics.includes('fractions'));
 }
 
