@@ -223,7 +223,6 @@
 </div>
 
 <!-- ══ QUESTION ══ -->
-<div class="scr" id="minigameScreen"></div>
 <div class="scr" id="q-scr">
   <div class="qhdr">
     <div>
@@ -395,11 +394,10 @@
         <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
           <div class="set-label">מי אני?</div>
           <div id="setGenderPicker" class="gender-picker">
-            <button type="button" class="gender-btn" data-value="boy"   onclick="selectGender('set','boy');   window.applyGenderTheme&&window.applyGenderTheme('boy')"   aria-pressed="false"><span class="gender-emoji">👦</span><span class="gender-label">ילד</span></button>
-            <button type="button" class="gender-btn" data-value="girl"  onclick="selectGender('set','girl');  window.applyGenderTheme&&window.applyGenderTheme('girl')"  aria-pressed="false"><span class="gender-emoji">👧</span><span class="gender-label">ילדה</span></button>
-            <button type="button" class="gender-btn" data-value="other" onclick="selectGender('set','other'); window.applyGenderTheme&&window.applyGenderTheme('other')" aria-pressed="false"><span class="gender-emoji">🌟</span><span class="gender-label">לא רוצה להגיד</span></button>
+            <button type="button" class="gender-btn" data-value="boy"   onclick="selectGender('set','boy')"   aria-pressed="false"><span class="gender-emoji">👦</span><span class="gender-label">ילד</span></button>
+            <button type="button" class="gender-btn" data-value="girl"  onclick="selectGender('set','girl')"  aria-pressed="false"><span class="gender-emoji">👧</span><span class="gender-label">ילדה</span></button>
+            <button type="button" class="gender-btn" data-value="other" onclick="selectGender('set','other')" aria-pressed="false"><span class="gender-emoji">🌟</span><span class="gender-label">לא רוצה להגיד</span></button>
           </div>
-          <button onclick="fbSaveProfileSettings()" style="margin-top:6px;padding:9px 18px;background:rgba(30,144,255,.2);border:1px solid var(--a4);color:var(--a4);border-radius:9px;cursor:pointer;font-family:'Rubik',sans-serif;font-weight:700;font-size:.9rem;">🎨 שמור מגדר וצבעים</button>
         </div>
         <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
           <div class="set-label">מייל לשחזור סיסמה <span style="font-size:.75rem;color:var(--a3)">(לא חובה)</span></div>
@@ -551,42 +549,6 @@
 </script>
 
 <script src="profile-fields.js"></script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=4');}</script>
-
-  <script src="minigame-fishing.js"></script>
-  <script src="minigame-dungeon.js"></script>
-  <script src="minigame-rocket.js"></script>
-  <script src="minigame-chef.js"></script>
-  <script src="minigame-builder.js"></script>
-  <script src="minigames.js"></script>
-
-<script>
-// ── PATCH: fix minigames tile onclick and export helpers to window ──
-window.show = function(id) {
-  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
-  var el = document.getElementById(id);
-  if (el) el.classList.add('on');
-  if (id === 'home' && window.updateHome) window.updateHome();
-};
-// Patch minigames button after DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-  // nothing needed here - grid is built dynamically by updateHome
-});
-// Override buildGrid to always include openMinigames
-var _origUpdateHome;
-function _patchUpdateHome() {
-  if (!window.updateHome) { setTimeout(_patchUpdateHome, 100); return; }
-  var orig = window.updateHome;
-  window.updateHome = function() {
-    orig.apply(this, arguments);
-    // Fix minigames button if it ended up with empty onclick
-    var btn = document.getElementById('minigamesBtn');
-    if (btn && !btn.getAttribute('onclick')) {
-      btn.setAttribute('onclick', 'openMinigames()');
-    }
-  };
-}
-_patchUpdateHome();
-</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}</script>
 </body>
 </html>
