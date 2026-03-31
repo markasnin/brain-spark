@@ -7,6 +7,19 @@
 window.FishingGame = (function () {
   'use strict';
 
+  // ── Persistent state (saved via main st.minigames) ──────────
+  function mgSave(data) {
+    if (!window.st) return;
+    if (!window.st.minigames) window.st.minigames = {};
+    window.st.minigames['fishing'] = data;
+    if (window.save) window.save();
+    else if (window.fbSave) window.fbSave();
+  }
+  function mgLoad() {
+    return (window.st && window.st.minigames && window.st.minigames['fishing']) || null;
+  }
+
+
   // ── Fish registry ─────────────────────────────────────────
   const FISH = [
     // common
@@ -227,6 +240,7 @@ window.FishingGame = (function () {
       if (window.addPts) window.addPts(f.pts);
       if (window.showPtsPop) window.showPtsPop(f.pts);
       if (window.spawnConf && f.rarity === 'legendary') window.spawnConf(40);
+      mgSave({ aquarium: state.aquarium, casts: state.casts, totalPts: state.totalPts });
       showToast(`🎉 תפסת ${f.emoji} ${f.name}! +${f.pts}`);
       state.phase = 'idle';
       render();
@@ -245,7 +259,7 @@ window.FishingGame = (function () {
     const f = state.aquarium[i];
     if (!f) return;
     const nick = prompt(`שם הדג שלך (${f.name}):`, f.nickname || f.name);
-    if (nick !== null && nick.trim()) { state.aquarium[i].nickname = nick.trim(); }
+    if (nick !== null && nick.trim()) { state.aquarium[i].nickname = nick.trim(); mgSave({ aquarium: state.aquarium, casts: state.casts, totalPts: state.totalPts }); }
     renderAquarium(document.getElementById('fishingGameWrap'));
   }
 
@@ -262,6 +276,13 @@ window.FishingGame = (function () {
     wrap.innerHTML = `<div id="fishingGameWrap" style="max-width:420px;margin:0 auto;padding:12px"></div>`;
     document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
     wrap.classList.add('on');
+    // Restore saved state
+    const saved = mgLoad();
+    if (saved) {
+      state.aquarium   = saved.aquarium   || [];
+      state.casts      = saved.casts      || 0;
+      state.totalPts   = saved.totalPts   || 0;
+    }
     state.phase = 'idle';
     render();
   }
