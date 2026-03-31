@@ -376,7 +376,7 @@ window.fbSaveProfileSettings = async function() {
   }
   try {
     const update = {};
-    if (gender) { update.gender = gender; window._gender = gender; if (window.applyGenderTheme) window.applyGenderTheme(gender); }
+    if (gender) { update.gender = gender; window._gender = gender; }
     if (email)  { update.contactEmail = email.toLowerCase(); window._contactEmail = email.toLowerCase(); }
     if (Object.keys(update).length > 0)
       await updateDoc(doc(db, 'users', window._fbUser.uid), update);
@@ -389,7 +389,9 @@ window.fbSaveProfileSettings = async function() {
 // ── REGISTRATION UI HELPERS ──
 window.toggleRegTerms = function() {
   const chk = document.getElementById('regTermsChk');
+  const row = document.getElementById('regTermsRow');
   if (chk) chk.classList.toggle('checked');
+  if (row) row.classList.toggle('accepted', chk ? chk.classList.contains('checked') : false);
 };
 
 window.showTermsModal = function() {
