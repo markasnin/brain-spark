@@ -32,6 +32,8 @@ function load() {
     if (st.dailyDate !== today) { st.dailyDone = false; st.dailyDate = today; }
     if (!st.history) st.history = [];
   } catch(e) {}
+  // Note: Firebase fbLoad() will run after login and will merge/override with cloud data
+  // So local data here is just a fast initial load — Firebase is the source of truth
 }
 
 function save() {
@@ -120,7 +122,7 @@ function buildGrid() {
     div.className = 'cbt' + (cat.cls ? ' '+cat.cls : '');
     if (cat.borderColor) div.style.borderColor = cat.borderColor + '40';
     const onclick = cat.special
-      ? ({'learn':'openLearn()','history':'openHistory()','mistakes':'openMistakes()','exam':'openExamPre()','friends':'openFriends()','settings':'openSettings()','minigames':'openMinigames()'}[cat.special]||'')
+      ? ({'learn':'openLearn()','history':'openHistory()','mistakes':'openMistakes()','exam':'openExamPre()','friends':'openFriends()','settings':'openSettings()'}[cat.special]||'')
       : `openCat('${cat.id}')`;
     div.setAttribute('onclick', onclick);
     div.id = cat.id + 'Btn';
