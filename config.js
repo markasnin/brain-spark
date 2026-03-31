@@ -47,10 +47,6 @@ let qs = {
   done: false
 };
 
-// Export st and cfg to window so firebase.js (ES module) can access them
-window.st  = st;
-window.cfg = cfg;
-
 // ══ LEVELS ══
 const LEVELS = [
   { n: 'מתמטיקאי מתחיל', xp: 50,       e: '🌱' },
@@ -82,7 +78,6 @@ const ALL_CATS = [
   { id: 'word',     cls: 'word',    icon: '📖', name: 'מילוליות',   sub: 'בעיות עם סיפור' },
   { id: 'shapes',   cls: '',        icon: '📐', name: 'גיאומטריה', sub: 'צורות וצלעות',  borderColor: '#ff9ff3' },
   { id: 'fractions',cls: '',        icon: '½',  name: 'שברים',      sub: 'חלקים של שלם',  borderColor: '#54a0ff' },
-  { id: 'minigames',cls: 'mul',    icon: '🎮', name: 'מיני-משחקים', sub: 'דיג, מבוך, חלל', borderColor: '#ffd43b', special: 'minigames' },
   { id: 'learn',    cls: 'learn',   icon: '🎓', name: 'בואו נלמד!', sub: 'חומר חדש',      special: 'learn' },
   { id: 'history',  cls: 'history', icon: '📊', name: 'היסטוריה',   sub: 'כל הפתרונות',   special: 'history' },
   { id: 'mistakes', cls: 'mistakes',icon: '🔄', name: 'טעויות',     sub: 'שיפור עצמי',    special: 'mistakes' },
