@@ -67,6 +67,28 @@ function loadQ(q) {
   document.getElementById('moreBtn').style.display='none';
   const mv=document.getElementById('mulVis');
   if (q.showMul) { mv.style.display='block'; buildMulGroups(q.mulA,q.mulB,q.mulEmoji); buildMulTable(q.mulA,q.mulB); } else mv.style.display='none';
+
+  // ── Shape canvas injection ──
+  let sc = document.getElementById('shapeCanvas');
+  if (!sc) {
+    sc = document.createElement('div');
+    sc.id = 'shapeCanvas';
+    sc.style.cssText = 'margin:8px 0;border-radius:14px;overflow:hidden;';
+    mv.insertAdjacentElement('afterend', sc);
+  }
+  if (q.shapeHtml) {
+    sc.innerHTML = q.shapeHtml;
+    sc.style.display = 'block';
+  } else {
+    sc.innerHTML = '';
+    sc.style.display = 'none';
+  }
+  // Wire up _shapeAnswer so interactive widgets auto-fill the answer box
+  window._shapeAnswer = function(v) {
+    const el = document.getElementById('ansInp');
+    if (el && !qs.done) el.value = Math.round(v);
+  };
+
   const na=document.getElementById('numAnsWrap'),wa=document.getElementById('wordAnsWrap'),ew=document.getElementById('exprWrap');
   if (q.type==='word') {
     na.style.display='block'; wa.style.display='block'; ew.style.display='block';
