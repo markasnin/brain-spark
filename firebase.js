@@ -170,6 +170,7 @@ window.fbRegister = async function() {
     window._username    = username;
     window._grade       = grade;
     window._gender      = gender;
+    if (window.applyGenderTheme) window.applyGenderTheme(gender);
     if (email) window._contactEmail = email.toLowerCase();
 
     // onAuthStateChanged fires and handles navigation
@@ -222,7 +223,7 @@ window.fbLoad = async function(uid) {
       if (d.grade)         window._grade         = d.grade;
       if (d.username)      window._username      = d.username;
       if (d.friends)       window._friends       = d.friends;
-      if (d.gender)        window._gender        = d.gender;
+      if (d.gender) { window._gender = d.gender; if (window.applyGenderTheme) window.applyGenderTheme(d.gender); }
       if (d.contactEmail)  window._contactEmail  = d.contactEmail;
       if (d.termsAccepted) window._termsAccepted = d.termsAccepted;
 
@@ -375,7 +376,7 @@ window.fbSaveProfileSettings = async function() {
   }
   try {
     const update = {};
-    if (gender) { update.gender = gender; window._gender = gender; }
+    if (gender) { update.gender = gender; window._gender = gender; if (window.applyGenderTheme) window.applyGenderTheme(gender); }
     if (email)  { update.contactEmail = email.toLowerCase(); window._contactEmail = email.toLowerCase(); }
     if (Object.keys(update).length > 0)
       await updateDoc(doc(db, 'users', window._fbUser.uid), update);
