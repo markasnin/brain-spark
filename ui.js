@@ -443,3 +443,7 @@ function createStars() {
     bg.appendChild(s);
   }
 }
+// ── Expose to ES module (firebase.js) ──
+window.cleanUsername = cleanUsername;
+window.showToast = showToast;
+window.updateHome = updateHome;
