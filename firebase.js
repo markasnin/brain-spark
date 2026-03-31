@@ -376,7 +376,7 @@ window.fbSaveProfileSettings = async function() {
   }
   try {
     const update = {};
-    if (gender) { update.gender = gender; window._gender = gender; }
+    if (gender) { update.gender = gender; window._gender = gender; if (window.applyGenderTheme) window.applyGenderTheme(gender); }
     if (email)  { update.contactEmail = email.toLowerCase(); window._contactEmail = email.toLowerCase(); }
     if (Object.keys(update).length > 0)
       await updateDoc(doc(db, 'users', window._fbUser.uid), update);
