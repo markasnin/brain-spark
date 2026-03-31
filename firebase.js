@@ -68,7 +68,33 @@ window.fbLoad = async function(uid) {
       if (d.gender)       window._gender       = d.gender;
       if (d.contactEmail) window._contactEmail = d.contactEmail;
       if (d.termsAccepted)window._termsAccepted= d.termsAccepted;
-      if (d.st)  Object.assign(st, d.st);
+
+      // ── Smart merge: Firestore always wins for progress data ──
+      // Take whichever has the higher score (prevents data loss in both directions)
+      if (d.st) {
+        const local = JSON.parse(localStorage.getItem('yanMath2') || '{}').st || {};
+        const cloud = d.st;
+        // Use the version with higher score as base, then merge history from both
+        const useCloud = (cloud.score || 0) >= (local.score || 0);
+        const base = useCloud ? cloud : local;
+        const other = useCloud ? local : cloud;
+        Object.assign(st, base);
+        // Merge history: combine both, deduplicate by timestamp, keep latest 200
+        const allHistory = [...(cloud.history || []), ...(local.history || [])];
+        const seen = new Set();
+        st.history = allHistory
+          .filter(h => { if (!h.ts || seen.has(h.ts)) return false; seen.add(h.ts); return true; })
+          .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+          .slice(0, 200);
+        // Always take the higher streak/maxStreak
+        st.streak    = Math.max(cloud.streak    || 0, local.streak    || 0);
+        st.maxStreak = Math.max(cloud.maxStreak  || 0, local.maxStreak  || 0);
+        // Merge learnedTopics from both
+        const topics = new Set([...(cloud.learnedTopics || []), ...(local.learnedTopics || [])]);
+        st.learnedTopics = [...topics];
+        // Sync localStorage with the merged result
+        try { localStorage.setItem('yanMath2', JSON.stringify({st, cfg})); } catch(e) {}
+      }
       if (d.cfg) Object.assign(cfg, d.cfg);
     }
     if (!window._friends) window._friends = [];
@@ -85,12 +111,15 @@ window.fbSave = function() {
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(async () => {
     try {
+      // Always sync localStorage too so both are in step
+      try { localStorage.setItem('yanMath2', JSON.stringify({st, cfg})); } catch(e) {}
       await setDoc(doc(db, 'users', window._fbUser.uid), {
         st, cfg,
-        displayName: window._displayName || '',
-        username:    window._username    || '',
-        grade:       window._grade       || '',
-        friends:     window._friends     || []
+        displayName:  window._displayName  || '',
+        username:     window._username     || '',
+        grade:        window._grade        || '',
+        friends:      window._friends      || [],
+        lastSaved:    Date.now(),
       }, { merge: true });
     } catch(e) { console.warn('fbSave error', e); }
   }, 1200);
