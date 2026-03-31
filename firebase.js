@@ -23,12 +23,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Access globals from non-module scripts
-// config.js exposes st and cfg on window - reference them via window to be safe
-// We use a getter so we always have the latest reference
-const getState = () => window.st;
-const getCfg   = () => window.cfg;
-
 // Expose to non-module scripts
 window._fb = {
   auth, db, doc, setDoc, getDoc, updateDoc,
@@ -50,9 +44,9 @@ onAuthStateChanged(auth, async (user) => {
       document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
       document.getElementById('grade-select-scr').classList.add('on');
     } else {
-      await window.loadGradeConfig(window._grade);
+      await loadGradeConfig(window._grade);
       document.getElementById('home').classList.add('on');
-      window.updateHome();
+      updateHome();
     }
   } else {
     window._fbUser = null;
@@ -61,225 +55,147 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// ── LOGIN ──
-window.fbLogin = async function() {
-  const usernameVal = document.getElementById('loginUsername').value.trim();
-  const pass        = document.getElementById('loginPass').value;
-  const err         = document.getElementById('loginErr');
-  const btn         = document.getElementById('loginBtn');
-  err.style.display = 'none';
-
-  if (!usernameVal || !pass) {
-    err.textContent = 'נא למלא שם משתמש וסיסמה';
-    err.style.display = 'block';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'נכנס...';
-
+// ── LOAD USER DATA ──
+window.fbLoad = async function(uid) {
   try {
-    // Build synthetic email directly — no pre-auth Firestore query needed
-    const syntheticEmail = window.cleanUsername(usernameVal) + '@brainspark.local';
+    const snap = await getDoc(doc(db, 'users', uid));
+    if (snap.exists()) {
+      const d = snap.data();
+      if (d.displayName)  window._displayName  = d.displayName;
+      if (d.grade)        window._grade        = d.grade;
+      if (d.username)     window._username     = d.username;
+      if (d.friends)      window._friends      = d.friends;
+      if (d.gender)       window._gender       = d.gender;
+      if (d.contactEmail) window._contactEmail = d.contactEmail;
+      if (d.termsAccepted)window._termsAccepted= d.termsAccepted;
+      if (d.st)  Object.assign(st, d.st);
+      if (d.cfg) Object.assign(cfg, d.cfg);
+    }
+    if (!window._friends) window._friends = [];
+    const today = new Date().toDateString();
+    if (st.dailyDate !== today) { st.dailyDone = false; st.dailyDate = today; }
+    if (!st.history) st.history = [];
+  } catch(e) { console.warn('fbLoad error', e); }
+};
+
+// ── SAVE USER DATA ──
+let _saveTimer = null;
+window.fbSave = function() {
+  if (!window._fbUser) return;
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(async () => {
     try {
-      await signInWithEmailAndPassword(auth, syntheticEmail, pass);
-      return; // success — onAuthStateChanged handles navigation
-    } catch(innerErr) {
-      if (innerErr.code === 'auth/wrong-password' || innerErr.code === 'auth/invalid-credential') {
-        err.textContent = 'סיסמה שגויה';
-        err.style.display = 'block';
-        btn.disabled = false; btn.textContent = '🚀 כניסה';
-        return;
+      await setDoc(doc(db, 'users', window._fbUser.uid), {
+        st, cfg,
+        displayName: window._displayName || '',
+        username:    window._username    || '',
+        grade:       window._grade       || '',
+        friends:     window._friends     || []
+      }, { merge: true });
+    } catch(e) { console.warn('fbSave error', e); }
+  }, 1200);
+};
+
+// ── USERNAME AVAILABILITY CHECK ──
+let _unameCheckTimer = null;
+window.scheduleUsernameCheck = function(immediate = false) {
+  clearTimeout(_unameCheckTimer);
+  _unameCheckTimer = setTimeout(async () => {
+    const val   = document.getElementById('regUsername').value.trim();
+    const badge = document.getElementById('regUsernameBadge');
+    if (!badge) return;
+    const clean = val.toLowerCase().replace(/[^\u05d0-\u05eaa-z0-9]/g, '');
+    if (!clean || clean.length < 2) { badge.style.display = 'none'; return; }
+    badge.style.cssText = 'display:inline-flex;padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:700;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:var(--txt2);margin-top:-8px;margin-bottom:10px;';
+    badge.textContent = '⏳ בודק...';
+    try {
+      const snap = await getDocs(query(collection(db, 'users'), where('username', '==', clean)));
+      if (snap.empty) {
+        badge.style.cssText = 'display:inline-flex;padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:700;border:1px solid rgba(46,213,115,.4);background:rgba(46,213,115,.12);color:var(--a3);margin-top:-8px;margin-bottom:10px;';
+        badge.textContent = '✅ פנוי!';
+      } else {
+        badge.style.cssText = 'display:inline-flex;padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:700;border:1px solid rgba(255,71,87,.4);background:rgba(255,71,87,.12);color:var(--a1);margin-top:-8px;margin-bottom:10px;';
+        badge.textContent = '❌ תפוס — נסה שם אחר';
       }
-      if (innerErr.code === 'auth/too-many-requests') {
-        err.textContent = 'יותר מדי ניסיונות, נסה שוב מאוחר יותר';
-        err.style.display = 'block';
-        btn.disabled = false; btn.textContent = '🚀 כניסה';
-        return;
-      }
-      // user-not-found on synthetic = registered with real email, fall through
-    }
-    // Fallback for real-email registrations
-    const snap = await getDocs(query(collection(db, 'users'), where('username', '==', window.cleanUsername(usernameVal))));
-    if (snap.empty) {
-      err.textContent = 'שם משתמש לא קיים';
-      err.style.display = 'block';
-      btn.disabled = false; btn.textContent = '🚀 כניסה';
-      return;
-    }
-    const userDoc = snap.docs[0].data();
-    const email = userDoc.loginEmail || userDoc.email;
-    if (!email) {
-      err.textContent = 'לא נמצא מייל לחשבון זה';
-      err.style.display = 'block';
-      btn.disabled = false; btn.textContent = '🚀 כניסה';
-      return;
-    }
-    await signInWithEmailAndPassword(auth, email, pass);
-  } catch(e) {
-    const msg = (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')
-      ? 'סיסמה שגויה'
-      : e.code === 'auth/user-not-found'
-      ? 'משתמש לא קיים'
-      : e.code === 'auth/too-many-requests'
-      ? 'יותר מדי ניסיונות, נסה שוב מאוחר יותר'
-      : 'שגיאה: ' + e.message;
-    err.textContent = msg;
-    err.style.display = 'block';
-    btn.disabled = false; btn.textContent = '🚀 כניסה';
-  }
+    } catch(e) { badge.style.display = 'none'; }
+  }, immediate ? 0 : 600);
 };
 
 // ── REGISTER ──
 window.fbRegister = async function() {
-  const displayName = document.getElementById('regDisplayName').value.trim();
-  const username    = window.cleanUsername(document.getElementById('regUsername').value);
-  const grade       = document.getElementById('regGrade').value;
-  const gender      = window.getSelectedGender ? window.getSelectedGender('reg') : '';
-  const email       = document.getElementById('regEmail').value.trim();
+  const username    = document.getElementById('regUsername').value.trim();
   const pass        = document.getElementById('regPass').value;
   const pass2       = document.getElementById('regPass2').value;
-  const err         = document.getElementById('authErr');
-  const btn         = document.getElementById('authBtn');
-  const termsChecked = document.getElementById('regTermsChk')?.classList.contains('checked');
-
+  const grade       = document.getElementById('regGrade').value;
+  const displayName = document.getElementById('regDisplayName').value.trim();
+  const gender      = window.getSelectedGender ? window.getSelectedGender('reg') : '';
+  const contactEmail= document.getElementById('regEmail')?.value.trim() || '';
+  const termsAccepted = document.getElementById('regTermsRow')?.classList.contains('accepted') || false;
+  const err = document.getElementById('authErr');
   err.style.display = 'none';
 
-  if (!displayName || displayName.length < 2) { err.textContent='נא להכניס שם תצוגה'; err.style.display='block'; return; }
-  if (!username || username.length < 2)        { err.textContent='שם משתמש חייב לפחות 2 תווים'; err.style.display='block'; return; }
-  if (!grade)                                  { err.textContent='נא לבחור כיתה'; err.style.display='block'; return; }
-  if (pass.length < 6)                         { err.textContent='סיסמה לפחות 6 תווים'; err.style.display='block'; return; }
-  if (pass !== pass2)                          { err.textContent='הסיסמאות לא תואמות'; err.style.display='block'; return; }
-  if (!termsChecked)                           { err.textContent='נא לאשר את תנאי השימוש'; err.style.display='block'; return; }
+  if (!displayName || displayName.length < 2) { err.textContent='שם תצוגה חייב להיות לפחות 2 תווים'; err.style.display='block'; return; }
+  if (!username    || username.length < 2)    { err.textContent='שם משתמש חייב להיות לפחות 2 תווים'; err.style.display='block'; return; }
+  if (!grade)  { err.textContent='בחר כיתה'; err.style.display='block'; return; }
+  if (pass.length < 6) { err.textContent='סיסמה חייבת להיות לפחות 6 תווים'; err.style.display='block'; return; }
+  if (pass !== pass2)  { err.textContent='הסיסמאות לא תואמות'; err.style.display='block'; return; }
+  if (!termsAccepted)  {
+    err.textContent='יש לאשר את תנאי השימוש כדי להמשיך'; err.style.display='block';
+    document.getElementById('regTermsRow').style.animation='shk .4s';
+    setTimeout(()=>document.getElementById('regTermsRow').style.animation='',400); return;
+  }
+  if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+    err.textContent='כתובת מייל לא תקינה'; err.style.display='block'; return;
+  }
 
-  // Email is optional — generate a synthetic one if not provided
-  const loginEmail = email || (username + '@brainspark.local');
-
-  btn.disabled = true; btn.textContent = 'יוצר חשבון...';
+  const cleanU    = cleanUsername(username);
+  const fakeEmail = contactEmail ? contactEmail.toLowerCase() : cleanU + '@brainspark.local';
 
   try {
-    // Check username uniqueness first
-    const snap = await getDocs(query(collection(db, 'users'), where('username', '==', username)));
-    if (!snap.empty) {
-      err.textContent = 'שם משתמש זה תפוס, נסה אחר';
-      err.style.display = 'block';
-      btn.disabled = false; btn.textContent = '✅ צור חשבון!';
-      return;
-    }
-
-    const cred = await createUserWithEmailAndPassword(auth, loginEmail, pass);
-    const uid  = cred.user.uid;
-
-    // Save initial user document to Firestore
-    await setDoc(doc(db, 'users', uid), {
-      displayName,
-      username,
-      grade,
-      gender:       gender || '',
-      contactEmail: email ? email.toLowerCase() : '',
-      loginEmail:   loginEmail.toLowerCase(),
-      termsAccepted: true,
-      friends: [],
-      st:  window.st,
-      cfg: window.cfg,
-      lastSaved: Date.now(),
-    });
-
+    document.getElementById('authBtn').disabled = true;
+    document.getElementById('authBtn').textContent = 'נרשם...';
+    const cred = await createUserWithEmailAndPassword(auth, fakeEmail, pass);
+    const userData = { displayName, username: cleanU, grade, createdAt: Date.now(), friends: [], st, cfg, termsAccepted: true };
+    if (gender)       userData.gender       = gender;
+    if (contactEmail) userData.contactEmail = contactEmail.toLowerCase();
+    await setDoc(doc(db, 'users', cred.user.uid), userData, { merge: true });
     window._displayName = displayName;
-    window._username    = username;
+    window._username    = cleanU;
     window._grade       = grade;
-    window._gender      = gender;
-    if (window.applyGenderTheme) window.applyGenderTheme(gender);
-    if (email) window._contactEmail = email.toLowerCase();
-
-    // onAuthStateChanged fires and handles navigation
+    window._friends     = [];
   } catch(e) {
-    const msg = e.code === 'auth/email-already-in-use'
-      ? 'שם משתמש זה כבר קיים, נסה אחר'
-      : e.code === 'auth/invalid-email'
-      ? 'מייל לא תקין'
-      : 'שגיאה: ' + e.message;
-    err.textContent = msg;
+    document.getElementById('authBtn').disabled = false;
+    document.getElementById('authBtn').textContent = 'הרשמה ✅';
+    err.textContent = e.code === 'auth/email-already-in-use' ? 'שם משתמש זה כבר תפוס, בחר אחר' : 'שגיאה: ' + e.message;
     err.style.display = 'block';
-    btn.disabled = false; btn.textContent = '✅ צור חשבון!';
+  }
+};
+
+// ── LOGIN ──
+window.fbLogin = async function() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const pass     = document.getElementById('loginPass').value;
+  const err      = document.getElementById('loginErr');
+  err.style.display = 'none';
+  if (!username || !pass) { err.textContent='מלא שם משתמש וסיסמה'; err.style.display='block'; return; }
+  try {
+    document.getElementById('loginBtn').disabled = true;
+    document.getElementById('loginBtn').textContent = 'נכנס...';
+    const clean     = username.trim().toLowerCase().replace(/[^\u05d0-\u05eaa-z0-9]/g, '');
+    const fakeEmail = clean + '@brainspark.local';
+    await signInWithEmailAndPassword(auth, fakeEmail, pass);
+  } catch(e) {
+    document.getElementById('loginBtn').disabled = false;
+    document.getElementById('loginBtn').textContent = '🚀 כניסה';
+    err.textContent = 'שם משתמש או סיסמה שגויים';
+    err.style.display = 'block';
   }
 };
 
 // ── LOGOUT ──
 window.fbLogout = async function() {
   if (!confirm('להתנתק?')) return;
-  try {
-    if (window.fbSave) window.fbSave();
-    await signOut(auth);
-    window._fbUser      = null;
-    window._username    = null;
-    window._displayName = null;
-    window._grade       = null;
-    window._friends     = [];
-    Object.assign(window.st, {
-      score:0, level:0, xp:0, streak:0, maxStreak:0,
-      learnedTopics:[], dailyDone:false, dailyDate:'',
-      history:[], examTopics:['add','sub','mul'], examDiff:'mix',
-      totalSolved:0, correctCount:0, minigames:{},
-      specialGlowColor:null, specialBadgeColor:null
-    });
-  } catch(e) {
-    console.error('Logout error:', e);
-  }
-};
-
-// ── LOAD USER DATA ──
-window.fbLoad = async function(uid) {
-  console.log('[BrainSpark] fbLoad START, uid=', uid);
-  try {
-    const snap = await getDoc(doc(db, 'users', uid));
-    console.log('[BrainSpark] fbLoad snap.exists=', snap.exists());
-    if (snap.exists()) {
-      const d = snap.data();
-      console.log('[BrainSpark] cloud data keys:', Object.keys(d));
-      console.log('[BrainSpark] cloud st.score=', d.st?.score, 'cloud st._savedAt=', d.st?._savedAt);
-      if (d.displayName)   window._displayName   = d.displayName;
-      if (d.grade)         window._grade         = d.grade;
-      if (d.username)      window._username      = d.username;
-      if (d.friends)       window._friends       = d.friends;
-      if (d.gender) { window._gender = d.gender; if (window.applyGenderTheme) window.applyGenderTheme(d.gender); }
-      if (d.contactEmail)  window._contactEmail  = d.contactEmail;
-      if (d.termsAccepted) window._termsAccepted = d.termsAccepted;
-
-      const cloudSt  = d.st  || {};
-      const localRaw = JSON.parse(localStorage.getItem('yanMath2') || '{}');
-      const localSt  = localRaw.st || {};
-      const cloudSaved = cloudSt._savedAt || 0;
-      const localSaved = localSt._savedAt || 0;
-      console.log('[BrainSpark] cloud _savedAt=', cloudSaved, 'local _savedAt=', localSaved);
-      const useSt = (localSaved > cloudSaved) ? localSt : cloudSt;
-      console.log('[BrainSpark] using:', localSaved > cloudSaved ? 'LOCAL' : 'CLOUD', 'score=', useSt.score);
-      Object.assign(window.st, useSt);
-      if (d.cfg) Object.assign(window.cfg, d.cfg);
-      if (!window.st.minigames) window.st.minigames = {};
-      try { localStorage.setItem('yanMath2', JSON.stringify({st: window.st, cfg: window.cfg})); } catch(e) {}
-    } else {
-      console.log('[BrainSpark] NO cloud doc — using localStorage only');
-      try {
-        const localRaw = JSON.parse(localStorage.getItem('yanMath2') || '{}');
-        if (localRaw.st)  Object.assign(window.st,  localRaw.st);
-        if (localRaw.cfg) Object.assign(window.cfg, localRaw.cfg);
-      } catch(e) {}
-    }
-    if (!window._friends) window._friends = [];
-    if (!window.st.history)      window.st.history = [];
-    if (!st.minigames)    st.minigames = {};
-    const today = new Date().toDateString();
-    if (window.st.dailyDate !== today) { window.st.dailyDone = false; window.st.dailyDate = today; }
-    console.log('[BrainSpark] fbLoad DONE. st.score=', window.st.score, 'grade=', window._grade);
-  } catch(e) {
-    console.error('[BrainSpark] fbLoad ERROR:', e.code, e.message);
-    try {
-      const localRaw = JSON.parse(localStorage.getItem('yanMath2') || '{}');
-      if (localRaw.st)  Object.assign(window.st,  localRaw.st);
-      if (localRaw.cfg) Object.assign(window.cfg, localRaw.cfg);
-    } catch(e2) {}
-  }
+  await signOut(auth);
 };
 
 // ── SAVE USERNAME (setup screen) ──
@@ -288,7 +204,7 @@ window.fbSaveUsername = async function() {
   const err  = document.getElementById('setupErr');
   const btn  = document.getElementById('setupBtn');
   err.style.display = 'none';
-  const clean = window.cleanUsername(val);
+  const clean = cleanUsername(val);
   if (!clean || clean.length < 2) { err.textContent='שם משתמש חייב להיות לפחות 2 תווים'; err.style.display='block'; return; }
   btn.disabled = true; btn.textContent = 'שומר...';
   try {
@@ -300,9 +216,9 @@ window.fbSaveUsername = async function() {
     if (!window._grade) {
       document.getElementById('grade-select-scr').classList.add('on');
     } else {
-      await window.loadGradeConfig(window._grade);
+      await loadGradeConfig(window._grade);
       document.getElementById('home').classList.add('on');
-      window.updateHome();
+      updateHome();
     }
   } catch(e) {
     try {
@@ -328,7 +244,7 @@ window.fbSendPasswordReset = async function() {
   }
   try {
     await sendPasswordResetEmail(auth, contactEmail);
-    window.showToast(`✅ קישור לאיפוס סיסמה נשלח ל-${contactEmail}`);
+    showToast(`✅ קישור לאיפוס סיסמה נשלח ל-${contactEmail}`);
   } catch(e) {
     err.textContent = (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-email')
       ? 'המייל לא מזוהה על ידי Firebase. עדכן את המייל בהגדרות ושמור שוב — ואז נסה מחדש.'
@@ -348,7 +264,7 @@ window.fbChangePassword = async function() {
     const cred = EmailAuthProvider.credential(window._fbUser.email, oldPass);
     await reauthenticateWithCredential(window._fbUser, cred);
     await updatePassword(window._fbUser, newPass);
-    window.showToast('✅ סיסמה עודכנה!');
+    showToast('✅ סיסמה עודכנה!');
     document.getElementById('oldPass').value = '';
     document.getElementById('newPass').value  = '';
   } catch(e) {
@@ -365,8 +281,8 @@ window.fbChangeDisplayName = async function() {
   if (!newName || newName.length < 2) { err.textContent='שם חייב להיות לפחות 2 תווים'; err.style.display='block'; return; }
   window._displayName = newName;
   window.fbSave();
-  window.updateHome();
-  window.showToast('✅ שם עודכן!');
+  updateHome();
+  showToast('✅ שם עודכן!');
 };
 
 // ── CHANGE GRADE ──
@@ -376,9 +292,9 @@ window.fbChangeGrade = async function() {
   if (!confirm(`לעבור לכיתה ${grade}? זה ישנה את רמת השאלות!`)) return;
   window._grade = grade;
   window.fbSave();
-  await window.loadGradeConfig(grade);
-  window.updateHome();
-  window.showToast(`✅ עברת לכיתה ${grade}!`);
+  await loadGradeConfig(grade);
+  updateHome();
+  showToast(`✅ עברת לכיתה ${grade}!`);
 };
 
 // ── SAVE PROFILE SETTINGS (email + gender) ──
@@ -395,93 +311,40 @@ window.fbSaveProfileSettings = async function() {
   }
   try {
     const update = {};
-    if (gender) { update.gender = gender; window._gender = gender; if (window.applyGenderTheme) window.applyGenderTheme(gender); }
+    if (gender) { update.gender = gender; window._gender = gender; }
     if (email)  { update.contactEmail = email.toLowerCase(); window._contactEmail = email.toLowerCase(); }
     if (Object.keys(update).length > 0)
       await updateDoc(doc(db, 'users', window._fbUser.uid), update);
-    window.showToast('✅ פרטים עודכנו!');
+
+    // Try updating Firebase Auth email too
+    if (email && window._fbUser) {
+      try {
+        const { updateEmail } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+        await updateEmail(window._fbUser, email.toLowerCase());
+      } catch(e) {
+        if (e.code === 'auth/requires-recent-login') {
+          const pass = prompt('כדי לעדכן מייל, הכנס סיסמה:');
+          if (pass) {
+            try {
+              const { reauthenticateWithCredential: reauth, EmailAuthProvider: EAP, updateEmail: ue }
+                = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+              const cred = EAP.credential(window._fbUser.email, pass);
+              await reauth(window._fbUser, cred);
+              await ue(window._fbUser, email.toLowerCase());
+            } catch(e2) { console.log('reauth error:', e2.code, e2.message); }
+          }
+        } else { console.log('updateEmail error:', e.code, e.message); }
+      }
+    }
+    showToast('✅ פרטים עודכנו!');
   } catch(e) {
     if (err) { err.textContent='שגיאה בשמירה'; err.style.display='block'; }
   }
 };
 
-// ── REGISTRATION UI HELPERS ──
-window.toggleRegTerms = function() {
-  const chk = document.getElementById('regTermsChk');
-  const row = document.getElementById('regTermsRow');
-  if (chk) chk.classList.toggle('checked');
-  if (row) row.classList.toggle('accepted', !!(chk && chk.classList.contains('checked')));
-};
-
-window.showTermsModal = function() {
-  const m = document.getElementById('termsModal');
-  if (m) m.style.display = 'flex';
-};
-
-window.closeTermsModal = function() {
-  const m = document.getElementById('termsModal');
-  if (m) m.style.display = 'none';
-};
-
-window.selectRegGrade = function(grade) {
-  document.getElementById('regGrade').value = grade;
-  document.querySelectorAll('.reg-grade-card').forEach(c => {
-    c.classList.toggle('selected', c.dataset.grade === grade);
-  });
-};
-
-let _usernameCheckTimer = null;
-window.scheduleUsernameCheck = function(immediate) {
-  clearTimeout(_usernameCheckTimer);
-  _usernameCheckTimer = setTimeout(async () => {
-    const val = window.cleanUsername(document.getElementById('regUsername').value);
-    const badge = document.getElementById('regUsernameBadge');
-    if (!badge) return;
-    if (!val || val.length < 2) { badge.style.display='none'; return; }
-    try {
-      const snap = await getDocs(query(collection(db, 'users'), where('username', '==', val)));
-      badge.style.display = 'inline';
-      if (snap.empty) {
-        badge.textContent = '✅ זמין!';
-        badge.style.color = 'var(--a3)';
-      } else {
-        badge.textContent = '❌ תפוס';
-        badge.style.color = 'var(--a1)';
-      }
-    } catch(e) { badge.style.display='none'; }
-  }, immediate ? 0 : 600);
-};
-
-window.regGoStep = function(step) {
-  const err = document.getElementById('authErr');
-  err.style.display = 'none';
-  if (step === 2) {
-    const name = document.getElementById('regDisplayName').value.trim();
-    const user = window.cleanUsername(document.getElementById('regUsername').value);
-    if (!name || name.length < 2) { err.textContent='נא להכניס שם תצוגה'; err.style.display='block'; return; }
-    if (!user || user.length < 2) { err.textContent='שם משתמש חייב לפחות 2 תווים'; err.style.display='block'; return; }
-  }
-  if (step === 3) {
-    const grade = document.getElementById('regGrade').value;
-    if (!grade) { err.textContent='נא לבחור כיתה'; err.style.display='block'; return; }
-  }
-  [1,2,3].forEach(i => {
-    document.getElementById('regStep'+i).classList.toggle('on', i===step);
-    document.getElementById('rdot'+i).classList.toggle('active', i<=step);
-    if (i < 3) document.getElementById('rline'+i).classList.toggle('active', i<step);
-  });
-};
-
-window.switchAuthTab = function(tab) {
-  document.getElementById('loginForm').classList.toggle('on', tab==='login');
-  document.getElementById('regForm').classList.toggle('on', tab==='reg');
-  document.getElementById('tabLogin').classList.toggle('active', tab==='login');
-  document.getElementById('tabReg').classList.toggle('active', tab==='reg');
-};
-
 // ── FRIENDS ──
 window.fbSearchUser = async function() {
-  const q   = window.cleanUsername(document.getElementById('friendSearch').value);
+  const q   = cleanUsername(document.getElementById('friendSearch').value);
   const res = document.getElementById('friendResults');
   res.innerHTML = '<div style="color:var(--txt2)">מחפש...</div>';
   try {
@@ -501,7 +364,7 @@ window.fbAddFriend = async function(uid, name) {
   if (window._friends.includes(uid)) return;
   window._friends.push(uid);
   window.fbSave();
-  window.showToast(`✅ ${name} נוסף לחברים!`);
+  showToast(`✅ ${name} נוסף לחברים!`);
   openFriends();
 };
 
@@ -509,7 +372,7 @@ window.fbRemoveFriend = async function(uid, name) {
   if (!confirm(`להסיר את ${name} מהחברים?`)) return;
   window._friends = (window._friends||[]).filter(id => id !== uid);
   window.fbSave();
-  window.showToast(`🗑️ ${name} הוסר מהחברים`);
+  showToast(`🗑️ ${name} הוסר מהחברים`);
   renderFriendsList();
   loadMiniLeaderboard();
 };
@@ -544,32 +407,4 @@ window.fbLoadLeaderboard = async function() {
     });
     if (results.length === 0) board.innerHTML='<div style="color:var(--txt2);text-align:center">אין חברים עדיין 😢</div>';
   } catch(e) { board.innerHTML='<div style="color:var(--a1)">שגיאה בטעינה</div>'; }
-};
-
-// ── SAVE TO FIRESTORE ──
-let _saveTimer = null;
-window.fbSave = function() {
-  if (!window._fbUser) {
-    console.log('[BrainSpark] fbSave skipped — not logged in');
-    return;
-  }
-  if (window.st) window.st._savedAt = Date.now();
-  try { localStorage.setItem('yanMath2', JSON.stringify({st: window.st, cfg: window.cfg})); } catch(e) {}
-  clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(async () => {
-    try {
-      console.log('[BrainSpark] fbSave START, uid=', window._fbUser.uid, 'score=', window.st && window.st.score);
-      await setDoc(doc(db, 'users', window._fbUser.uid), {
-        st: window.st, cfg: window.cfg,
-        displayName:  window._displayName  || '',
-        username:     window._username     || '',
-        grade:        window._grade        || '',
-        friends:      window._friends      || [],
-        lastSaved:    Date.now(),
-      }, { merge: true });
-      console.log('[BrainSpark] fbSave SUCCESS');
-    } catch(e) {
-      console.error('[BrainSpark] fbSave ERROR:', e.code, e.message);
-    }
-  }, 800);
 };
