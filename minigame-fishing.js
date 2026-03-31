@@ -46,19 +46,40 @@ window.FishingGame = (function () {
     cancelCb: null,
   };
 
-  // ── Question generator ────────────────────────────────────
-  function makeQ(diff) {
+
+  // ── Grade-aware question generator ───────────────────────
+  function _gradePool(diff) {
     const gc = window.GRADE_CONFIG;
-    const cat = diff === 'easy'   ? _pick(['add','sub']) :
-                diff === 'medium' ? _pick(['add','sub','mul']) :
-                                    _pick(['mul','div','add']);
-    if (window.genQ) return window.genQ(cat, diff);
-    // fallback inline
+    const avail = (gc && gc.availableCategories) || ['add','sub'];
+    const math = ['add','sub','mul','div'].filter(c => avail.includes(c));
+    let pool;
+    if (diff === 'easy')   pool = math.filter(c => c === 'add' || c === 'sub');
+    else if (diff === 'medium') pool = math.filter(c => c !== 'div');
+    else pool = math;
+    return (pool.length ? pool : math.length ? math : ['add']);
+  }
+  function makeQ(diff) {
+    const pool = _gradePool(diff);
+    const cat  = pool[Math.floor(Math.random() * pool.length)];
+    if (window.genQ) { try { return window.genQ(cat, diff); } catch(e) {} }
     const r = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
-    if (cat==='add') { const a=r(2,20),b=r(2,20); return {text:`${a} + ${b} = ?`,answer:a+b}; }
-    if (cat==='sub') { const a=r(5,25),b=r(1,a);  return {text:`${a} - ${b} = ?`,answer:a-b}; }
-    if (cat==='mul') { const a=r(2,9),b=r(2,9);   return {text:`${a} × ${b} = ?`,answer:a*b}; }
-    const b=r(2,6),q=r(2,6); return {text:`${b*q} ÷ ${b} = ?`,answer:q};
+    const gr = window._grade || '\u05d1';
+    const sm = (gr==='\u05d0'||gr==='\u05d1');
+    const md = (gr==='\u05d2'||gr==='\u05d3');
+    if (cat==='add') { const m=sm?15:md?60:250; const a=r(1,m),b=r(1,m); return {text:`${a} + ${b} = ?`, answer:a+b}; }
+    if (cat==='sub') { const m=sm?15:md?60:250; const a=r(3,m),b=r(1,a); return {text:`${a} - ${b} = ?`, answer:a-b}; }
+    if (cat==='mul') { const m=sm?5:md?9:12;    const a=r(2,m),b=r(2,m); return {text:`${a} \u00d7 ${b} = ?`, answer:a*b}; }
+    const m=md?9:12; const b=r(2,m),q=r(1,m);  return {text:`${b*q} \u00f7 ${b} = ?`, answer:q};
+  }
+
+
+  function helpBtn(msg) {
+    const safe = msg.replace(/'/g,"&#39;").replace(/"/g,"&quot;");
+    return `<div style="text-align:center;margin-bottom:10px">
+      <button onclick="window._showHelp('${safe}')" style="padding:6px 18px;background:rgba(255,211,42,.15);border:1px solid #ffd43b88;color:#ffd43b;border-radius:20px;font-family:'Rubik',sans-serif;font-size:.8rem;cursor:pointer;font-weight:700">
+        💡 איך משחקים?
+      </button>
+    </div>`;
   }
 
   // ── Pick fish by rarity ───────────────────────────────────
@@ -118,7 +139,7 @@ window.FishingGame = (function () {
   }
 
   function renderCastBtn() {
-    return `<button id="castBtn" onclick="window.FishingGame.cast()" style="width:100%;padding:16px;background:linear-gradient(135deg,#0d3b6e,#1e6091);border:2px solid #74c0fc;color:#fff;border-radius:16px;font-family:'Fredoka',sans-serif;font-size:1.3rem;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 20px #74c0fc44">
+    return helpBtn('🎣 דיג מתמטי\n\n• לחץ \'זרוק חכה!\' כדי להטיל\n• כשדג נתפס — פתור תרגיל\n• נכון → תתפוס את הדג \n• טעות → הדג בורח\n• דגים נדירים = תרגילים קשים\n• צבור דגים באקווריום שלך!') + `<button id="castBtn" onclick="window.FishingGame.cast()" style="width:100%;padding:16px;background:linear-gradient(135deg,#0d3b6e,#1e6091);border:2px solid #74c0fc;color:#fff;border-radius:16px;font-family:'Fredoka',sans-serif;font-size:1.3rem;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 20px #74c0fc44">
       🎣 זרוק חכה!
     </button>`;
   }
