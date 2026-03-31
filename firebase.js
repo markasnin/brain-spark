@@ -79,7 +79,31 @@ window.fbLogin = async function() {
   btn.textContent = 'נכנס...';
 
   try {
-    // Look up the user's login email by username
+    // First try the synthetic email (used by most users who registered without a real email).
+    // This avoids a pre-auth Firestore query which is blocked by security rules.
+    const syntheticEmail = cleanUsername(usernameVal) + '@brainspark.local';
+    try {
+      await signInWithEmailAndPassword(auth, syntheticEmail, pass);
+      return; // onAuthStateChanged handles navigation
+    } catch(innerErr) {
+      // If it's wrong-password the username exists but password is wrong — stop here
+      if (innerErr.code === 'auth/wrong-password' || innerErr.code === 'auth/invalid-credential') {
+        err.textContent = 'סיסמה שגויה';
+        err.style.display = 'block';
+        btn.disabled = false; btn.textContent = '🚀 כניסה';
+        return;
+      }
+      if (innerErr.code === 'auth/too-many-requests') {
+        err.textContent = 'יותר מדי ניסיונות, נסה שוב מאוחר יותר';
+        err.style.display = 'block';
+        btn.disabled = false; btn.textContent = '🚀 כניסה';
+        return;
+      }
+      // user-not-found on synthetic email means they registered with a real email.
+      // Fall through to Firestore lookup (only works if security rules allow it).
+    }
+
+    // Fallback: look up the real email from Firestore (requires permissive rules)
     const snap = await getDocs(query(collection(db, 'users'), where('username', '==', cleanUsername(usernameVal))));
     if (snap.empty) {
       err.textContent = 'שם משתמש לא קיים';
@@ -389,9 +413,7 @@ window.fbSaveProfileSettings = async function() {
 // ── REGISTRATION UI HELPERS ──
 window.toggleRegTerms = function() {
   const chk = document.getElementById('regTermsChk');
-  const row = document.getElementById('regTermsRow');
   if (chk) chk.classList.toggle('checked');
-  if (row) row.classList.toggle('accepted', chk ? chk.classList.contains('checked') : false);
 };
 
 window.showTermsModal = function() {
