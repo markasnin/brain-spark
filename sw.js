@@ -11,6 +11,8 @@ const FILES = [
   './firebase.js',
   './profile-fields.js',
   './manifest.json',
+  './minigame-chef.js',
+  './minigame-builder.js',
   './minigames.js',
   './minigame-fishing.js',
   './minigame-dungeon.js',
