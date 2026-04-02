@@ -17,9 +17,13 @@ async function loadGradeConfig(grade) {
 
 function applyGradeConfig() {
   const gc = window.GRADE_CONFIG; if (!gc) return;
-  (gc.availableLearnTopics||[]).forEach(t => { if(!st.learnedTopics.includes(t)) st.learnedTopics.push(t); });
+  let changed = false;
+  (gc.availableLearnTopics||[]).forEach(t => {
+    if (!st.learnedTopics.includes(t)) { st.learnedTopics.push(t); changed = true; }
+  });
   st.examTopics = st.examTopics.filter(t => (gc.availableExamTopics||[]).includes(t));
   if (st.examTopics.length===0) st.examTopics = (gc.availableExamTopics||['add']).slice(0,2);
+  if (changed) save();
 }
 
 async function selectGrade(grade) {
