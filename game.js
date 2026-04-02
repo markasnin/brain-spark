@@ -33,7 +33,6 @@ async function selectGrade(grade) {
 
 // ── Category ──
 function openCat(cat) {
-  if (cat === 'word') { showToast('🔒 מילוליות — בקרוב!'); return; }
   if (LOCKED_TOPICS[cat] && !st.learnedTopics.includes(LOCKED_TOPICS[cat])) { showToast('🔒 קודם למד את הנושא הזה!'); return; }
   const gc = window.GRADE_CONFIG;
   if (gc && !gc.availableCategories.includes(cat)) { showToast('🔒 נושא זה לא זמין בכיתה שלך'); return; }
@@ -67,28 +66,11 @@ function loadQ(q) {
   document.getElementById('moreBtn').style.display='none';
   const mv=document.getElementById('mulVis');
   if (q.showMul) { mv.style.display='block'; buildMulGroups(q.mulA,q.mulB,q.mulEmoji); buildMulTable(q.mulA,q.mulB); } else mv.style.display='none';
-
-  // ── Shape canvas injection ──
-  let sc = document.getElementById('shapeCanvas');
-  if (!sc) {
-    sc = document.createElement('div');
-    sc.id = 'shapeCanvas';
-    sc.style.cssText = 'margin:8px 0;border-radius:14px;overflow:hidden;';
-    mv.insertAdjacentElement('afterend', sc);
-  }
-  if (q.shapeHtml) {
-    sc.innerHTML = q.shapeHtml;
-    sc.style.display = 'block';
-  } else {
-    sc.innerHTML = '';
-    sc.style.display = 'none';
-  }
-  // Wire up _shapeAnswer so interactive widgets auto-fill the answer box
-  window._shapeAnswer = function(v) {
-    const el = document.getElementById('ansInp');
-    if (el && !qs.done) el.value = Math.round(v);
-  };
-
+  // ── Shape canvas ──
+  let sc=document.getElementById('shapeCanvas');
+  if (!sc) { sc=document.createElement('div'); sc.id='shapeCanvas'; sc.style.cssText='margin:8px 0;border-radius:14px;overflow:hidden;'; mv.insertAdjacentElement('afterend',sc); }
+  if (q.shapeHtml) { sc.innerHTML=q.shapeHtml; sc.style.display='block'; } else { sc.innerHTML=''; sc.style.display='none'; }
+  window._shapeAnswer = function(v) { const el=document.getElementById('ansInp'); if(el&&!qs.done){el.value=Math.round(v);} };
   const na=document.getElementById('numAnsWrap'),wa=document.getElementById('wordAnsWrap'),ew=document.getElementById('exprWrap');
   if (q.type==='word') {
     na.style.display='block'; wa.style.display='block'; ew.style.display='block';
@@ -356,7 +338,21 @@ function startDaily(){if(st.dailyDone){showToast('✅ כבר השלמת את ה�
 function finishDaily(){st.dailyDone=true;save();addPts(20);showPtsPop(20);spawnConf(25);showToast('🎉 משימה יומית הושלמה! +20 בונוס!');setTimeout(()=>show('home'),2000);}
 
 // ── Exam ──
-const EXAM_CATS=[{id:'add',n:'➕ חיבור'},{id:'sub',n:'➖ חיסור'},{id:'mul',n:'✖️ כפל'},{id:'div',n:'➗ חילוק',needs:'division'},{id:'word',n:'📖 מילוליות'},{id:'shapes',n:'📐 גיאומטריה',needs:'shapes'},{id:'fractions',n:'½ שברים',needs:'fractions'}];
+const EXAM_CATS=[
+  {id:'add',n:'➕ חיבור'},
+  {id:'sub',n:'➖ חיסור'},
+  {id:'mul',n:'✖️ כפל'},
+  {id:'div',n:'➗ חילוק',needs:'division'},
+  {id:'word',n:'📖 מילוליות'},
+  {id:'shapes',n:'📐 גיאומטריה',needs:'shapes'},
+  {id:'fractions',n:'½ שברים',needs:'fractions'},
+  {id:'measurement',n:'📏 מידות',needs:'measurement'},
+  {id:'data',n:'📊 נתונים',needs:'data'},
+  {id:'decimals',n:'0.5 עשרוניים',needs:'decimals'},
+  {id:'percent',n:'% אחוזים',needs:'percent'},
+  {id:'negatives',n:'− שליליים',needs:'negatives'},
+  {id:'ratio',n:'⚖️ יחס ופרופורציה',needs:'ratio'},
+];
 
 function openExamPre(){const gc=window.GRADE_CONFIG;const available=gc?.availableExamTopics||['add','sub','mul','word'];const g=document.getElementById('examTopicsGrid');g.innerHTML='';EXAM_CATS.forEach(cat=>{if(!available.includes(cat.id))return;const locked=cat.needs&&!st.learnedTopics.includes(cat.needs);const sel=st.examTopics.includes(cat.id);const b=document.createElement('button');b.className='etopic-btn'+(sel&&!locked?' sel':'')+(locked?' locked':'');b.textContent=cat.n+(locked?' 🔒':'');b.disabled=locked;b.onclick=()=>{if(locked)return;const i=st.examTopics.indexOf(cat.id);if(i>=0)st.examTopics.splice(i,1);else st.examTopics.push(cat.id);save();openExamPre();};g.appendChild(b);});['easy','medium','hard','mix'].forEach(d=>{const btn=document.getElementById('exD'+{easy:'e',medium:'m',hard:'h',mix:'x'}[d]);if(btn)btn.style.opacity=st.examDiff===d?1:.4;});document.getElementById('examPreInfo').textContent=`נושאים: ${st.examTopics.length} | 10 שאלות`;show('exam-pre-scr');}
 function setExamDiff(d){st.examDiff=d;save();openExamPre();}
@@ -366,3 +362,5 @@ function submitExamAns(){const q=qs.current;if(!q||qs.done)return;const inp=docu
 function nextExamQ(){qs.examIdx++;loadExamQ();}
 function startExamTimer(){qs.examTimer=setInterval(()=>{qs.examSecs--;const m=Math.floor(qs.examSecs/60),s=qs.examSecs%60;document.getElementById('examTmr').textContent=`⏱️ ${m}:${s.toString().padStart(2,'0')}`;if(qs.examSecs<=0){clearInterval(qs.examTimer);finishExam();}},1000);}
 function finishExam(){if(qs.examTimer)clearInterval(qs.examTimer);const total=qs.examPool.reduce((s,q)=>s+q.pts,0);const pct=Math.round(qs.examScore/total*100);let grade,msg;if(pct>=90){grade='A+ 🏆';msg='מדהים! גאון מתמטיקה!';}else if(pct>=75){grade='A 🌟';msg='מצוין מאוד!';}else if(pct>=60){grade='B ⚡';msg='טוב! אפשר לשפר!';}else if(pct>=40){grade='C 📚';msg='עוד קצת תרגול!';}else{grade='D 😊';msg='תלמד שוב ותנסה!';}addPts(Math.round(qs.examScore/10));document.getElementById('examQArea').style.display='none';const r=document.getElementById('examResults');r.style.display='block';r.innerHTML=`<div class="gcard" style="text-align:center"><div style="font-size:3rem;margin-bottom:8px">${pct>=75?'🏆':pct>=50?'⭐':'📚'}</div><div style="font-family:'Fredoka',sans-serif;font-size:2.5rem;color:var(--a2)">${grade}</div><div style="font-size:1rem;margin:10px 0">${msg}</div><div style="font-size:.9rem;color:var(--txt2)">${qs.examScore} / ${total} (${pct}%)</div><button class="lgo" style="margin-top:18px" onclick="show('home')">→ חזרה לבית</button></div>`;if(pct>=75)spawnConf(30);}
+// ── Expose to ES module (firebase.js) ──
+window.loadGradeConfig = loadGradeConfig;
