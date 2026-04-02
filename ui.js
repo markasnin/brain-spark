@@ -32,12 +32,16 @@ function load() {
     if (st.dailyDate !== today) { st.dailyDone = false; st.dailyDate = today; }
     if (!st.history) st.history = [];
   } catch(e) {}
+  // Note: Firebase fbLoad() will run after login and will merge/override with cloud data
+  // So local data here is just a fast initial load — Firebase is the source of truth
 }
 
 function save() {
+  st._savedAt = Date.now(); // timestamp for cross-device sync comparison
   try { localStorage.setItem('yanMath2', JSON.stringify({st, cfg})); } catch(e) {}
   if (window.fbSave) window.fbSave();
 }
+window.save = save;
 
 function sortLeaderboard(results) {
   return results.sort((a, b) => {
@@ -120,16 +124,17 @@ function buildGrid() {
     div.className = 'cbt' + (cat.cls ? ' '+cat.cls : '');
     if (cat.borderColor) div.style.borderColor = cat.borderColor + '40';
     const onclick = cat.special
-      ? ({'learn':'openLearn()','history':'openHistory()','mistakes':'openMistakes()','exam':'openExamPre()','friends':'openFriends()','settings':'openSettings()'}[cat.special]||'')
+      ? ({'learn':'openLearn()','history':'openHistory()','mistakes':'openMistakes()','exam':'openExamPre()','friends':'openFriends()','settings':'openSettings()','minigames':'openMinigames()'}[cat.special]||'')
       : `openCat('${cat.id}')`;
     div.setAttribute('onclick', onclick);
     div.id = cat.id + 'Btn';
     div.innerHTML = `<span class="ci">${cat.icon}</span><div class="cn">${cat.name}</div><div class="cs">${cat.sub}</div>`;
     grid.appendChild(div);
   });
-  lockCat('divBtn',       !st.learnedTopics.includes('division'));
-  lockCat('shapesBtn',    !st.learnedTopics.includes('shapes'));
-  lockCat('fractionsBtn', !st.learnedTopics.includes('fractions'));
+  // Dynamically lock/unlock every category that has a LOCKED_TOPICS entry
+  Object.entries(LOCKED_TOPICS).forEach(([catId, topicKey]) => {
+    lockCat(catId + 'Btn', !st.learnedTopics.includes(topicKey));
+  });
 }
 
 function lockCat(id, locked) {
@@ -420,6 +425,14 @@ function switchAuthTab(tab) {
   if (tab==='reg') resetRegForm();
 }
 
+
+// ══ GENDER THEME ══
+window.applyGenderTheme = function(gender) {
+  document.body.classList.remove("theme-boy", "theme-girl");
+  if (gender === "boy")  document.body.classList.add("theme-boy");
+  if (gender === "girl") document.body.classList.add("theme-girl");
+};
+
 // ══ STARS ══
 function createStars() {
   const bg = document.getElementById('bg');
@@ -431,3 +444,7 @@ function createStars() {
     bg.appendChild(s);
   }
 }
+// ── Expose to ES module (firebase.js) ──
+window.cleanUsername = cleanUsername;
+window.showToast = showToast;
+window.updateHome = updateHome;
