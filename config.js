@@ -75,47 +75,59 @@ const GRADE_FILES = {
 
 // ══ CATEGORY DEFINITIONS ══
 const ALL_CATS = [
-  { id: 'add',         cls: 'add',      icon: '➕',  name: 'חיבור',           sub: 'מספרים גדולים' },
-  { id: 'sub',         cls: 'sub',      icon: '➖',  name: 'חיסור',           sub: 'עם ובלי לווה' },
-  { id: 'mul',         cls: 'mul',      icon: '✖️',  name: 'כפל',             sub: 'לוח הכפל' },
-  { id: 'div',         cls: 'div',      icon: '➗',  name: 'חילוק',           sub: 'חלוקה שווה' },
-  { id: 'word',        cls: 'word',     icon: '📖',  name: 'מילוליות',        sub: 'בעיות עם סיפור' },
-  { id: 'shapes',      cls: '',         icon: '📐',  name: 'גיאומטריה',       sub: 'צורות, שטח, היקף',   borderColor: '#ff9ff3' },
-  { id: 'fractions',   cls: '',         icon: '½',   name: 'שברים',           sub: 'חלקים של שלם',        borderColor: '#54a0ff' },
-  { id: 'measurement', cls: '',         icon: '📏',  name: 'מידות',           sub: 'אורך, משקל, זמן',    borderColor: '#ffd43b' },
-  { id: 'data',        cls: '',         icon: '📊',  name: 'נתונים',          sub: 'ממוצע, גרפים, שכיח', borderColor: '#2ed573' },
-  { id: 'decimals',    cls: '',         icon: '0.5', name: 'עשרוניים',        sub: 'עשיריות ומאיות',      borderColor: '#a29bfe' },
-  { id: 'percent',     cls: '',         icon: '%',   name: 'אחוזים',          sub: 'מתוך 100',            borderColor: '#fd79a8' },
-  { id: 'negatives',   cls: '',         icon: '−',   name: 'שליליים',         sub: 'מתחת לאפס',           borderColor: '#636e72' },
-  { id: 'ratio',       cls: '',         icon: '⚖️',  name: 'יחס ופרופורציה',  sub: 'כלל שלושה',           borderColor: '#fdcb6e' },
-  { id: 'minigames',   cls: 'mul',      icon: '🎮',  name: 'מיני-משחקים',    sub: 'דיג, מבוך, חלל',     borderColor: '#ffd43b', special: 'minigames' },
-  { id: 'learn',       cls: 'learn',    icon: '🎓',  name: 'בואו נלמד!',     sub: 'חומר חדש',            special: 'learn' },
-  { id: 'history',     cls: 'history',  icon: '📜',  name: 'היסטוריה',        sub: 'כל הפתרונות',         special: 'history' },
-  { id: 'mistakes',    cls: 'mistakes', icon: '🔄',  name: 'טעויות',          sub: 'שיפור עצמי',          special: 'mistakes' },
-  { id: 'exam',        cls: 'test',     icon: '🏆',  name: 'מבחן',            sub: 'בחר נושאים',          special: 'exam' },
-  { id: 'friends',     cls: '',         icon: '👥',  name: 'חברים',           sub: 'לוח תוצאות',          borderColor: '#2ed573', special: 'friends' },
-  { id: 'settings',    cls: 'settings', icon: '⚙️',  name: 'הגדרות',          sub: 'הורים',               special: 'settings' },
+  // ── Arithmetic ──
+  { id: 'add',         cls: 'add',      icon: '➕', name: 'חיבור',           sub: 'מספרים גדולים' },
+  { id: 'sub',         cls: 'sub',      icon: '➖', name: 'חיסור',           sub: 'עם ובלי לווה' },
+  { id: 'mul',         cls: 'mul',      icon: '✖️', name: 'כפל',             sub: 'לוח הכפל' },
+  { id: 'div',         cls: 'div',      icon: '➗', name: 'חילוק',           sub: 'חלוקה שווה' },
+  { id: 'word',        cls: 'word',     icon: '📖', name: 'מילוליות',        sub: 'בעיות עם סיפור' },
+  { id: 'fractions',   cls: '',         icon: '½',  name: 'שברים',           sub: 'חלקים של שלם',      borderColor: '#54a0ff' },
+
+  // ── Geometry (separate categories) ──
+  { id: 'shapes',      cls: '',         icon: '📐', name: 'גיאומטריה',       sub: 'צורות אינטראקטיביות', borderColor: '#ff9ff3' },
+  { id: 'shapes2d',    cls: '',         icon: '🔷', name: 'צורות 2D',         sub: 'זיהוי וספירת צלעות',  borderColor: '#a29bfe' },
+  { id: 'symmetry',    cls: '',         icon: '🔁', name: 'סימטריה',          sub: 'צירי סימטריה',        borderColor: '#fd79a8' },
+  { id: 'perimeter',   cls: '',         icon: '📏', name: 'היקף',             sub: 'סכום כל הצלעות',      borderColor: '#00cec9' },
+  { id: 'area',        cls: '',         icon: '📐', name: 'שטח',              sub: 'שטח צורות',           borderColor: '#6c5ce7' },
+  { id: 'angles',      cls: '',         icon: '📐', name: 'זוויות',           sub: 'חדה, ישרה, קהה',      borderColor: '#fdcb6e' },
+  { id: 'shapes3d',    cls: '',         icon: '🧊', name: 'גופים 3D',         sub: 'פנים, קצוות, קודקודים', borderColor: '#74b9ff' },
+  { id: 'coordinates', cls: '',         icon: '🗺️', name: 'קואורדינטות',      sub: 'נקודות על הצי',       borderColor: '#55efc4' },
+  { id: 'measurement', cls: '',         icon: '📏', name: 'מדידה',            sub: 'אורך, משקל, זמן, נפח', borderColor: '#fab1a0' },
+
+  // ── Special ──
+  { id: 'minigames',   cls: 'mul',      icon: '🎮', name: 'מיני-משחקים',     sub: 'דיג, מבוך, חלל',     borderColor: '#ffd43b', special: 'minigames' },
+  { id: 'learn',       cls: 'learn',    icon: '🎓', name: 'בואו נלמד!',      sub: 'חומר חדש',            special: 'learn' },
+  { id: 'history',     cls: 'history',  icon: '📊', name: 'היסטוריה',        sub: 'כל הפתרונות',         special: 'history' },
+  { id: 'mistakes',    cls: 'mistakes', icon: '🔄', name: 'טעויות',          sub: 'שיפור עצמי',          special: 'mistakes' },
+  { id: 'exam',        cls: 'test',     icon: '🏆', name: 'מבחן',            sub: 'בחר נושאים',          special: 'exam' },
+  { id: 'friends',     cls: '',         icon: '👥', name: 'חברים',           sub: 'לוח תוצאות',          borderColor: '#2ed573', special: 'friends' },
+  { id: 'settings',    cls: 'settings', icon: '⚙️', name: 'הגדרות',          sub: 'הורים',               special: 'settings' },
 ];
 
 const CAT_NAMES = {
-  add: '➕ חיבור',      sub: '➖ חיסור',    mul: '✖️ כפל',
-  div: '➗ חילוק',      word: '📖 מילוליות',
-  shapes: '📐 גיאומטריה', fractions: '½ שברים',
-  measurement: '📏 מידות', data: '📊 נתונים',
-  decimals: '0.5 עשרוניים', percent: '% אחוזים',
-  negatives: '− שליליים',  ratio: '⚖️ יחס ופרופורציה',
+  add:         '➕ חיבור',
+  sub:         '➖ חיסור',
+  mul:         '✖️ כפל',
+  div:         '➗ חילוק',
+  word:        '📖 מילוליות',
+  shapes:      '📐 גיאומטריה (אינטראקטיבי)',
+  fractions:   '½ שברים',
+  shapes2d:    '🔷 צורות 2D',
+  symmetry:    '🔁 סימטריה',
+  perimeter:   '📏 היקף',
+  area:        '📐 שטח',
+  angles:      '📐 זוויות',
+  shapes3d:    '🧊 גופים 3D',
+  coordinates: '🗺️ קואורדינטות',
+  measurement: '📏 מדידה',
 };
 
 const LOCKED_TOPICS = {
   div:         'division',
   shapes:      'shapes',
   fractions:   'fractions',
-  measurement: 'measurement',
-  data:        'data',
-  decimals:    'decimals',
-  percent:     'percent',
-  negatives:   'negatives',
-  ratio:       'ratio',
+  // New geometry categories — unlocked automatically when grade file loads
+  // (no lock required — they are gated by grade's availableCategories)
 };
 
 // ══ BRAINROT / GAME THEMES ══
