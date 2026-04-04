@@ -77,13 +77,8 @@ window.GRADE_CONFIG = {
       const r=window.GRADE_CONFIG.ranges.mul[diff];
       const a=rnd(r.aMin,r.aMax), b=rnd(r.bMin,r.bMax);
       const th=pick(GAME_THEMES); const emoji=pick(th.items);
-      const stories=[
-        `${a} × ${b} = ?`,
-        `${a} שורות של ${b} עצים. כמה עצים?`,
-        `${b} ימים × ${a} ש"ח = כמה ש"ח?`,
-      ];
       return { type:'num',cat:'mul',diff,label:th.label,gameLabel:brainrotLabel(),
-        text:pick(stories),answer:a*b,pts:window.GRADE_CONFIG.pts[diff],
+        text:`${a} × ${b} = ?`,answer:a*b,pts:window.GRADE_CONFIG.pts[diff],
         hint:{type:'groups',a,b,emoji},showMul:true,mulA:a,mulB:b,mulEmoji:emoji,dir:'ltr' };
     },
     div(diff) {
