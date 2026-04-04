@@ -130,7 +130,7 @@ window.FishingGame = (function () {
         <div id="fishCatch" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:3rem;opacity:0;transition:opacity .4s">🐟</div>
       </div>
       ${state.phase === 'question' ? renderQuestion() : renderCastBtn()}
-      ${aquaCount > 0 ? `<button onclick="window.FishingGame.showAquarium()" style="width:100%;margin-top:8px;padding:10px;background:linear-gradient(135deg,#1e6091,#0d3b6e);border:1px solid #74c0fc44;color:#74c0fc;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer">🐠 האקווריום שלי (${aquaCount} דגים)</button>` : ''}
+      ${aquaCount > 0 ? `<button onclick="window.FishingGame.showAquarium()" style="width:100%;margin-top:8px;padding:10px;background:linear-gradient(135deg,#1e6091,#0d3b6e);border:1px solid #74c0fc44;color:#74c0fc;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer">🐠 האקווריום שלי — ${aquaCount} דגים 🎣</button>` : ''}
       <button onclick="window.FishingGame.exit()" style="width:100%;margin-top:6px;padding:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#adb5bd;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.82rem;cursor:pointer">← חזרה לבית</button>
     `;
     if (state.phase === 'casting') animateCast();
@@ -178,7 +178,7 @@ window.FishingGame = (function () {
   function renderAquarium(el) {
     const aqua = state.aquarium;
     el.innerHTML = `
-      <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:#74c0fc;text-align:center;margin-bottom:8px">🐠 האקווריום שלי</div>
+      <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:#74c0fc;text-align:center;margin-bottom:8px">🐠 האקווריום שלי 🌊</div>
       <div style="background:linear-gradient(180deg,#0d3b6e,#1a5276);border-radius:16px;padding:10px;min-height:180px;border:1px solid #1e6091;margin-bottom:10px">
         ${aqua.length === 0 ? '<div style="color:#adb5bd;text-align:center;padding:40px 0;font-family:Rubik,sans-serif">אין דגים עדיין! לך לדוג! 🎣</div>' :
           `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${aqua.map((f,i) => `
