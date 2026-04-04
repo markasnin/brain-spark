@@ -194,23 +194,25 @@ function gen_perimeter(diff) {
     answer=a+b+c2;
     text=`מה היקף המשולש? (צלעות: ${a}, ${b}, ${c2} ס"מ)`;
     hint=`💡 ${a} + ${b} + ${c2} = ${answer}`;
-    body=`<polygon points="150,25 265,195 35,195" fill="${c.f}77" stroke="${c.s}" stroke-width="3"/>
-      ${dimLine(35,210,265,210,a+' ס"מ',c.s)}
-      ${dimLine(268,193,153,25,b+' ס"מ',c.s)}
-      ${dimLine(147,25,32,193,c2+' ס"מ',c.s)}
-      ${tx(150,125,'היקף=?','#ffffffcc',16)}`;
+    // All labels inside the SVG viewBox — no dimLine (they clip)
+    body=`<polygon points="150,28 262,198 38,198" fill="${c.f}77" stroke="${c.s}" stroke-width="3"/>
+      ${tx(150,220,a+' ס"מ',c.s,13)}
+      ${tx(216,110,b+' ס"מ',c.s,13,'middle')}
+      ${tx(84,110,c2+' ס"מ',c.s,13,'middle')}
+      ${tx(150,125,'היקף=?','#ffffffcc',17)}`;
   } else if(type==='para'){
     const base=_rnd(4,diff==='hard'?20:12);
     const side=_rnd(2,diff==='hard'?12:8);
     answer=2*(base+side);
     text=`מה היקף המקבילית? (בסיס ${base} ס"מ, צלע ${side} ס"מ)`;
     hint=`💡 2 × (${base} + ${side}) = ${answer}`;
-    const bpx=Math.min(base*10,180),spx=Math.min(side*9,110),off=30;
-    const ox=(300-bpx)/2,oy=70;
+    // Fixed: everything inside viewBox, no clipping
+    const bpx=Math.min(base*9,190),spx=Math.min(side*9,120),off=28;
+    const ox=40,oy=35;
     body=`<polygon points="${ox+off},${oy} ${ox+off+bpx},${oy} ${ox+bpx},${oy+spx} ${ox},${oy+spx}" fill="${c.f}77" stroke="${c.s}" stroke-width="3"/>
-      ${dimLine(ox+off,oy-16,ox+off+bpx,oy-16,base+' ס"מ',c.s)}
-      ${dimLine(ox-18,oy,ox-18,oy+spx,side+' ס"מ',c.s)}
-      ${tx((ox*2+bpx+off)/2,oy+spx/2+7,'היקף=?','#ffffffcc',15)}`;
+      ${tx(ox+off+bpx/2,oy-12,base+' ס"מ',c.s,13)}
+      ${tx(ox+bpx+off+14,oy+spx/2,side+' ס"מ',c.s,13,'start')}
+      ${tx(ox+bpx/2+off/2,oy+spx/2+8,'היקף=?','#ffffffcc',16)}`;
   } else {
     const s=_rnd(2,diff==='hard'?12:8);
     answer=6*s;
@@ -220,7 +222,7 @@ function gen_perimeter(diff) {
       ${dimLine(150,22,233,68,s+' ס"מ',c.s)}
       ${tx(150,122,'היקף=?','#ffffffcc',16)}`;
   }
-  return mkQ('perimeter',diff,text,answer,svgWrap(300,225,body),hint,'📏 היקף');
+  return mkQ('perimeter',diff,text,answer,svgWrap(300,245,body),hint,'📏 היקף');
 }
 
 // ══════════════════════════════════════════════
@@ -281,11 +283,11 @@ function gen_area(diff) {
     if(!Number.isInteger(answer)){return gen_area(diff);}
     text=`מה שטח המשולש? (בסיס ${base} ס"מ, גובה ${height} ס"מ)`;
     hint=`💡 (בסיס × גובה) ÷ 2 = (${base} × ${height}) ÷ 2 = ${answer} ס"מ²`;
-    const bpx=Math.min(base*9,200),hpx=Math.min(height*9,160);
-    const ox=(300-bpx)/2,oy=220-hpx;
+    const bpx=Math.min(base*9,200),hpx=Math.min(height*9,155);
+    const ox=(300-bpx)/2,oy=210-hpx;
     body=`<polygon points="${ox},${oy+hpx} ${ox+bpx},${oy+hpx} ${ox+bpx/2},${oy}" fill="${c.f}77" stroke="${c.s}" stroke-width="3"/>
       <line x1="${ox+bpx/2}" y1="${oy}" x2="${ox+bpx/2}" y2="${oy+hpx}" stroke="#ffd32a" stroke-width="1.5" stroke-dasharray="5,3"/>
-      ${dimLine(ox,oy+hpx+14,ox+bpx,oy+hpx+14,base+' ס"מ',c.s)}
+      ${tx(ox+bpx/2,oy+hpx+16,base+' ס"מ',c.s,13)}
       ${dimLine(ox+bpx/2+8,oy,ox+bpx/2+8,oy+hpx,height+' ס"מ','#ffd32a')}
       ${tx(ox+bpx/2,oy+hpx/2,'שטח=?','#ffffffcc',15)}`;
   } else if(type==='para'){
@@ -315,7 +317,7 @@ function gen_area(diff) {
     body=`<polygon points="${ox},${oy+hpx} ${ox+b1px},${oy+hpx} ${ox+off+b2px},${oy} ${ox+off},${oy}" fill="${c.f}77" stroke="${c.s}" stroke-width="3"/>
       ${dimLine(ox,oy+hpx+14,ox+b1px,oy+hpx+14,b1+' ס"מ',c.s)}
       ${dimLine(ox+off,oy-14,ox+off+b2px,oy-14,b2+' ס"מ',c.s)}
-      ${dimLine(ox-18,oy,ox-18,oy+hpx,h+' ס"מ','#ffd32a')}
+      ${tx(Math.max(ox-2,18),oy+hpx/2,h+' ס"מ','#ffd32a',12,'end')}
       ${tx(ox+b1px/2,oy+hpx/2+7,'שטח=?','#ffffffcc',15)}`;
   } else if(type==='circle'){
     const r=diff==='easy'?_rnd(2,5):diff==='medium'?_rnd(3,8):_rnd(4,11);
@@ -334,15 +336,15 @@ function gen_area(diff) {
     answer=W*H-w*h;
     text=`מה שטח הצורה (מלבן גדול פחות חלק חסר)?`;
     hint=`💡 ${W}×${H} − ${w}×${h} = ${W*H} − ${w*h} = ${answer} ס"מ²`;
-    const sc=18,ox=20,oy=15;
+    const sc=18,ox=25,oy=22;
     body=`<polygon points="${ox},${oy} ${ox+W*sc},${oy} ${ox+W*sc},${oy+(H-h)*sc} ${ox+(W-w)*sc},${oy+(H-h)*sc} ${ox+(W-w)*sc},${oy+H*sc} ${ox},${oy+H*sc}" fill="${c.f}77" stroke="${c.s}" stroke-width="3"/>
-      ${dimLine(ox,oy-14,ox+W*sc,oy-14,W+' ס"מ',c.s)}
-      ${dimLine(ox-14,oy,ox-14,oy+H*sc,H+' ס"מ',c.s)}
+      ${tx(ox+W*sc/2,oy-8,W+' ס"מ',c.s,12)}
+      ${tx(ox-4,oy+H*sc/2,H+' ס"מ',c.s,12,'end')}
       ${dimLine(ox+(W-w)*sc,oy+(H-h)*sc-12,ox+W*sc,oy+(H-h)*sc-12,w+' ס"מ',PAL.s[0])}
       ${dimLine(ox+W*sc+10,oy,ox+W*sc+10,oy+(H-h)*sc,h+' ס"מ',PAL.s[0])}
       ${tx(ox+W*sc/2,oy+H*sc/2+5,'שטח=?','#ffffffcc',15)}`;
   }
-  return mkQ('area',diff,text,answer,svgWrap(300,230,body),hint,'📐 שטח');
+  return mkQ('area',diff,text,answer,svgWrap(300,235,body),hint,'📐 שטח');
 }
 
 // ══════════════════════════════════════════════
