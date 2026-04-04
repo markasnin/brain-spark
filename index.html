@@ -588,41 +588,182 @@ function _patchOpenCat() {
 }
 _patchOpenCat();
 
-// ══ GROUPED CATEGORY GRID ══
-// Groups: חשבון | שברים | הנדסה | נתונים | משחקים ועוד
+// ══ GROUPED CATEGORY GRID — REDESIGNED ══
 
 const CAT_GROUPS = [
   {
-    id: 'cheshbon',
-    label: '🔢 חשבון',
-    color: '#2ed573',
+    id: 'cheshbon', label: 'חשבון', emoji: '🔢',
+    color: '#2ed573', glow: 'rgba(46,213,115,.18)',
+    grad: 'linear-gradient(135deg,#0a2e1a,#0d3d22)',
     cats: ['add','sub','mul','div','word']
   },
   {
-    id: 'fractions',
-    label: '½ שברים',
-    color: '#54a0ff',
+    id: 'fractions', label: 'שברים', emoji: '½',
+    color: '#54a0ff', glow: 'rgba(84,160,255,.18)',
+    grad: 'linear-gradient(135deg,#0a1a3e,#0d2255)',
     cats: ['fractions','fractions_half','fractions_unit','fractions_mul','fractions_div','fractions_part','decimal_intro','decimals','decimals_mul','percentages_intro','percentages','ratio']
   },
   {
-    id: 'geometry',
-    label: '📐 הנדסה',
-    color: '#ff9ff3',
+    id: 'geometry', label: 'הנדסה', emoji: '📐',
+    color: '#c77dff', glow: 'rgba(199,125,255,.18)',
+    grad: 'linear-gradient(135deg,#1a0a2e,#25104a)',
     cats: ['shapes','shapes2d','symmetry','perimeter','area','angles','shapes3d','volume','circle','coordinates','scale','measurement']
   },
   {
-    id: 'numbers',
-    label: '📊 נתונים ומספרים',
-    color: '#ffd32a',
+    id: 'numbers', label: 'נתונים ומספרים', emoji: '📊',
+    color: '#ffd32a', glow: 'rgba(255,211,42,.18)',
+    grad: 'linear-gradient(135deg,#2a1e00,#3a2a00)',
     cats: ['data','evens','rounding','integers_intro']
   },
   {
-    id: 'games',
-    label: '🎮 משחקים ועוד',
-    color: '#ff6348',
+    id: 'games', label: 'משחקים ועוד', emoji: '🎮',
+    color: '#ff6348', glow: 'rgba(255,99,72,.18)',
+    grad: 'linear-gradient(135deg,#2e0a0a,#401010)',
     cats: ['minigames','learn','exam','history','mistakes','friends','settings']
   }
 ];
+
+// ─── inject styles once ───
+(function injectGroupStyles(){
+  if (document.getElementById('gg-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'gg-styles';
+  s.textContent = `
+    #groupedGrid {
+      width:100%; max-width:440px;
+      display:flex; flex-direction:column; gap:14px;
+      padding-bottom:24px;
+    }
+
+    /* ── Section panel ── */
+    .gg-section {
+      width:100%; border-radius:24px; overflow:hidden;
+      border:1.5px solid var(--gg-color,rgba(255,255,255,.1));
+      box-shadow:0 8px 32px rgba(0,0,0,.5), 0 0 0 0 var(--gg-glow);
+      background:var(--card);
+    }
+
+    /* ── Section header ── */
+    .gg-head {
+      display:flex; align-items:center; gap:12px;
+      padding:16px 20px 14px;
+      background:var(--gg-grad);
+      position:relative; overflow:hidden;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .gg-head::before {
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(135deg,rgba(255,255,255,.07) 0%,transparent 60%);
+      pointer-events:none;
+    }
+    /* glow orb behind emoji */
+    .gg-head::after {
+      content:''; position:absolute; right:-10px; top:-20px;
+      width:80px; height:80px; border-radius:50%;
+      background:var(--gg-glow); filter:blur(22px);
+      pointer-events:none; opacity:.6;
+    }
+    .gg-head-emoji {
+      font-size:2.2rem; line-height:1; position:relative; z-index:1;
+      filter:drop-shadow(0 0 12px var(--gg-color));
+      animation:gg-bounce 2.8s ease-in-out infinite;
+    }
+    @keyframes gg-bounce {
+      0%,100%{transform:translateY(0) scale(1);}
+      50%{transform:translateY(-4px) scale(1.08);}
+    }
+    .gg-head-text { flex:1; position:relative; z-index:1; }
+    .gg-head-label {
+      font-family:'Fredoka',sans-serif; font-size:1.35rem; font-weight:700;
+      color:var(--gg-color); text-shadow:0 0 18px var(--gg-color);
+      line-height:1;
+    }
+    .gg-head-sub { font-size:.72rem; color:rgba(255,255,255,.45); margin-top:2px; }
+    .gg-head-count {
+      position:relative; z-index:1;
+      font-size:.78rem; font-weight:800;
+      padding:5px 12px; border-radius:99px;
+      background:rgba(0,0,0,.35);
+      border:1.5px solid var(--gg-color);
+      color:var(--gg-color);
+      box-shadow:0 0 10px var(--gg-glow);
+    }
+
+    /* ── Card grid ── */
+    .gg-grid {
+      display:grid; grid-template-columns:repeat(3,1fr);
+      gap:1px; background:rgba(255,255,255,.04);
+    }
+    @media(max-width:340px){ .gg-grid{grid-template-columns:repeat(2,1fr);} }
+
+    /* ── Individual card ── */
+    .gg-card {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:6px; padding:18px 6px 16px;
+      background:linear-gradient(160deg,rgba(255,255,255,.03) 0%, transparent 100%);
+      cursor:pointer; border:none; text-align:center;
+      position:relative; overflow:hidden;
+      transition:transform .2s cubic-bezier(.34,1.56,.64,1), background .18s;
+      min-height:100px;
+    }
+    /* color accent top bar */
+    .gg-card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:2.5px;
+      background:var(--gg-color); opacity:.45;
+    }
+    /* hover shimmer */
+    .gg-card::after {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(circle at 50% 30%, var(--gg-glow) 0%, transparent 70%);
+      opacity:0; transition:opacity .2s; pointer-events:none;
+    }
+    .gg-card:hover:not(.gg-locked) { transform:translateY(-4px) scale(1.04); z-index:2; }
+    .gg-card:hover:not(.gg-locked)::after { opacity:1; }
+    .gg-card:hover:not(.gg-locked) .gg-card-icon { transform:scale(1.22) translateY(-3px); }
+    .gg-card:active:not(.gg-locked) { transform:scale(.94); }
+    .gg-card.gg-locked { opacity:.32; cursor:not-allowed; filter:grayscale(.8); }
+
+    .gg-card-icon {
+      font-size:2.2rem; line-height:1;
+      filter:drop-shadow(0 2px 8px rgba(0,0,0,.5));
+      transition:transform .2s cubic-bezier(.34,1.56,.64,1);
+    }
+    .gg-card-name {
+      font-size:.82rem; font-weight:700; color:#fff;
+      line-height:1.2; letter-spacing:.2px;
+    }
+    .gg-card-sub {
+      font-size:.62rem; color:rgba(255,255,255,.4);
+      line-height:1.3;
+    }
+    .gg-lock-tag {
+      font-size:.58rem; padding:2px 7px; border-radius:99px;
+      background:rgba(255,71,87,.18); color:#ff6b6b;
+      border:1px solid rgba(255,71,87,.35);
+    }
+
+    /* ── Wide card (full row, for settings/friends) ── */
+    .gg-card.gg-wide {
+      grid-column:1/-1; flex-direction:row; gap:14px;
+      justify-content:flex-start; padding:14px 22px; min-height:auto;
+    }
+    .gg-card.gg-wide .gg-card-icon { font-size:1.7rem; }
+    .gg-card.gg-wide .gg-card-name { font-size:.9rem; }
+    .gg-card.gg-wide::before { width:3px; height:100%; top:0; right:0; left:auto; }
+  `;
+  document.head.appendChild(s);
+})();
+
+function _getCatOnclick(cat) {
+  if (cat.special === 'minigames') return 'openMinigames()';
+  if (cat.special === 'learn')     return 'openLearn()';
+  if (cat.special === 'exam')      return 'openExamPre()';
+  if (cat.special === 'history')   return 'openHistory()';
+  if (cat.special === 'mistakes')  return 'openMistakes()';
+  if (cat.special === 'friends')   return 'openFriends()';
+  if (cat.special === 'settings')  return 'openSettings()';
+  return `openCat('${cat.id}')`;
+}
 
 function buildGroupedGrid() {
   const container = document.getElementById('groupedGrid');
@@ -631,88 +772,99 @@ function buildGroupedGrid() {
 
   const gc = window.GRADE_CONFIG;
   const available = gc ? gc.availableCategories : null;
-
-  // Build a flat lookup of all cats by id
   const catMap = {};
   (typeof ALL_CATS !== 'undefined' ? ALL_CATS : []).forEach(c => { catMap[c.id] = c; });
 
+  // Subtitle per group
+  const subtitles = {
+    cheshbon: '4 פעולות החשבון + מילוליות',
+    fractions: 'שברים, עשרוניים, אחוזים, יחס',
+    geometry:  'צורות, מדידה, שטח, היקף',
+    numbers:   'נתונים, ממוצע, דפוסים',
+    games:     'משחקים, לימוד, מבחנים',
+  };
+
   CAT_GROUPS.forEach(group => {
-    // Filter to cats that exist AND are either available or special
     const cats = group.cats
       .map(id => catMap[id])
       .filter(c => {
         if (!c) return false;
-        if (c.special) return true;          // always show special tiles
+        if (c.special) return true;
         if (!available) return true;
         return available.includes(c.id);
       });
 
     if (cats.length === 0) return;
 
-    // Section header
-    const header = document.createElement('div');
-    header.className = 'sec-label';
-    header.style.cssText = `
-      width:100%;max-width:420px;
-      font-size:.8rem;font-weight:800;letter-spacing:1.5px;
-      color:${group.color};text-transform:uppercase;
-      margin:20px 0 8px;opacity:.9;
-      display:flex;align-items:center;gap:8px;
+    // ── Section panel with CSS vars ──
+    const section = document.createElement('div');
+    section.className = 'gg-section';
+    section.style.cssText = `
+      --gg-color:${group.color};
+      --gg-glow:${group.glow};
+      --gg-grad:${group.grad};
+      border-color:${group.color}33;
     `;
-    header.innerHTML = `
-      <span style="flex:1;height:1px;background:linear-gradient(90deg,${group.color}44,transparent)"></span>
-      <span>${group.label}</span>
-      <span style="flex:1;height:1px;background:linear-gradient(270deg,${group.color}44,transparent)"></span>
-    `;
-    container.appendChild(header);
 
-    // Grid for this group
+    // ── Header ──
+    const head = document.createElement('div');
+    head.className = 'gg-head';
+    head.innerHTML = `
+      <span class="gg-head-emoji">${group.emoji}</span>
+      <div class="gg-head-text">
+        <div class="gg-head-label">${group.label}</div>
+        <div class="gg-head-sub">${subtitles[group.id] || ''}</div>
+      </div>
+      <span class="gg-head-count">${cats.length}</span>
+    `;
+    section.appendChild(head);
+
+    // ── Card grid ──
     const grid = document.createElement('div');
-    grid.className = 'grid';
-    grid.style.cssText = 'margin-bottom:4px;';
+    grid.className = 'gg-grid';
+    // Pass CSS vars down to cards via grid
+    grid.style.cssText = `--gg-color:${group.color};--gg-glow:${group.glow};`;
 
     cats.forEach(cat => {
-      const isLocked = !cat.special && typeof LOCKED_TOPICS !== 'undefined' &&
-        LOCKED_TOPICS[cat.id] && !st.learnedTopics.includes(LOCKED_TOPICS[cat.id]);
-      const isAvail = cat.special || !available || available.includes(cat.id);
+      const isLocked = !cat.special
+        && typeof LOCKED_TOPICS !== 'undefined'
+        && LOCKED_TOPICS[cat.id]
+        && typeof st !== 'undefined'
+        && !st.learnedTopics.includes(LOCKED_TOPICS[cat.id]);
 
-      const btn = document.createElement('button');
-      btn.className = 'cbt' + (cat.cls ? ' ' + cat.cls : '') + (isLocked ? ' locked' : '');
-      if (cat.id === 'minigames') btn.id = 'minigamesBtn';
-      if (cat.borderColor) btn.style.borderColor = cat.borderColor + '55';
+      const isWide = cat.special === 'settings' || cat.special === 'friends';
 
-      // onclick
-      if (cat.special === 'minigames') btn.setAttribute('onclick', 'openMinigames()');
-      else if (cat.special === 'learn')    btn.setAttribute('onclick', 'openLearn()');
-      else if (cat.special === 'exam')     btn.setAttribute('onclick', 'openExamPre()');
-      else if (cat.special === 'history')  btn.setAttribute('onclick', 'openHistory()');
-      else if (cat.special === 'mistakes') btn.setAttribute('onclick', 'openMistakes()');
-      else if (cat.special === 'friends')  btn.setAttribute('onclick', 'openFriends()');
-      else if (cat.special === 'settings') btn.setAttribute('onclick', 'openSettings()');
-      else btn.setAttribute('onclick', `openCat('${cat.id}')`);
+      const card = document.createElement('button');
+      card.className = 'gg-card' + (isLocked ? ' gg-locked' : '') + (isWide ? ' gg-wide' : '');
+      if (cat.id === 'minigames') card.id = 'minigamesBtn';
 
-      btn.innerHTML = `
-        <span class="ci">${cat.icon}</span>
-        <div class="cn">${cat.name}</div>
-        <div class="cs">${cat.sub}</div>
-        ${isLocked ? '<div style="font-size:.65rem;color:var(--a1);margin-top:4px">🔒 נעול</div>' : ''}
+      // Per-card accent color
+      const accent = cat.borderColor || group.color;
+      card.style.cssText = `--gg-color:${accent};--gg-glow:${accent}28;`;
+
+      card.setAttribute('onclick', _getCatOnclick(cat));
+
+      card.innerHTML = `
+        <span class="gg-card-icon">${cat.icon}</span>
+        <div class="gg-card-name">${cat.name}</div>
+        <div class="gg-card-sub">${cat.sub}</div>
+        ${isLocked ? '<span class="gg-lock-tag">🔒 נעול</span>' : ''}
       `;
-      grid.appendChild(btn);
+      grid.appendChild(card);
     });
 
-    container.appendChild(grid);
+    section.appendChild(grid);
+    container.appendChild(section);
   });
 }
 
 // Patch updateHome to also rebuild grouped grid
-var _origUpdateHome2;
 function _patchGroupedGrid() {
   if (!window.updateHome) { setTimeout(_patchGroupedGrid, 120); return; }
   var orig = window.updateHome;
   window.updateHome = function() {
     orig.apply(this, arguments);
     buildGroupedGrid();
-    // Fix minigames button
     var btn = document.getElementById('minigamesBtn');
     if (btn && !btn.getAttribute('onclick')) btn.setAttribute('onclick', 'openMinigames()');
   };
