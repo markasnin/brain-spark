@@ -74,13 +74,8 @@ window.GRADE_CONFIG = {
       const r=window.GRADE_CONFIG.ranges.mul[diff];
       const a=rnd(r.aMin,r.aMax), b=rnd(r.bMin,r.bMax);
       const th=pick(GAME_THEMES);
-      const stories=[
-        `${a} × ${b} = ?`,
-        `${a} קופסאות × ${b} פריטים = כמה פריטים?`,
-        `מגרש ${a} מ' × ${b} מ'. שטח?`,
-      ];
       return { type:'num',cat:'mul',diff,label:th.label,gameLabel:brainrotLabel(),
-        text:pick(stories),answer:a*b,pts:window.GRADE_CONFIG.pts[diff],
+        text:`${a} × ${b} = ?`,answer:a*b,pts:window.GRADE_CONFIG.pts[diff],
         hint:{type:'text',msg:`💡 ${a}×${b}=${a*b}`},showMul:false,dir:'ltr' };
     },
     div(diff) {
