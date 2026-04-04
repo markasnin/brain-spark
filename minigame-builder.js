@@ -93,7 +93,7 @@ window.BuilderGame = (function () {
       <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:#69db7c;text-align:center;margin-bottom:4px">🏗️ בנה את העיר שלך!</div>
       ${helpBtn('🏗️ בנאי המתמטיקה!\\n\\n• לחץ \\"בנה מבנה\\" לבחור מה לבנות\\n• פתור תרגיל מתמטיקה לקבל חומרי בנייה\\n• כל מבנה עולה חומרים ומרוויח נקודות\\n• ראה את העיר גדלה!\\n• 15 תורות לבנות עיר מדהימה!')}
       <div style="display:flex;justify-content:space-between;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 12px;margin-bottom:8px">
-        <span style="color:#69db7c;font-family:'Fredoka',sans-serif">🧱 ${st.resources}</span>
+        <span style="color:#69db7c;font-family:'Fredoka',sans-serif">🧱 ${st.resources} חומרים</span>
         <span style="color:#ffd43b;font-family:'Fredoka',sans-serif">⭐ ${st.score}</span>
         <span style="color:#74c0fc;font-family:'Fredoka',sans-serif">👥 ${st.population}</span>
         <span style="color:#ff8c42;font-family:'Fredoka',sans-serif">🎯 ${st.turn}/${st.maxTurns}</span>
