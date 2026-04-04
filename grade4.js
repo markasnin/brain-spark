@@ -62,55 +62,33 @@ window.GRADE_CONFIG = {
       const r=window.GRADE_CONFIG.ranges.add[diff];
       const a=rnd(r.aMin,r.aMax), b=rnd(r.bMin,r.bMax);
       const th=pick(GAME_THEMES);
-      const stories=[
-        `${a.toLocaleString()} + ${b.toLocaleString()} = ?`,
-        `בעיר גרים ${a.toLocaleString()} איש. הגיעו עוד ${b.toLocaleString()}. כמה גרים?`,
-        `ספרייה: ${a.toLocaleString()} ספרים. נוספו ${b.toLocaleString()}. כמה בסך הכל?`,
-        `קופה א': ${a.toLocaleString()} ש"ח. קופה ב': ${b.toLocaleString()} ש"ח. כמה יחד?`,
-      ];
       return { type:'num',cat:'add',diff,label:th.label,gameLabel:brainrotLabel(),
-        text:pick(stories),answer:a+b,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'decompose',a,b},showMul:false,dir:'rtl' };
+        text:`${a.toLocaleString()} + ${b.toLocaleString()} = ?`,answer:a+b,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'decompose',a,b},showMul:false,dir:'ltr' };
     },
     sub(diff) {
       const r=window.GRADE_CONFIG.ranges.sub[diff];
       const total=rnd(r.aMin,r.aMax), b=rnd(1,Math.floor(total/2)), a=total-b;
       const th=pick(GAME_THEMES);
-      const stories=[
-        `${total.toLocaleString()} - ${b.toLocaleString()} = ?`,
-        `היו ${total.toLocaleString()} מוצרים. נמכרו ${b.toLocaleString()}. כמה נשאר?`,
-        `אוכלוסיית עיר: ${total.toLocaleString()}. עזבו ${b.toLocaleString()}. כמה נשארו?`,
-      ];
       return { type:'num',cat:'sub',diff,label:th.label,gameLabel:brainrotLabel(),
-        text:pick(stories),answer:a,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${total.toLocaleString()} - ${b.toLocaleString()} = ${a.toLocaleString()}`},showMul:false,dir:'rtl' };
+        text:`${total.toLocaleString()} - ${b.toLocaleString()} = ?`,answer:a,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:`💡 ${total.toLocaleString()} - ${b.toLocaleString()} = ${a.toLocaleString()}`},showMul:false,dir:'ltr' };
     },
     mul(diff) {
       const r=window.GRADE_CONFIG.ranges.mul[diff];
       const a=rnd(r.aMin,r.aMax), b=rnd(r.bMin,r.bMax);
       const th=pick(GAME_THEMES); const emoji=pick(th.items);
-      const stories=[
-        `${a} × ${b} = ?`,
-        `${a} חבילות, בכל חבילה ${b} פריטים. כמה פריטים?`,
-        `${b} ימים × ${a} ש"ח ביום = כמה ש"ח?`,
-        `גן עם ${a} עצים בכל שורה. יש ${b} שורות. כמה עצים?`,
-      ];
       return { type:'num',cat:'mul',diff,label:th.label,gameLabel:brainrotLabel(),
-        text:pick(stories),answer:a*b,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'groups',a,b,emoji},showMul:true,mulA:a,mulB:b,mulEmoji:emoji,dir:'rtl' };
+        text:`${a} × ${b} = ?`,answer:a*b,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'groups',a,b,emoji},showMul:true,mulA:a,mulB:b,mulEmoji:emoji,dir:'ltr' };
     },
     div(diff) {
       const r=window.GRADE_CONFIG.ranges.div[diff];
       const b=rnd(r.bMin,r.bMax), q=rnd(r.qMin,r.qMax), a=b*q;
       const th=pick(GAME_THEMES); const emoji=pick(th.items);
-      const stories=[
-        `${a.toLocaleString()} ÷ ${b} = ?`,
-        `${a.toLocaleString()} פריטים מחולקים ל-${b} קבוצות שוות. כמה בכל קבוצה?`,
-        `${a.toLocaleString()} ק"מ ב-${b} ימים. כמה ק"מ ביום?`,
-      ];
       return { type:'num',cat:'div',diff,label:th.label,gameLabel:brainrotLabel(),
-        text:pick(stories),answer:q,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'groups',a:q,b,emoji},showMul:true,mulA:q,mulB:b,mulEmoji:emoji,dir:'rtl' };
+        text:`${a.toLocaleString()} ÷ ${b} = ?`,answer:q,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'groups',a:q,b,emoji},showMul:true,mulA:q,mulB:b,mulEmoji:emoji,dir:'ltr' };
     },
     word: null,
     fractions(diff) {
