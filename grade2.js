@@ -45,45 +45,26 @@ window.GRADE_CONFIG = {
     add(diff) {
       const r = window.GRADE_CONFIG.ranges.add[diff];
       const a = rnd(r.aMin, r.aMax), b = rnd(r.bMin, r.bMax);
-      const th = pick(GAME_THEMES); const e = pick(th.items);
-      const stories = [
-        `לרועי יש ${a} ${e} ולשרה יש ${b}. כמה יש להם ביחד?`,
-        `בשוק יש ${a} ${e} בבוקר. הגיעו עוד ${b}. כמה יש עכשיו?`,
-        `ביום א' אספנו ${a} ${e} וביום ב' ${b}. כמה בסך הכל?`,
-        `${a} + ${b} = ?`,
-        `${a} כדורים אדומים ו-${b} כחולים. כמה כדורים יש?`,
-      ];
+      const th = pick(GAME_THEMES);
       return { type:'num', cat:'add', diff, label:th.label, gameLabel:brainrotLabel(),
-        text:pick(stories), answer:a+b, pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'decompose',a,b}, showMul:false, dir:'rtl' };
+        text:`${a} + ${b} = ?`, answer:a+b, pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'decompose',a,b}, showMul:false, dir:'ltr' };
     },
     sub(diff) {
       const r = window.GRADE_CONFIG.ranges.sub[diff];
       const total = rnd(r.aMin, r.aMax), b = rnd(1, Math.floor(total/2)), a = total-b;
-      const th = pick(GAME_THEMES); const e = pick(th.items);
-      const stories = [
-        `היו ${total} ${e}. מכרו ${b}. כמה נשאר?`,
-        `לטל היו ${total} שקלים. הוציאה ${b}. כמה נשאר?`,
-        `${total} - ${b} = ?`,
-        `${total} ילדים בגן. ${b} הלכו הביתה. כמה נשארו?`,
-      ];
+      const th = pick(GAME_THEMES);
       return { type:'num', cat:'sub', diff, label:th.label, gameLabel:brainrotLabel(),
-        text:pick(stories), answer:a, pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'cubes',total,remove:b}, showMul:false, dir:'rtl' };
+        text:`${total} - ${b} = ?`, answer:a, pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'cubes',total,remove:b}, showMul:false, dir:'ltr' };
     },
     mul(diff) {
       const r = window.GRADE_CONFIG.ranges.mul[diff];
       const a = rnd(r.aMin, r.aMax), b = rnd(r.bMin, r.bMax);
       const th = pick(GAME_THEMES); const emoji = pick(th.items);
-      const stories = [
-        `${a} ילדים, לכל אחד ${b} ${emoji}. כמה ${emoji} בסך הכל?`,
-        `${a} קופסאות, בכל קופסה ${b} ${emoji}. כמה בסך הכל?`,
-        `${a} × ${b} = ?`,
-        `${b} שורות של ${a} ילדים. כמה ילדים בסך הכל?`,
-      ];
       return { type:'num', cat:'mul', diff, label:th.label, gameLabel:brainrotLabel(),
-        text:pick(stories), answer:a*b, pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'groups',a,b,emoji}, showMul:true, mulA:a, mulB:b, mulEmoji:emoji, dir:'rtl' };
+        text:`${a} × ${b} = ?`, answer:a*b, pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'groups',a,b,emoji}, showMul:true, mulA:a, mulB:b, mulEmoji:emoji, dir:'ltr' };
     },
     word: null,
     shapes2d(diff) {
