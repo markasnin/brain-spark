@@ -169,7 +169,7 @@ window.RocketGame = (function () {
       <div style="font-family:'Fredoka',sans-serif;font-size:1.6rem;color:#a5d8ff;text-align:center;margin-bottom:8px">🚀 מרוץ החלל</div>
       ${helpBtn("🚀 מרוץ החלל\n\n• תדלק → פתור תרגיל קל לדלק\n• גש לכוכב → פתור תרגיל לכבוש\n• אסטרואידים פוגעים בפתאום — פתור מהר!\n• טעות = חיים פחות\n• הבס את הבוס הסופי לנצחון! 👾")}
       ${spaceCard(`
-        <canvas id="rocketCanvas" width="400" height="220" style="width:100%;border-radius:12px;display:block"></canvas>
+        <canvas id="rocketCanvas" width="400" height="220" style="width:100%;max-width:400px;height:auto;border-radius:12px;display:block;margin:0 auto"></canvas>
       `)}
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;text-align:center">
         <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:8px"><div style="font-size:1.3rem">⛽</div><div style="color:#69db7c;font-size:.8rem;font-family:Rubik,sans-serif">${st.fuel}/${MAX_FUEL}</div></div>
@@ -377,14 +377,23 @@ window.RocketGame = (function () {
     setTimeout(initCanvas,50);
   }
 
-  function exit() { clearTimer(); animFrame&&cancelAnimationFrame(animFrame); if(window.show)window.show('home'); }
+  function exit() {
+    clearTimer();
+    animFrame && cancelAnimationFrame(animFrame);
+    const wrap = document.getElementById('minigameScreen');
+    if (wrap) wrap.style.cssText = '';
+    if (window.show) window.show('home');
+  }
 
   function open() {
     const wrap = document.getElementById('minigameScreen');
-    if(!wrap) return;
-    wrap.innerHTML=`<div id="rocketWrap" style="max-width:420px;margin:0 auto;padding:12px"></div>`;
-    document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+    if (!wrap) return;
+    // Show the screen properly
+    document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
     wrap.classList.add('on');
+    // Add scroll support so content isn't hidden on small screens
+    wrap.style.cssText = 'overflow-y:auto;padding:16px 12px 40px;align-items:center;';
+    wrap.innerHTML = `<div id="rocketWrap" style="width:100%;max-width:420px;margin:0 auto"></div>`;
     restart();
   }
 
