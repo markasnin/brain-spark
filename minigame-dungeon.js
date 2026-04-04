@@ -85,7 +85,7 @@ window.DungeonGame = (function () {
 
   function hpBar(cur,max,col){const p=Math.max(0,Math.min(100,(cur/max)*100));return `<div style="background:rgba(255,255,255,.1);border-radius:6px;height:10px;overflow:hidden"><div style="width:${p}%;height:100%;background:${col};border-radius:6px;transition:width .3s"></div></div>`;}
 
-  function heroStatus(){return `<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 12px;margin-bottom:8px"><div style="font-size:1.8rem">🧙‍♂️</div><div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:#fff;font-family:'Fredoka',sans-serif;font-size:.95rem">גיבור Lv.${st.heroLv}</span><span style="color:#ffd43b;font-size:.8rem">🪙 ${st.gold} | ✨ ${st.xp}</span></div>${hpBar(st.heroHp,HERO_MAX_HP,'#ff6b6b')}<div style="font-size:.7rem;color:#adb5bd;margin-top:2px">❤️ ${st.heroHp}/${HERO_MAX_HP}</div></div></div>`;}
+  function heroStatus(){return `<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 12px;margin-bottom:8px"><div style="font-size:1.8rem">🧙‍♂️</div><div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:#fff;font-family:'Fredoka',sans-serif;font-size:.95rem">גיבור Lv.${st.heroLv}</span><span style="color:#ffd43b;font-size:.8rem">🪙 ${st.gold} זהב | ✨ ${st.xp} ניסיון</span></div>${hpBar(st.heroHp,HERO_MAX_HP,'#ff6b6b')}<div style="font-size:.7rem;color:#adb5bd;margin-top:2px">❤️ ${st.heroHp}/${HERO_MAX_HP}</div></div></div>`;}
 
   function render(){
     const el=document.getElementById('dungeonWrap');if(!el)return;
@@ -175,7 +175,7 @@ window.DungeonGame = (function () {
 
   function heroHit(){st.heroHp--;log('💥 המפלצת פגעה! HP:'+st.heroHp);if(st.heroHp<=0){st.phase='gameover';render();return;}st.activeQ=makeQ(st.monster.diff);render();}
 
-  function monsterHit(){st.monsterHp--;st.streak++;log('⚔️ פגעת ב'+st.monster.name+'! HP:'+st.monsterHp);if(st.monsterHp<=0){clearTimer();const gold=st.monster.gold+(st.streak>=3?5:0);st.gold+=gold;st.xp+=st.monster.xp;if(window.addPts)window.addPts(gold);if(Math.random()<.25){st.inventory.push('potion');window.showToast&&window.showToast('🧪 מצאת כוס מרפא!');}window.showToast&&window.showToast('🎉 ניצחת! +'+gold+'🪙');st.room++;mgSave({room:st.room,gold:st.gold,xp:st.xp,heroHp:st.heroHp,inventory:st.inventory});if(st.room>=8)st.phase='victory';else st.phase='map';st.streak=0;render();}else{st.activeQ=makeQ(st.monster.diff);render();}}
+  function monsterHit(){st.monsterHp--;st.streak++;log('⚔️ פגעת ב'+st.monster.name+'! HP:'+st.monsterHp);if(st.monsterHp<=0){clearTimer();const gold=st.monster.gold+(st.streak>=3?5:0);st.gold+=gold;st.xp+=st.monster.xp;if(window.addPts)window.addPts(gold);if(Math.random()<.25){st.inventory.push('potion');window.showToast&&window.showToast('🧪 מצאת כוס מרפא! (+❤️)');}window.showToast&&window.showToast('🎉 ניצחת! +'+gold+'🪙');st.room++;mgSave({room:st.room,gold:st.gold,xp:st.xp,heroHp:st.heroHp,inventory:st.inventory});if(st.room>=8)st.phase='victory';else st.phase='map';st.streak=0;render();}else{st.activeQ=makeQ(st.monster.diff);render();}}
 
   function log(msg){st.log.push(msg);if(st.log.length>10)st.log.shift();}
 
