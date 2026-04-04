@@ -1,9 +1,19 @@
 // ══════════════════════════════════════════════
-// GRADE 6 — כיתה ו
-// כל הנושאים + אחוזים מתקדמים, יחס ופרופורציה,
-// מספרים שליליים, סדר פעולות, סטטיסטיקה, מהירות-זמן-מרחק,
-// נפח גופים, גיאומטריה מתקדמת, דפוסים מתקדמים
-// מספרים: עד 1,000,000
+// GRADE 6 — כיתה ו  |  תוכנית משרד החינוך תשס"ו
+// ────────────────────────────────────────────
+// מספרים: כל הקבוצות (טבעיים, שלמים, שברים), יחסי הכלה
+// שברים פשוטים: כפל שבר×שבר (כולל מעורבים), חילוק שברים
+//               חלק של כמות (מציאת ערך החלק, חישוב החלק, מציאת הכמות הבסיסית)
+// שברים עשרוניים: ×10/100/1000, כפל, חילוק
+//                  שבר עשרוני מחזורי (היכרות)
+// אחוזים: ערך האחוז + חישוב האחוז (לא "מחיר מקורי" — זה כיתה ז+)
+// יחס: הגדרה + תכונות + חלוקת כמות לפי יחס
+// מספרים שלמים: מיקום על ישר מספרים, חיבור וחיסור בסיסי
+// גאומטריה (גופים — כיתה ו!): מיון גופים, פריסות, גופים משוכללים
+//                               חישובי נפחים (תיבה, גליל)
+//                               מעגל ועיגול: היקף ושטח
+// קנה מידה (פרופורציה)
+// חקר נתונים: ממוצע, חציון, שכיח, טווח (פרטים — כיתה ו)
 // ══════════════════════════════════════════════
 window.GRADE_CONFIG = {
   gradeId: 'ו',
@@ -12,21 +22,23 @@ window.GRADE_CONFIG = {
   gradeColor: '#ff4757',
 
   availableCategories: [
-    'add','sub','mul','div','word','fractions',
-    'percentages','ratio','negative_numbers','order_of_ops',
-    'perimeter','area','angles','shapes3d','coordinates',
-    'data','speed','volume3d','money','measurement'
+    'add','sub','mul','div','word',
+    'fractions_mul','fractions_div','fractions_part',
+    'decimals_mul','percentages','ratio',
+    'integers_intro','perimeter','area','volume','circle',
+    'data','scale','measurement'
   ],
   availableLearnTopics: [
     'division','shapes','fractions','measurement',
-    'perimeter_learn','area_learn','angles_learn','shapes3d_learn','coordinates_learn','measurement_learn',
+    'perimeter_learn','area_learn','shapes3d_learn','coordinates_learn',
     'percentages_learn','ratio_learn','negative_learn','statistics_learn'
   ],
   availableExamTopics: [
-    'add','sub','mul','div','word','fractions',
-    'percentages','ratio','negative_numbers','order_of_ops',
-    'perimeter','area','angles','shapes3d','coordinates',
-    'data','speed','volume3d','measurement'
+    'add','sub','mul','div','word',
+    'fractions_mul','fractions_div','fractions_part',
+    'decimals_mul','percentages','ratio',
+    'integers_intro','perimeter','area','volume','circle',
+    'data','scale','measurement'
   ],
 
   ranges: {
@@ -34,271 +46,309 @@ window.GRADE_CONFIG = {
     sub: { easy:{aMin:1000,aMax:99999}, medium:{aMin:10000,aMax:499999}, hard:{aMin:100000,aMax:999999} },
     mul: { easy:{aMin:10,aMax:50,bMin:10,bMax:50}, medium:{aMin:20,aMax:99,bMin:20,bMax:99}, hard:{aMin:50,aMax:200,bMin:50,bMax:200} },
     div: { easy:{bMin:5,bMax:20,qMin:5,qMax:20}, medium:{bMin:10,bMax:30,qMin:10,qMax:30}, hard:{bMin:15,bMax:50,qMin:15,qMax:50} },
-    fractions: { easy:{pairs:[[1,2],[1,4],[3,4],[1,3],[2,3],[1,5],[2,5]],totalMax:60}, medium:{pairs:[[3,5],[4,5],[1,6],[5,6],[1,7],[2,7],[3,7]],totalMax:120}, hard:{pairs:[[5,7],[6,7],[1,8],[3,8],[5,8],[7,8],[1,9],[4,9],[7,9]],totalMax:200} },
+    fractions: { easy:{pairs:[[1,2],[1,4],[3,4],[1,3],[2,3]]}, medium:{pairs:[[1,5],[2,5],[3,5],[4,5],[1,6],[5,6]]}, hard:{pairs:[[3,8],[5,8],[7,8],[2,7],[4,9],[7,9]]} },
   },
 
   pts: { easy:8, medium:18, hard:30 },
-  welcome: 'כיתה ו — המתמטיקאים האמיתיים! 🚀',
-  tip: 'אחוזים, יחסים, מהירות — כיתה ו מלאה! 💪',
+  welcome: 'כיתה ו — שברים מלאים, אחוזים, יחס, גופים ועיגול! 🚀',
+  tip: 'חילוק שברים: הפוך וכפול! ½÷¼ = ½×4 = 2 💡',
 
   generators: {
     add(diff) {
       const r=window.GRADE_CONFIG.ranges.add[diff];
       const a=rnd(r.aMin,r.aMax), b=rnd(r.bMin,r.bMax);
       const th=pick(GAME_THEMES);
-      const stories=[
-        `${a.toLocaleString()} + ${b.toLocaleString()} = ?`,
-        `אוכלוסיית עיר א: ${a.toLocaleString()}. עיר ב: ${b.toLocaleString()}. כמה בשתי הערים?`,
-        `קופה א: ${a.toLocaleString()} ש"ח. קופה ב: ${b.toLocaleString()} ש"ח. כמה בסך הכל?`,
-      ];
-      return {type:'num',cat:'add',diff,label:th.label,gameLabel:brainrotLabel(),
-        text:pick(stories),answer:a+b,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'decompose',a,b},showMul:false,dir:'rtl'};
+      return { type:'num',cat:'add',diff,label:th.label,gameLabel:brainrotLabel(),
+        text:`${a.toLocaleString()} + ${b.toLocaleString()} = ?`,answer:a+b,
+        pts:window.GRADE_CONFIG.pts[diff],hint:{type:'decompose',a,b},showMul:false,dir:'ltr' };
     },
     sub(diff) {
       const r=window.GRADE_CONFIG.ranges.sub[diff];
       const a=rnd(r.aMin,r.aMax), b=rnd(1,Math.floor(a/2));
       const th=pick(GAME_THEMES);
-      return {type:'num',cat:'sub',diff,label:th.label,gameLabel:brainrotLabel(),
+      return { type:'num',cat:'sub',diff,label:th.label,gameLabel:brainrotLabel(),
         text:`${a.toLocaleString()} - ${b.toLocaleString()} = ?`,answer:a-b,
-        pts:window.GRADE_CONFIG.pts[diff],hint:{type:'text',msg:`💡 ${a.toLocaleString()} - ${b.toLocaleString()} = ${(a-b).toLocaleString()}`},showMul:false,dir:'ltr'};
+        pts:window.GRADE_CONFIG.pts[diff],hint:{type:'text',msg:`💡 ${(a-b).toLocaleString()}`},showMul:false,dir:'ltr' };
     },
     mul(diff) {
       const r=window.GRADE_CONFIG.ranges.mul[diff];
       const a=rnd(r.aMin,r.aMax), b=rnd(r.bMin,r.bMax);
       const th=pick(GAME_THEMES);
-      return {type:'num',cat:'mul',diff,label:th.label,gameLabel:brainrotLabel(),
-        text:`${a} × ${b} = ?`,answer:a*b,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${a} × ${b} = ${a*b}`},showMul:false,dir:'ltr'};
+      const stories=[
+        `${a} × ${b} = ?`,
+        `${a} קופסאות × ${b} פריטים = כמה פריטים?`,
+        `מגרש ${a} מ' × ${b} מ'. שטח?`,
+      ];
+      return { type:'num',cat:'mul',diff,label:th.label,gameLabel:brainrotLabel(),
+        text:pick(stories),answer:a*b,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:`💡 ${a}×${b}=${a*b}`},showMul:false,dir:'ltr' };
     },
     div(diff) {
       const r=window.GRADE_CONFIG.ranges.div[diff];
       const b=rnd(r.bMin,r.bMax), q=rnd(r.qMin,r.qMax), a=b*q;
       const th=pick(GAME_THEMES);
-      return {type:'num',cat:'div',diff,label:th.label,gameLabel:brainrotLabel(),
+      return { type:'num',cat:'div',diff,label:th.label,gameLabel:brainrotLabel(),
         text:`${a.toLocaleString()} ÷ ${b} = ?`,answer:q,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${b} × ${q} = ${a}`},showMul:false,dir:'ltr'};
+        hint:{type:'text',msg:`💡 ${b}×${q}=${a}`},showMul:false,dir:'ltr' };
     },
     word: null,
-    fractions(diff) {
-      const r=window.GRADE_CONFIG.ranges.fractions[diff];
-      const [n,d]=pick(r.pairs);
-      const total=rnd(d,Math.floor(r.totalMax/d))*d; const part=(total/d)*n;
-      const th=pick(GAME_THEMES);
+
+    // ══ כפל שברים (כיתה ו) ══
+    fractions_mul(diff) {
+      const pairs={easy:[[1,2],[1,4],[2,3],[3,4]],medium:[[1,3],[2,5],[3,5],[3,4],[2,3]],hard:[[3,8],[5,8],[4,7],[3,7]]};
+      const pool=pairs[diff]||pairs.easy;
+      const [n1,d1]=pick(pool), [n2,d2]=pick(pool);
+      const rn=n1*n2, rd=d1*d2;
+      const gcd=(a,b)=>b===0?a:gcd(b,a%b);
+      const g=gcd(rn,rd);
+      const ansN=rn/g, ansD=rd/g;
       const stories=[
-        `${n}/${d} מתוך ${total.toLocaleString()} = ?`,
-        `מ-${total} תלמידים, ${n}/${d} הגיעו לטיול. כמה הגיעו?`,
-        `${n}/${d} מ-${total} ק"מ עברנו. כמה ק"מ עברנו?`,
+        `${n1}/${d1} × ${n2}/${d2} = ? (כתוב מנה×מכנה ψ כתוב ${ansN} אם ${ansD}=1, אחרת כתוב מנה בלבד)`,
+        `${n1}/${d1} מ-${n2}/${d2} = ?`,
       ];
-      return {type:'num',cat:'fractions',diff,label:'½ שברים',gameLabel:'',
-        text:pick(stories),answer:part,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${total}÷${d}=${total/d}. ×${n}=${part}`},showMul:false,dir:'rtl'};
+      // פשוט נשאל על המנה
+      return { type:'num',cat:'fractions_mul',diff,label:'½ כפל שברים',gameLabel:'',
+        text:`${n1}/${d1} × ${n2}/${d2} = ?/${ansD}  (כתוב את המנה)`,
+        answer:ansN,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:`💡 מנה: ${n1}×${n2}=${rn}, מכנה: ${d1}×${d2}=${rd}. מצמצמים÷${g}: ${ansN}/${ansD}`},
+        showMul:false,dir:'rtl' };
     },
 
-    // ══ אחוזים ══
+    // ══ חילוק שברים (כיתה ו) ══
+    fractions_div(diff) {
+      const pairs={easy:[[1,2],[1,4],[2,3],[3,4]],medium:[[1,3],[2,5],[3,5]],hard:[[3,8],[5,8],[4,7]]};
+      const pool=pairs[diff]||pairs.easy;
+      const [n1,d1]=pick(pool), [n2,d2]=pick(pool);
+      // a÷b = a×(1/b) = (n1/d1)÷(n2/d2) = (n1×d2)/(d1×n2)
+      const rn=n1*d2, rd=d1*n2;
+      const gcd=(a,b)=>b===0?a:gcd(b,a%b);
+      const g=gcd(rn,rd);
+      const ansN=rn/g, ansD=rd/g;
+      return { type:'num',cat:'fractions_div',diff,label:'½ חילוק שברים',gameLabel:'',
+        text:`${n1}/${d1} ÷ ${n2}/${d2} = ?/${ansD}  (כתוב את המנה)`,
+        answer:ansN,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:`💡 הפוך וכפול: ${n1}/${d1} × ${d2}/${n2} = ${rn}/${rd} = ${ansN}/${ansD}`},
+        showMul:false,dir:'rtl' };
+    },
+
+    // ══ חלק של כמות (כיתה ו) — מציאת כמות הבסיס ══
+    fractions_part(diff) {
+      const cases={
+        easy:[
+          ()=>{const d=pick([2,4]),tot=d*rnd(2,8),n=rnd(1,d-1),part=(tot/d)*n;return{text:`${n}/${d} מ-${tot} = ?`,answer:part,hint:`💡 ${tot}÷${d}=${tot/d}. ×${n}=${part}`};},
+          ()=>{const d=pick([3,5]),tot=d*rnd(2,6),n=rnd(1,d-1),part=(tot/d)*n;return{text:`${n}/${d} מ-${tot} = ?`,answer:part,hint:`💡 ${tot}÷${d}×${n}=${part}`};},
+        ],
+        medium:[
+          ()=>{const part=rnd(2,8)*2,n=2,d=4,tot=part*d/n;return{text:`2/4 מ-? = ${part}. מצא את הכמות הבסיסית`,answer:tot,hint:`💡 כמות×2/4=${part} → כמות=${part}÷2×4=${tot}`};},
+          ()=>{const d=pick([3,5,6]),n=rnd(1,d-1),tot=d*rnd(3,8),part=(tot/d)*n;return{text:`${n}/${d} מ-${tot} = ?`,answer:part,hint:`💡 ${tot}÷${d}×${n}=${part}`};},
+        ],
+        hard:[
+          ()=>{const d=pick([4,5,8]),n=rnd(1,d-1),part=rnd(2,8)*n,tot=part*d/n;return{text:`${n}/${d} מ-? = ${part}. מה הכמות הבסיסית?`,answer:tot,hint:`💡 ${part}÷${n}×${d}=${tot}`};},
+          ()=>{const d=pick([3,6,9]),n=rnd(1,d-1),tot=d*rnd(4,10),part=(tot/d)*n;const pct=Math.round(n/d*100);return{text:`${n}/${d} (כלומר ${pct}%) מ-${tot} = ?`,answer:part,hint:`💡 ${tot}×${n}/${d}=${part}`};},
+        ],
+      };
+      const pool=cases[diff]||cases.easy;
+      const q=pick(pool)();
+      return { type:'num',cat:'fractions_part',diff,label:'½ חלק של כמות',gameLabel:'',
+        text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:q.hint},showMul:false,dir:'rtl' };
+    },
+
+    // ══ שברים עשרוניים — כפל וחילוק (כיתה ו) ══
+    decimals_mul(diff) {
+      const qs={
+        easy:[
+          ()=>{const n=rnd(2,9),f=pick([10,100]);return{text:`0.${n} × ${f} = ?`,answer:n*(f/10),hint:`💡 0.${n}×${f}=${n*(f/10)}`};},
+          ()=>{const n=rnd(2,9);return{text:`0.${n} × 10 = ?`,answer:n,hint:`💡 הזזת נקודה: 0.${n}×10=${n}`};},
+          ()=>{const n=rnd(10,90);return{text:`${n} ÷ 10 = ?`,answer:n/10,hint:`💡 ${n}÷10=${n/10}`};},
+        ],
+        medium:[
+          ()=>{const a=rnd(2,8),b=rnd(2,5);return{text:`${a}.${b} × 10 = ?`,answer:parseFloat((a*10+b).toFixed(1)),hint:`💡 ${a}.${b}×10=${a*10+b}`};},
+          ()=>{const a=rnd(10,50);return{text:`${a} ÷ 100 = 0.?? (כתוב 100×התשובה)`,answer:a,hint:`💡 ${a}÷100=0.${a<10?'0'+a:a}`};},
+          ()=>{const a=rnd(2,5),b=rnd(2,5);return{text:`${a}.${b} × 2 = ?`,answer:parseFloat(((a*10+b)*2/10).toFixed(1)),hint:`💡 ${a}.${b}×2=${((a*10+b)*2/10).toFixed(1)}`};},
+        ],
+        hard:[
+          ()=>{const a=rnd(2,9),b=rnd(2,9);return{text:`0.${a} × 0.${b} = ? (×100 לתשובה)`,answer:a*b,hint:`💡 0.${a}×0.${b}=0.0${a*b<10?'0'+a*b:a*b}`};},
+          ()=>{const n=rnd(100,900);return{text:`${n} ÷ 1000 = 0.??? (כתוב 1000×התשובה)`,answer:n,hint:`💡 ${n}÷1000=0.${n}`};},
+        ],
+      };
+      const pool=qs[diff]||qs.easy; const fn=pick(pool); const q=fn();
+      return { type:'num',cat:'decimals_mul',diff,label:'🔢 שברים עשרוניים ×÷',gameLabel:'',
+        text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:q.hint},showMul:false,dir:'rtl' };
+    },
+
+    // ══ אחוזים (כיתה ו) — ערך האחוז + חישוב האחוז ══
     percentages(diff) {
       const cases={
         easy:[
-          ()=>{const tot=rnd(2,10)*10;const pct=pick([10,20,25,50]);const ans=Math.round(tot*pct/100);return{text:`${pct}% מ-${tot} = ?`,answer:ans,hint:`${tot}×${pct}/100=${ans}`};},
-          ()=>{const p=rnd(50,200)/10*10;const pct=pick([10,25,50]);const ans=Math.round(p*pct/100);return{text:`ספר עולה ${p} ש"ח. הנחה ${pct}%. כמה תשלם?`,answer:Math.round(p-ans),hint:`הנחה: ${ans} ש"ח. תשלם: ${Math.round(p-ans)}`};},
+          // ערך האחוז: מה הוא X% מ-Y?
+          ()=>{const tot=pick([100,200,50,400]);const pct=pick([10,25,50]);const ans=tot*pct/100;return{text:`${pct}% מ-${tot} = ?`,answer:ans,hint:`💡 ${tot}×${pct}/100=${ans}`};},
+          ()=>{const tot=pick([100,80,40,20]);const pct=pick([50,25,10]);const ans=tot*pct/100;return{text:`${pct}% מ-${tot} = ?`,answer:ans,hint:`💡 ${tot}÷${100/pct}=${ans}`};},
         ],
         medium:[
-          ()=>{const tot=rnd(2,20)*10;const pct=pick([15,20,30,35,40,60,75]);const ans=Math.round(tot*pct/100);return{text:`${pct}% מ-${tot} = ?`,answer:ans,hint:`${tot}×${pct}/100=${ans}`};},
-          ()=>{const part=rnd(1,9)*5;const tot=rnd(2,8)*25;const pct=Math.round(part/tot*100);return{text:`${part} מתוך ${tot} — כמה אחוזים? (עגל)`,answer:pct,hint:`${part}/${tot}×100≈${pct}%`};},
-          ()=>{const orig=rnd(5,20)*10;const pct=pick([10,20,30]);const after=Math.round(orig*(1+pct/100));return{text:`מחיר עלה ב-${pct}%. היה ${orig} ש"ח. מה המחיר החדש?`,answer:after,hint:`${orig}×${100+pct}/100=${after}`};},
+          // ערך האחוז: מספרים לא עגולים
+          ()=>{const tot=rnd(2,10)*20;const pct=pick([10,20,25,50]);const ans=tot*pct/100;return{text:`${pct}% מ-${tot} = ?`,answer:ans,hint:`💡 ${tot}×${pct}/100=${ans}`};},
+          // חישוב האחוז: X מ-Y זה כמה אחוז?
+          ()=>{const pct=pick([10,20,25,50]);const tot=pick([100,200,80,40]);const part=tot*pct/100;return{text:`${part} מ-${tot} = כמה אחוזים?`,answer:pct,hint:`💡 ${part}/${tot}×100=${pct}%`};},
+          ()=>{const tot=rnd(2,8)*25;const pct=pick([10,20,40,50]);const ans=tot*pct/100;return{text:`${pct}% מ-${tot} = ?`,answer:ans,hint:`💡 ${tot}×${pct}/100=${ans}`};},
         ],
         hard:[
-          ()=>{const after=rnd(4,16)*10;const pct=pick([20,25,50]);const orig=after*100/(100-pct);return Number.isInteger(orig)?{text:`אחרי הנחה ${pct}% מחיר הוא ${after} ש"ח. מה היה המחיר המקורי?`,answer:orig,hint:`${after}÷${(100-pct)/100}=${orig}`}:{text:`${pct}% מ-${after*5} = ?`,answer:after*pct/100*5,hint:`${after*5}×${pct}/100=${after*pct/100*5}`};},
-          ()=>{const a=rnd(3,9)*10,b=rnd(2,8)*10;const gain=Math.round((b-a)/a*100);return gain>0?{text:`מחיר עלה מ-${a} ל-${b} ש"ח. מה אחוז העלייה? (עגל)`,answer:gain,hint:`(${b}-${a})/${a}×100=${gain}%`}:{text:`${a}% מ-${b*10} = ?`,answer:Math.round(a*b*10/100),hint:`${a}/100×${b*10}=${Math.round(a*b*10/100)}`};},
-          ()=>{const classes=rnd(3,6),avg=rnd(25,35);const total=classes*avg;const absentPct=pick([10,20,25]);const absent=Math.round(total*absentPct/100);return{text:`${classes} כיתות עם ממוצע ${avg} תלמידים. ${absentPct}% נעדרו. כמה נעדרו?`,answer:absent,hint:`${classes}×${avg}=${total} תלמידים. ${absentPct}% = ${absent}`};},
+          // חישוב אחוז מורכב יותר
+          ()=>{const pct=pick([15,20,30,40]);const tot=rnd(2,8)*10;const ans=Math.round(tot*pct/100);return{text:`${pct}% מ-${tot} = ?`,answer:ans,hint:`💡 ${tot}×${pct}/100=${ans}`};},
+          ()=>{const tot=rnd(2,10)*20;const part=rnd(1,tot/4)*4;const pct=Math.round(part/tot*100);return Number.isInteger(pct)?{text:`${part} מ-${tot} זה כמה אחוזים?`,answer:pct,hint:`💡 ${part}/${tot}×100=${pct}%`}:{text:`20% מ-${tot} = ?`,answer:tot/5,hint:`💡 ${tot}/5=${tot/5}`};},
+          ()=>{const tot=rnd(3,9)*20;const pct=pick([10,20,25,30,40,50]);const ans=tot*pct/100;return{text:`${pct}% מ-${tot} = ?`,answer:ans,hint:`💡 ${tot}×${pct}/100=${ans}`};},
         ],
       };
       const pool=cases[diff]||cases.easy; const q=pick(pool)();
-      return {type:'num',cat:'percentages',diff,label:'💯 אחוזים',gameLabel:'',
+      return { type:'num',cat:'percentages',diff,label:'💯 אחוזים',gameLabel:'',
         text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${q.hint}`},showMul:false,dir:'rtl'};
+        hint:{type:'text',msg:q.hint},showMul:false,dir:'rtl' };
     },
 
-    // ══ יחס ופרופורציה ══
+    // ══ יחס (כיתה ו) — הגדרה + חלוקת כמות לפי יחס ══
     ratio(diff) {
       const cases={
         easy:[
-          ()=>{const a=rnd(1,4),b=rnd(1,4),k=rnd(2,5);return{text:`יחס בנים לבנות ${a}:${b}. יש ${(a+b)*k} ילדים. כמה בנים?`,answer:a*k,hint:`${a*k} בנים (${a}×${k})`};},
-          ()=>{const r=rnd(2,5),tot=r*rnd(3,8);return{text:`לכל ${r} שקלים שחסכת, תקבל עוד 1 ש"ח בונוס. חסכת ${tot} ש"ח. כמה בונוס?`,answer:Math.floor(tot/r),hint:`${tot}÷${r}=${Math.floor(tot/r)} ש"ח בונוס`};},
+          ()=>{const a=rnd(1,4),b=rnd(1,4),k=rnd(2,5),tot=(a+b)*k;const pA=a*k;return{text:`יחס בנים לבנות ${a}:${b}. סך הכל ${tot} ילדים. כמה בנים?`,answer:pA,hint:`💡 ${tot}×${a}/(${a}+${b})=${pA}`};},
+          ()=>{const r=rnd(2,4),tot=r*rnd(3,8);return{text:`יחס מיץ למים 1:${r}. יש ${tot} ל' מים. כמה ל' מיץ?`,answer:tot/r,hint:`💡 ${tot}÷${r}=${tot/r}`};},
         ],
         medium:[
-          ()=>{const a=rnd(2,5),b=rnd(2,5);const tot=(a+b)*rnd(3,7);const pA=tot*a/(a+b);return Number.isInteger(pA)?{text:`יחס ${a}:${b}. יש ${tot} פריטים בסך הכל. כמה פריטים ביחס ה-${a}?`,answer:pA,hint:`${tot}×${a}/(${a+b})=${pA}`}:{text:`יחס 3:2, יש 50 פריטים. כמה ב-3?`,answer:30,hint:`50×3/5=30`};},
-          ()=>{const scale=pick([100,200,250,500,1000]);const map=rnd(2,8);return{text:`מפה בסולם 1:${scale}. מרחק על המפה ${map} ס"מ. מה המרחק האמיתי בס"מ?`,answer:map*scale,hint:`${map}×${scale}=${map*scale} ס"מ`};},
+          ()=>{const a=rnd(2,4),b=rnd(2,4);const k=rnd(2,5);const tot=(a+b)*k;const pA=a*k;return Number.isInteger(pA)?{text:`חולקים ${tot} ש"ח ביחס ${a}:${b}. הראשון מקבל כמה?`,answer:pA,hint:`💡 ${tot}×${a}/${a+b}=${pA}`}:{text:`יחס 2:3, סך 50 ש"ח. הראשון מקבל?`,answer:20,hint:`💡 50×2/5=20`};},
+          ()=>{const scale=pick([100,1000,500]);const map=rnd(2,8);return{text:`קנה מידה 1:${scale}. מרחק במפה: ${map} ס"מ. מרחק אמיתי בס"מ?`,answer:map*scale,hint:`💡 ${map}×${scale}=${map*scale} ס"מ`};},
         ],
         hard:[
-          ()=>{const a=rnd(2,5),b=rnd(2,5),c=rnd(2,4);const tot=(a+b+c)*rnd(2,5);const pA=tot*a/(a+b+c);return Number.isInteger(pA)?{text:`יחס שלושה חלקים: ${a}:${b}:${c}. סך הכל ${tot}. כמה ב-${a}?`,answer:pA,hint:`${tot}×${a}/${a+b+c}=${pA}`}:{text:`יחס 2:3:5. סך 100. כמה ב-2?`,answer:20,hint:`100×2/10=20`};},
-          ()=>{const kmh=rnd(3,8)*10,hrs=rnd(2,5);return{text:`מכונית נוסעת ${kmh} קמ"ש. תוך ${hrs} שעות כמה ק"מ?`,answer:kmh*hrs,hint:`${kmh}×${hrs}=${kmh*hrs} ק"מ`};},
+          ()=>{const a=rnd(2,4),b=rnd(2,4),c=rnd(2,3);const k=rnd(2,4);const tot=(a+b+c)*k;const pA=a*k;return Number.isInteger(pA)?{text:`חולקים ${tot} ביחס ${a}:${b}:${c}. חלק הראשון?`,answer:pA,hint:`💡 ${tot}×${a}/${a+b+c}=${pA}`}:{text:`חולקים 60 ביחס 2:3:1. חלק הראשון?`,answer:20,hint:`💡 60×2/6=20`};},
+          ()=>{const tot=rnd(4,12)*10;const pct=pick([20,25,40,50]);const part=tot*pct/100;return{text:`מ-${tot} תלמידים, ${part} נעדרו. מה יחס הנוכחים לנעדרים? (כתוב נוכחים)`,answer:tot-part,hint:`💡 נוכחים: ${tot}-${part}=${tot-part}`};},
         ],
       };
       const pool=cases[diff]||cases.easy; const q=pick(pool)();
-      return {type:'num',cat:'ratio',diff,label:'⚖️ יחס',gameLabel:'',
+      return { type:'num',cat:'ratio',diff,label:'⚖️ יחס',gameLabel:'',
         text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${q.hint}`},showMul:false,dir:'rtl'};
+        hint:{type:'text',msg:q.hint},showMul:false,dir:'rtl' };
     },
 
-    // ══ מספרים שליליים ══
-    negative_numbers(diff) {
-      const cases={
+    // ══ מספרים שלמים — מבוא (כיתה ו) ══
+    integers_intro(diff) {
+      const qs={
         easy:[
-          ()=>{const a=rnd(1,10),b=rnd(1,a);return{text:`0 - ${a} = ?`,answer:-a,hint:`מתחת לאפס: -${a}`};},
-          ()=>{const a=rnd(1,8),b=rnd(1,8);return{text:`(-${a}) + ${a+b} = ?`,answer:b,hint:`-${a}+${a+b}=${b}`};},
-          ()=>{const t=rnd(-5,0);const b=rnd(1,10);return{text:`טמפרטורה ${t}°. עלתה ב-${b}°. מה הטמפרטורה עכשיו?`,answer:t+b,hint:`${t}+${b}=${t+b}`};},
+          ()=>{const a=rnd(1,8),b=rnd(1,10);return{text:`(-${a}) + ${a+b} = ?`,answer:b,hint:`💡 -${a}+${a+b}=${b}`};},
+          ()=>{const t=rnd(-10,-1),r=rnd(1,15);return{text:`טמפרטורה ${t}°. עלתה ב-${r}°. כמה עכשיו?`,answer:t+r,hint:`💡 ${t}+${r}=${t+r}`};},
+          ()=>{const a=rnd(1,10);return{text:`מה קטן מ-0 ב-${a}? (מספר שלילי)`,answer:-a,hint:`💡 0-${a}=-${a}`};},
         ],
         medium:[
-          ()=>{const a=rnd(2,10),b=rnd(2,10);return{text:`(-${a}) + (-${b}) = ?`,answer:-(a+b),hint:`שני שליליים: -(${a}+${b})=-${a+b}`};},
-          ()=>{const a=rnd(5,15),b=rnd(2,a-1);return{text:`(-${a}) - (-${b}) = ?`,answer:b-a,hint:`-${a}+${b}=${b-a}`};},
-          ()=>{const temps=[-3,-1,2,0,-5,4,-2];const t1=pick(temps),t2=pick(temps);return{text:`טמפרטורה בבוקר ${t1}°. בערב ${t2}°. כמה השתנתה (יכולה להיות שלילית)?`,answer:t2-t1,hint:`${t2}-(${t1})=${t2-t1}`};},
+          ()=>{const a=rnd(2,8),b=rnd(2,8);return{text:`(-${a}) + (-${b}) = ?`,answer:-(a+b),hint:`💡 שני שליליים: -(${a}+${b})=-${a+b}`};},
+          ()=>{const a=rnd(3,10),b=rnd(2,a-1);return{text:`(-${a}) + ${b} = ?`,answer:b-a,hint:`💡 -${a}+${b}=${b-a}`};},
+          ()=>{const a=rnd(-5,5),b=rnd(1,8);return{text:`מספר ${a} על ישר המספרים. 3 צעדים ימינה = ?`,answer:a+3,hint:`💡 ${a}+3=${a+3}`};},
         ],
         hard:[
-          ()=>{const a=rnd(2,8),b=rnd(2,8);return{text:`(-${a}) × ${b} = ?`,answer:-a*b,hint:`שלילי כפול חיובי = שלילי: -${a*b}`};},
-          ()=>{const a=rnd(2,6),b=rnd(2,6);return{text:`(-${a}) × (-${b}) = ?`,answer:a*b,hint:`שלילי כפול שלילי = חיובי: ${a*b}`};},
-          ()=>{const a=rnd(3,9),b=rnd(2,4);return{text:`(-${a*b}) ÷ ${b} = ?`,answer:-a,hint:`שלילי חלקי חיובי = שלילי: -${a}`};},
+          ()=>{const a=rnd(2,6),b=rnd(2,6);return{text:`${a} - ${a+b} = ?`,answer:-b,hint:`💡 ${a}-${a+b}=-${b}`};},
+          ()=>{const temps=[-5,-2,0,3,-8,4,-1];const t1=pick(temps),t2=pick(temps);return{text:`טמפרטורה שינתה מ-${t1}° ל-${t2}°. מה השינוי?`,answer:t2-t1,hint:`💡 ${t2}-(${t1})=${t2-t1}`};},
+          ()=>{const a=rnd(2,6),b=rnd(2,6);return{text:`(-${a}) - (-${b}) = ?`,answer:b-a,hint:`💡 -${a}+${b}=${b-a}`};},
         ],
       };
-      const pool=cases[diff]||cases.easy; const q=pick(pool)();
-      return {type:'num',cat:'negative_numbers',diff,label:'➖ מספרים שליליים',gameLabel:'',
+      const pool=qs[diff]||qs.easy; const q=pick(pool)();
+      return { type:'num',cat:'integers_intro',diff,label:'➖ מספרים שלמים',gameLabel:'',
         text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${q.hint}`},showMul:false,dir:'rtl'};
+        hint:{type:'text',msg:q.hint},showMul:false,dir:'rtl' };
     },
 
-    // ══ סדר פעולות ══
-    order_of_ops(diff) {
-      const cases={
-        easy:[
-          ()=>{const a=rnd(2,8),b=rnd(2,5),c=rnd(1,5);const ans=a+b*c;return{text:`${a} + ${b} × ${c} = ? (קודם כפל!)`,answer:ans,hint:`קודם: ${b}×${c}=${b*c}, אחר כך: ${a}+${b*c}=${ans}`};},
-          ()=>{const a=rnd(2,8),b=rnd(2,5),c=rnd(1,5);const ans=a-b+c;return{text:`${a} - ${b} + ${c} = ?`,answer:ans,hint:`משמאל לימין: ${a}-${b}=${a-b}, +${c}=${ans}`};},
-        ],
-        medium:[
-          ()=>{const a=rnd(2,6),b=rnd(2,5),c=rnd(1,4),d=rnd(1,4);const ans=a*b+c*d;return{text:`${a} × ${b} + ${c} × ${d} = ?`,answer:ans,hint:`קודם כפלים: ${a*b}+${c*d}=${ans}`};},
-          ()=>{const a=rnd(2,5),b=rnd(2,5);const inner=rnd(2,4),add=rnd(1,4);const ans=(a+inner)*b;return{text:`(${a} + ${inner}) × ${b} = ?`,answer:ans,hint:`קודם סוגריים: ${a+inner}×${b}=${ans}`};},
-        ],
-        hard:[
-          ()=>{const a=rnd(2,5),b=rnd(2,4),c=rnd(2,4),d=rnd(2,3);const ans=a*(b+c)-d;return{text:`${a} × (${b} + ${c}) - ${d} = ?`,answer:ans,hint:`סוגריים: ${b+c}, כפל: ${a*(b+c)}, פחות ${d} = ${ans}`};},
-          ()=>{const sq=rnd(2,5);const a=rnd(1,5);const ans=sq*sq+a;return{text:`${sq}² + ${a} = ?`,answer:ans,hint:`${sq}²=${sq*sq}, +${a}=${ans}`};},
-        ],
-      };
-      const pool=cases[diff]||cases.easy; const q=pick(pool)();
-      return {type:'num',cat:'order_of_ops',diff,label:'🔢 סדר פעולות',gameLabel:'',
-        text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${q.hint}`},showMul:false,dir:'rtl'};
-    },
-
-    // ══ מהירות-זמן-מרחק ══
-    speed(diff) {
-      const cases={
-        easy:[
-          ()=>{const kmh=rnd(3,8)*10,hrs=rnd(1,5);return{text:`מכונית נוסעת ${kmh} קמ"ש. תוך ${hrs} שעות עברה כמה ק"מ?`,answer:kmh*hrs,hint:`מהירות × זמן = מרחק: ${kmh}×${hrs}=${kmh*hrs}`};},
-          ()=>{const km=rnd(4,15)*10,hrs=rnd(2,5);const kmh=km/hrs;return Number.isInteger(kmh)?{text:`רכיבה של ${km} ק"מ תוך ${hrs} שעות. מה המהירות הממוצעת?`,answer:kmh,hint:`מרחק÷זמן=${km}÷${hrs}=${kmh} קמ"ש`}:{text:`נסיעה של 120 ק"מ תוך 3 שעות. מה המהירות?`,answer:40,hint:`120÷3=40 קמ"ש`};},
-        ],
-        medium:[
-          ()=>{const kmh=rnd(4,12)*10,km=kmh*rnd(1,4);const hrs=km/kmh;return{text:`נסיעה של ${km} ק"מ במהירות ${kmh} קמ"ש. כמה זמן (שעות)?`,answer:hrs,hint:`זמן=מרחק÷מהירות: ${km}÷${kmh}=${hrs}`};},
-          ()=>{const kmh1=rnd(4,8)*10,kmh2=rnd(4,8)*10,hrs=rnd(1,3);return{text:`רכב א' נוסע ${kmh1} קמ"ש ורכב ב' ${kmh2} קמ"ש. בעוד ${hrs} שעות — כמה ק"מ הפרש ביניהם?`,answer:Math.abs(kmh1-kmh2)*hrs,hint:`|${kmh1}-${kmh2}|×${hrs}=${Math.abs(kmh1-kmh2)*hrs}`};},
-        ],
-        hard:[
-          ()=>{const d=rnd(3,8)*50,r1=rnd(4,8)*10,r2=rnd(4,8)*10;const t=d/(r1+r2);return Number.isInteger(t)?{text:`שני רכבים יוצאים לקראת זה לזה. מרחק ${d} ק"מ. מהירויות ${r1} ו-${r2} קמ"ש. תוך כמה שעות ייפגשו?`,answer:t,hint:`${d}÷(${r1}+${r2})=${d}÷${r1+r2}=${t}`}:{text:`מרחק 300 ק"מ. מהירות 60 קמ"ש. כמה שעות?`,answer:5,hint:`300÷60=5`};},
-        ],
-      };
-      const pool=cases[diff]||cases.easy; const q=pick(pool)();
-      return {type:'num',cat:'speed',diff,label:'🚗 מהירות-זמן-מרחק',gameLabel:'',
-        text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${q.hint}`},showMul:false,dir:'rtl'};
-    },
-
-    // ══ נפח גופים ══
-    volume3d(diff) {
-      const cases={
-        easy:[
-          ()=>{const l=rnd(2,8),w=rnd(2,6),h=rnd(2,5);return{text:`נפח קובייד (מלבן תלת-מימדי): ${l}×${w}×${h} = ?`,answer:l*w*h,hint:`${l}×${w}×${h}=${l*w*h} יח' נפח`};},
-          ()=>{const s=rnd(2,6);return{text:`נפח קוביה עם צלע ${s} ס"מ = ?`,answer:s*s*s,hint:`${s}³=${s*s*s} ס"מ³`};},
-        ],
-        medium:[
-          ()=>{const r=rnd(2,5),h=rnd(3,8);const v=Math.round(3.14*r*r*h);return{text:`נפח גליל: רדיוס ${r} ס"מ, גובה ${h} ס"מ. (π≈3.14, עגל)`,answer:v,hint:`π×${r}²×${h}≈${v} ס"מ³`};},
-          ()=>{const l=rnd(3,10),w=rnd(3,8);const waterH=rnd(1,4);return{text:`בריכה ${l}×${w} מטר מלאה מים לגובה ${waterH} מ'. כמה מ"ק מים?`,answer:l*w*waterH,hint:`${l}×${w}×${waterH}=${l*w*waterH} מ"ק`};},
-        ],
-        hard:[
-          ()=>{const r=rnd(2,5),h=rnd(4,10);const vc=Math.round(3.14*r*r*h/3);return{text:`נפח חרוט: רדיוס ${r} ס"מ, גובה ${h} ס"מ. (π≈3.14, עגל)`,answer:vc,hint:`⅓×π×${r}²×${h}≈${vc} ס"מ³`};},
-          ()=>{const s=rnd(3,7);const v=s*s*s;const boxes=rnd(2,5);return{text:`קוביות עם צלע ${s} ס"מ. יש ${boxes} קוביות. כמה נפח כולל?`,answer:v*boxes,hint:`${s}³×${boxes}=${v}×${boxes}=${v*boxes} ס"מ³`};},
-        ],
-      };
-      const pool=cases[diff]||cases.easy; const q=pick(pool)();
-      return {type:'num',cat:'volume3d',diff,label:'🧊 נפח',gameLabel:'',
-        text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${q.hint}`},showMul:false,dir:'rtl'};
-    },
-
-    // ══ סטטיסטיקה ══
-    data(diff) {
-      const n=rnd(4,7);
-      const vals=Array.from({length:n},()=>rnd(diff==='easy'?10:diff==='medium'?20:30,diff==='easy'?40:diff==='medium'?80:100));
-      const sum=vals.reduce((a,b)=>a+b,0);
-      const avg=Math.round(sum/n);
-      const mx=Math.max(...vals),mn=Math.min(...vals),range=mx-mn;
-      const sorted=[...vals].sort((a,b)=>a-b);
-      const median=n%2===0?(sorted[n/2-1]+sorted[n/2])/2:sorted[Math.floor(n/2)];
-      const type=pick(diff==='easy'?['max','min','avg']:diff==='medium'?['avg','median','range']:['avg','median','range','sum']);
-      const q=type==='max'?{text:`הנתונים: ${vals.join(', ')}. מה הגדול ביותר?`,answer:mx,hint:`גדול ביותר: ${mx}`}
-              :type==='min'?{text:`הנתונים: ${vals.join(', ')}. מה הקטן ביותר?`,answer:mn,hint:`קטן ביותר: ${mn}`}
-              :type==='avg'?{text:`הנתונים: ${vals.join(', ')}. מה הממוצע? (עגל למספר שלם)`,answer:avg,hint:`סכום ${sum}÷${n}≈${avg}`}
-              :type==='median'?{text:`הנתונים: ${vals.join(', ')}. מה החציון? (עגל)`,answer:Math.round(median),hint:`מסודר: ${sorted.join(',')}. חציון: ${Math.round(median)}`}
-              :type==='range'?{text:`הנתונים: ${vals.join(', ')}. מה הטווח?`,answer:range,hint:`${mx}-${mn}=${range}`}
-              :{text:`הנתונים: ${vals.join(', ')}. מה הסכום?`,answer:sum,hint:`סכום: ${sum}`};
-      return {type:'num',cat:'data',diff,label:'📊 סטטיסטיקה',gameLabel:'',
-        text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${q.hint}`},showMul:false,dir:'rtl'};
-    },
-
-    // גיאומטריה
+    // ══ גאומטריה ══
     perimeter(diff) {
       if (window.genGeometryCategory) return window.genGeometryCategory('perimeter',diff);
-      const r=rnd(4,12); return {type:'num',cat:'perimeter',diff,label:'📏 היקף',gameLabel:'',
-        text:`היקף עיגול רדיוס ${r} (π≈3.14, עגל)`,answer:Math.round(2*3.14*r),pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 2×3.14×${r}≈${Math.round(2*3.14*r)}`},showMul:false,dir:'rtl'};
+      const r=rnd(3,diff==='hard'?12:7);
+      return { type:'num',cat:'perimeter',diff,label:'📏 היקף',gameLabel:'',
+        text:`היקף עיגול רדיוס ${r} ס"מ. (π≈3.14, עגל למספר שלם)`,
+        answer:Math.round(2*3.14*r),pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:`💡 2×3.14×${r}≈${Math.round(2*3.14*r)}`},showMul:false,dir:'rtl' };
     },
     area(diff) {
       if (window.genGeometryCategory) return window.genGeometryCategory('area',diff);
-      const r=rnd(3,8); return {type:'num',cat:'area',diff,label:'📐 שטח',gameLabel:'',
-        text:`שטח עיגול רדיוס ${r} ס"מ (π≈3.14, עגל)`,answer:Math.round(3.14*r*r),pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 3.14×${r}²≈${Math.round(3.14*r*r)}`},showMul:false,dir:'rtl'};
+      const r=rnd(2,diff==='hard'?8:5);
+      return { type:'num',cat:'area',diff,label:'📐 שטח',gameLabel:'',
+        text:`שטח עיגול רדיוס ${r} ס"מ. (π≈3.14, עגל)`,
+        answer:Math.round(3.14*r*r),pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:`💡 3.14×${r}²≈${Math.round(3.14*r*r)}`},showMul:false,dir:'rtl' };
     },
-    angles(diff) {
-      if (window.genGeometryCategory) return window.genGeometryCategory('angles',diff);
-      const n=rnd(4,8); return {type:'num',cat:'angles',diff,label:'📐 זוויות',gameLabel:'',
-        text:`סכום זוויות ${n}-צלע = ?°`,answer:(n-2)*180,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 (${n}-2)×180=${(n-2)*180}°`},showMul:false,dir:'rtl'};
+    volume(diff) {
+      // נפחי גופים — כיתה ו (תיבה + גליל)
+      const type=diff==='easy'?'box':pick(['box','cylinder']);
+      if(type==='cylinder'){
+        const r=rnd(2,6),h=rnd(3,10);
+        const v=Math.round(3.14*r*r*h);
+        return { type:'num',cat:'volume',diff,label:'🧊 נפח',gameLabel:'',
+          text:`נפח גליל: רדיוס ${r} ס"מ, גובה ${h} ס"מ (π≈3.14, עגל)`,
+          answer:v,pts:window.GRADE_CONFIG.pts[diff],
+          hint:{type:'text',msg:`💡 π×${r}²×${h}≈${v} ס"מ³`},showMul:false,dir:'rtl' };
+      }
+      const l=rnd(2,diff==='hard'?10:8),w=rnd(2,8),h=rnd(2,6);
+      return { type:'num',cat:'volume',diff,label:'🧊 נפח',gameLabel:'',
+        text:`נפח תיבה: ${l}×${w}×${h} ס"מ = ?`,answer:l*w*h,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:`💡 ${l}×${w}×${h}=${l*w*h} ס"מ³`},showMul:false,dir:'rtl' };
     },
-    shapes3d(diff) {
-      if (window.genGeometryCategory) return window.genGeometryCategory('shapes3d',diff);
-      return {type:'num',cat:'shapes3d',diff,label:'🧊 גופים 3D',gameLabel:'',
-        text:'כמה קצוות לפירמידה ריבועית?',answer:8,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:'💡 פירמידה ריבועית: 5 פנים, 8 קצוות, 5 קודקודים'},showMul:false,dir:'rtl'};
-    },
-    coordinates(diff) {
-      if (window.genGeometryCategory) return window.genGeometryCategory('coordinates',diff);
-      return {type:'num',cat:'coordinates',diff,label:'🗺️ קואורדינטות',gameLabel:'',
-        text:'נקודה (-3, 2) — באיזה רביע?',answer:2,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:'💡 X שלילי, Y חיובי = רביע 2'},showMul:false,dir:'rtl'};
-    },
-    money(diff) {
-      const fns={
-        easy:[()=>{const p=rnd(50,200),pct=pick([10,20,25]);const d=Math.round(p*pct/100);return{text:`מוצר עולה ${p} ש"ח. הנחה ${pct}%. כמה משלמים?`,answer:p-d,hint:`${p}-${d}=${p-d}`};},],
-        medium:[()=>{const d=rnd(5,15),rate=rnd(8,15)/100,months=rnd(6,24);const interest=Math.round(d*rate*months/12);return{text:`הלוואה ${d*100} ש"ח בריבית ${Math.round(rate*100)}% לשנה. ל-${months} חודשים. כמה ריבית?`,answer:interest,hint:`${d*100}×${Math.round(rate*100)}/100×${months}/12≈${interest}`};},],
-        hard:[()=>{const buy=rnd(5,15)*10,sell=buy+rnd(2,6)*5;const pct=Math.round((sell-buy)/buy*100);return{text:`קנינו ב-${buy} ש"ח ומכרנו ב-${sell} ש"ח. מה אחוז הרווח? (עגל)`,answer:pct,hint:`(${sell}-${buy})/${buy}×100=${pct}%`};},],
-      };
-      const pool=fns[diff]||fns.easy; const q=pick(pool)();
-      return {type:'num',cat:'money',diff,label:'💰 כסף ועסקים',gameLabel:'',
+    circle(diff) {
+      // מעגל ועיגול — היקף + שטח
+      const r=rnd(2,diff==='hard'?10:7);
+      const circ=Math.round(2*3.14*r);
+      const area=Math.round(3.14*r*r);
+      const q=Math.random()<0.5
+        ?{text:`היקף עיגול עם רדיוס ${r} ס"מ (π≈3.14, עגל)`,answer:circ,hint:`💡 2×π×r=2×3.14×${r}≈${circ} ס"מ`}
+        :{text:`שטח עיגול עם רדיוס ${r} ס"מ (π≈3.14, עגל)`,answer:area,hint:`💡 π×r²=3.14×${r*r}≈${area} ס"מ²`};
+      return { type:'num',cat:'circle',diff,label:'⭕ מעגל',gameLabel:'',
         text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${q.hint}`},showMul:false,dir:'rtl'};
+        hint:{type:'text',msg:q.hint},showMul:false,dir:'rtl' };
+    },
+    scale(diff) {
+      const scales=diff==='easy'?[100,200]:diff==='medium'?[500,1000]:pick([[2000,5000,10000]]);
+      const scale=typeof scales==='number'?scales:pick(scales);
+      const mapDist=rnd(2,diff==='easy'?5:diff==='medium'?8:12);
+      const realDist=mapDist*scale;
+      const q=Math.random()<0.6
+        ?{text:`קנה מידה 1:${scale}. מרחק במפה: ${mapDist} ס"מ. מרחק אמיתי בס"מ?`,answer:realDist,hint:`💡 ${mapDist}×${scale}=${realDist} ס"מ`}
+        :{text:`קנה מידה 1:${scale}. מרחק אמיתי: ${realDist} ס"מ. במפה כמה ס"מ?`,answer:mapDist,hint:`💡 ${realDist}÷${scale}=${mapDist} ס"מ`};
+      return { type:'num',cat:'scale',diff,label:'🗺️ קנה מידה',gameLabel:'',
+        text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:q.hint},showMul:false,dir:'rtl' };
+    },
+    data(diff) {
+      // ממוצע, חציון, שכיח, טווח — כיתה ו
+      const n=rnd(4,7);
+      const vals=Array.from({length:n},()=>rnd(diff==='easy'?5:diff==='medium'?10:20,diff==='easy'?30:diff==='medium'?60:100));
+      const sum=vals.reduce((a,b)=>a+b,0);
+      const avg=Math.round(sum/n);
+      const sorted=[...vals].sort((a,b)=>a-b);
+      const median=n%2===0?(sorted[n/2-1]+sorted[n/2])/2:sorted[Math.floor(n/2)];
+      const mx=Math.max(...vals), mn=Math.min(...vals), range=mx-mn;
+      const type=pick(diff==='easy'?['max','avg']:diff==='medium'?['avg','median']:['avg','median','range']);
+      const q=type==='max'?{text:`הנתונים: ${vals.join(', ')}. מה הגדול?`,answer:mx,hint:`💡 ${mx}`}
+              :type==='avg'?{text:`הנתונים: ${vals.join(', ')}. מה הממוצע? (עגל)`,answer:avg,hint:`💡 ${sum}÷${n}≈${avg}`}
+              :type==='median'?{text:`הנתונים: ${vals.join(', ')}. מה החציון?`,answer:Math.round(median),hint:`💡 מסודר: ${sorted.join(',')}. אמצע: ${Math.round(median)}`}
+              :{text:`הנתונים: ${vals.join(', ')}. מה הטווח?`,answer:range,hint:`💡 ${mx}-${mn}=${range}`};
+      return { type:'num',cat:'data',diff,label:'📊 נתונים וסטטיסטיקה',gameLabel:'',
+        text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:q.hint},showMul:false,dir:'rtl' };
     },
     measurement(diff) {
       if (window.genGeometryCategory) return window.genGeometryCategory('measurement',diff);
-      return {type:'num',cat:'measurement',diff,label:'📏 מדידה',gameLabel:'',
-        text:"3 ק\"מ + 750 מ' = כמה מ'?",answer:3750,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:"💡 3×1000+750=3750 מ'"},showMul:false,dir:'rtl'};
+      const qs={
+        easy:[
+          {text:"מעבר בין יחידות: 2.5 מ' = כמה ס\"מ?",answer:250,hint:"💡 2.5×100=250 ס\"מ"},
+          {text:"3.5 ק\"ג = כמה גרם?",answer:3500,hint:"💡 3.5×1000=3500 גרם"},
+          {text:"0.75 ליטר = כמה מ\"ל?",answer:750,hint:"💡 0.75×1000=750 מ\"ל"},
+        ],
+        medium:[
+          {text:"1 דונם = 1000 מ\"ר. שדה 3.5 דונם = כמה מ\"ר?",answer:3500,hint:"💡 3.5×1000=3500 מ\"ר"},
+          {text:"כמה ס\"מ² ב-0.5 מ\"ר?",answer:5000,hint:"💡 0.5×10000=5000 ס\"מ²"},
+        ],
+        hard:[
+          {text:"ריצוף חדר 6×4 מ' עם אריחים 30×30 ס\"מ. כמה אריחים?",answer:Math.round(6*4/(0.3*0.3)),hint:"💡 24מ\"ר÷0.09מ\"ר="+Math.round(6*4/(0.3*0.3))+" אריחים"},
+          {text:"1 מ\"ר = כמה ס\"מ²?",answer:10000,hint:"💡 100×100=10,000 ס\"מ²"},
+        ],
+      };
+      const q=pick(qs[diff]||qs.easy);
+      return { type:'num',cat:'measurement',diff,label:'📏 מדידה',gameLabel:'',
+        text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:q.hint},showMul:false,dir:'rtl' };
     },
   },
 };
