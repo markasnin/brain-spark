@@ -55,43 +55,25 @@ window.GRADE_CONFIG = {
       const r = window.GRADE_CONFIG.ranges.add[diff];
       const a = rnd(r.aMin,r.aMax), b = rnd(r.bMin,r.bMax);
       const th = pick(GAME_THEMES);
-      const stories = [
-        `${a} + ${b} = ?`,
-        `בספריה יש ${a} ספרים בעברית ו-${b} בערבית. כמה ספרים יש?`,
-        `אספנו ${a} ק"ג אשפה ביום ראשון ו-${b} ביום שני. כמה ק"ג בסך הכל?`,
-        `בעיר יש ${a} ילדים בגן ו-${b} ביסודי. כמה ילדים בסך הכל?`,
-      ];
       return { type:'num',cat:'add',diff,label:th.label,gameLabel:brainrotLabel(),
-        text:pick(stories),answer:a+b,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'decompose',a,b},showMul:false,dir:'rtl' };
+        text:`${a} + ${b} = ?`,answer:a+b,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'decompose',a,b},showMul:false,dir:'ltr' };
     },
     sub(diff) {
       const r = window.GRADE_CONFIG.ranges.sub[diff];
       const total = rnd(r.aMin,r.aMax), b = rnd(1,Math.floor(total/2)), a=total-b;
       const th = pick(GAME_THEMES);
-      const stories=[
-        `${total} - ${b} = ?`,
-        `היו ${total} ספרים. הושאלו ${b}. כמה נשארו?`,
-        `מרחק הטיול ${total} מ'. עברנו ${b} מ'. כמה נותר?`,
-        `היו ${total} אבטיחים. נמכרו ${b}. כמה נשאר?`,
-      ];
       return { type:'num',cat:'sub',diff,label:th.label,gameLabel:brainrotLabel(),
-        text:pick(stories),answer:a,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${total} - ${b} = ${a}`},showMul:false,dir:'rtl' };
+        text:`${total} - ${b} = ?`,answer:a,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:`💡 ${total} - ${b} = ${a}`},showMul:false,dir:'ltr' };
     },
     mul(diff) {
       const r = window.GRADE_CONFIG.ranges.mul[diff];
       const a=rnd(r.aMin,r.aMax), b=rnd(r.bMin,r.bMax);
       const th=pick(GAME_THEMES); const emoji=pick(th.items);
-      const stories=[
-        `${a} שורות של ${b} ${emoji}. כמה בסך הכל?`,
-        `${b} ימים, בכל יום ${a} שעות לימוד. כמה שעות?`,
-        `${a} × ${b} = ?`,
-        `כל אחד מ-${b} ילדים קיבל ${a} ${emoji}. כמה ${emoji} חולקו?`,
-      ];
       return { type:'num',cat:'mul',diff,label:th.label,gameLabel:brainrotLabel(),
-        text:pick(stories),answer:a*b,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'groups',a,b,emoji},showMul:true,mulA:a,mulB:b,mulEmoji:emoji,dir:'rtl' };
+        text:`${a} × ${b} = ?`,answer:a*b,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'groups',a,b,emoji},showMul:true,mulA:a,mulB:b,mulEmoji:emoji,dir:'ltr' };
     },
     div(diff) {
       const r = window.GRADE_CONFIG.ranges.div[diff];
@@ -99,18 +81,10 @@ window.GRADE_CONFIG = {
       const remainder = diff==='hard' ? rnd(0,b-1) : 0;
       const a=b*q+remainder;
       const th=pick(GAME_THEMES); const emoji=pick(th.items);
-      const withRemainder = remainder > 0;
-      const stories = withRemainder ? [
-        `${a} ÷ ${b} = ? (כולל שארית)`,
-        `${a} ${emoji} מחולקים ל-${b} ילדים. כמה קיבל כל ילד ועוד כמה נשאר? (כתוב מנה בלבד)`,
-      ] : [
-        `${a} ÷ ${b} = ?`,
-        `${a} ${emoji} מחולקים שווה ל-${b} ילדים. כמה קיבל כל ילד?`,
-        `${a} ממתקים מחולקים ל-${b} קבוצות שוות. כמה בכל קבוצה?`,
-      ];
+      const txt = remainder > 0 ? `${a} ÷ ${b} = ? (שארית)` : `${a} ÷ ${b} = ?`;
       return { type:'num',cat:'div',diff,label:th.label,gameLabel:brainrotLabel(),
-        text:pick(stories),answer:q,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'groups',a:q,b,emoji},showMul:true,mulA:q,mulB:b,mulEmoji:emoji,dir:'rtl' };
+        text:txt,answer:q,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'groups',a:q,b,emoji},showMul:true,mulA:q,mulB:b,mulEmoji:emoji,dir:'ltr' };
     },
     word: null,
     fractions_unit(diff) {
