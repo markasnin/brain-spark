@@ -40,34 +40,20 @@ window.GRADE_CONFIG = {
       const r = window.GRADE_CONFIG.ranges.add[diff];
       const a = rnd(r.aMin, r.aMax), b = rnd(r.bMin, r.bMax);
       if (a + b > 20 && diff === 'easy') return window.GRADE_CONFIG.generators.add(diff);
-      const th = pick(GAME_THEMES); const e = pick(th.items);
-      const stories = [
-        `יש ${a} ${e} ועוד ${b} ${e}. כמה יש בסך הכל?`,
-        `${a} ילדים בגן ועוד ${b} הגיעו. כמה ילדים יש עכשיו?`,
-        `לנועה יש ${a} מדבקות. קיבלה עוד ${b}. כמה יש לה?`,
-        `${a} + ${b} = ?`,
-        `${b} ילדים בחצר ועוד ${a} יצאו מהכיתה. כמה ילדים בחצר?`,
-      ];
+      const th = pick(GAME_THEMES);
       return { type:'num', cat:'add', diff, label:th.label, gameLabel:brainrotLabel(),
-        text: pick(stories), answer:a+b, pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'decompose',a,b}, showMul:false, dir:'rtl' };
+        text:`${a} + ${b} = ?`, answer:a+b, pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'decompose',a,b}, showMul:false, dir:'ltr' };
     },
     sub(diff) {
       const r = window.GRADE_CONFIG.ranges.sub[diff];
       const total = rnd(r.aMin, r.aMax);
       const b = rnd(1, total - 1);
       const a = total - b;
-      const th = pick(GAME_THEMES); const e = pick(th.items);
-      const stories = [
-        `היו ${total} ${e}. לקחו ${b}. כמה נשאר?`,
-        `${total} ילדים בגן. ${b} הלכו הביתה. כמה נשארו?`,
-        `היו ${total} עוגיות. אכלו ${b}. כמה נשארו?`,
-        `${total} - ${b} = ?`,
-        `יש ${total} בלונים. ${b} התפוצצו. כמה נשארו?`,
-      ];
+      const th = pick(GAME_THEMES);
       return { type:'num', cat:'sub', diff, label:th.label, gameLabel:brainrotLabel(),
-        text: pick(stories), answer:a, pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'cubes',total,remove:b}, showMul:false, dir:'rtl' };
+        text:`${total} - ${b} = ?`, answer:a, pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'cubes',total,remove:b}, showMul:false, dir:'ltr' };
     },
     evens(diff) {
       // זוגיות ואי-זוגיות — תוכנית כיתה א
