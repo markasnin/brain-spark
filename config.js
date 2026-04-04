@@ -71,7 +71,7 @@ const ALL_CATS = [
   { id:'data',            cls:'',         icon:'📊', name:'חקר נתונים',          sub:'ממוצע, גרף, טווח',      borderColor:'#6c5ce7' },
   // ── מיוחד ──
   { id:'minigames', cls:'mul',     icon:'🎮', name:'מיני-משחקים',  sub:'דיג, מבוך, חלל',  borderColor:'#ffd43b',special:'minigames' },
-  { id:'learn',     cls:'learn',   icon:'🎓', name:'בואו נלמד!',   sub:'חומר חדש',         special:'learn' },
+  { id:'learn',     cls:'learn',   icon:'📚', name:'תזכורת',        sub:'חוקים ונוסחאות',   special:'learn' },
   { id:'history',   cls:'history', icon:'📊', name:'היסטוריה',     sub:'כל הפתרונות',      special:'history' },
   { id:'mistakes',  cls:'mistakes',icon:'🔄', name:'טעויות',       sub:'שיפור עצמי',       special:'mistakes' },
   { id:'exam',      cls:'test',    icon:'🏆', name:'מבחן',         sub:'בחר נושאים',       special:'exam' },
