@@ -15,19 +15,14 @@
 <!-- ══ LOAD ORDER ══
   1. special-users.js  — SPECIAL_USERS object (edit to add/remove VIPs)
   2. config.js         — cfg, st, qs, LEVELS, GRADE_FILES, ALL_CATS, themes
-  3. shapes.js         — interactive geometry questions (original)
-  4. geometry.js       — separate geometry category generators (NEW)
-                          shapes2d, symmetry, perimeter, area, angles, shapes3d, coordinates, measurement
-  5. questions.js      — genQ, genPool, genAdd/Sub/Mul/Div/Word/Shapes/Frac
-  6. game.js           — loadQ, submitAns, streak, points, exam, daily, history
-  7. lessons.js        — openLearn, openLesson, LESSONS
-  8. ui.js             — show, updateHome, buildGrid, settings, friends UI
-  9. firebase.js       — Firebase init + all async Firebase functions (module)
+  3. questions.js      — genQ, genPool, genAdd/Sub/Mul/Div/Word/Shapes/Frac
+  4. game.js           — loadQ, submitAns, streak, points, exam, daily, history
+  5. lessons.js        — openLearn, openLesson, LESSONS
+  6. ui.js             — show, updateHome, buildGrid, settings, friends UI
+  7. firebase.js       — Firebase init + all async Firebase functions (module)
 -->
 <script src="special-users.js"></script>
 <script src="config.js"></script>
-<script src="shapes.js"></script>
-<script src="geometry.js"></script>
 <script src="questions.js"></script>
 <script src="game.js"></script>
 <script src="lessons.js"></script>
@@ -182,8 +177,8 @@
       <div style="font-size:.82rem;color:var(--txt2)" id="dailyDesc">2 שאלות מיוחדות מחכות לך</div>
     </div>
   </div>
-  <div class="sec-label">קטגוריות</div>
-  <div class="grid" id="mainGrid"></div>
+  <div id="groupedGrid"></div>
+  <div class="grid" id="mainGrid" style="display:none"></div>
 </div>
 
 <!-- ══ FRIENDS ══ -->
@@ -566,32 +561,164 @@
   <script src="minigames.js"></script>
 
 <script>
-// ── PATCH: fix minigames tile onclick and export helpers to window ──
+// ── PATCH: fix show(), minigames tile onclick, and grouped grid ──
 window.show = function(id) {
   document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
   var el = document.getElementById(id);
   if (el) el.classList.add('on');
   if (id === 'home' && window.updateHome) window.updateHome();
 };
-// Patch minigames button after DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-  // nothing needed here - grid is built dynamically by updateHome
-});
-// Override buildGrid to always include openMinigames
-var _origUpdateHome;
-function _patchUpdateHome() {
-  if (!window.updateHome) { setTimeout(_patchUpdateHome, 100); return; }
+
+// Patch openCat to allow 'word' (game.js has an old hardcoded block)
+function _patchOpenCat() {
+  if (typeof openCat === 'undefined') { setTimeout(_patchOpenCat, 100); return; }
+  var _origOpenCat = openCat;
+  window.openCat = function(cat) {
+    if (cat === 'word') {
+      // Skip the hardcoded block — word is fully implemented
+      var gc = window.GRADE_CONFIG;
+      if (gc && !gc.availableCategories.includes(cat)) { showToast('🔒 נושא זה לא זמין בכיתה שלך'); return; }
+      qs.cat = cat;
+      document.getElementById('diffTitle').textContent = CAT_NAMES[cat] || cat;
+      show('diff-scr');
+      return;
+    }
+    _origOpenCat.apply(this, arguments);
+  };
+}
+_patchOpenCat();
+
+// ══ GROUPED CATEGORY GRID ══
+// Groups: חשבון | שברים | הנדסה | נתונים | משחקים ועוד
+
+const CAT_GROUPS = [
+  {
+    id: 'cheshbon',
+    label: '🔢 חשבון',
+    color: '#2ed573',
+    cats: ['add','sub','mul','div','word']
+  },
+  {
+    id: 'fractions',
+    label: '½ שברים',
+    color: '#54a0ff',
+    cats: ['fractions','fractions_half','fractions_unit','fractions_mul','fractions_div','fractions_part','decimal_intro','decimals','decimals_mul','percentages_intro','percentages','ratio']
+  },
+  {
+    id: 'geometry',
+    label: '📐 הנדסה',
+    color: '#ff9ff3',
+    cats: ['shapes','shapes2d','symmetry','perimeter','area','angles','shapes3d','volume','circle','coordinates','scale','measurement']
+  },
+  {
+    id: 'numbers',
+    label: '📊 נתונים ומספרים',
+    color: '#ffd32a',
+    cats: ['data','evens','rounding','integers_intro']
+  },
+  {
+    id: 'games',
+    label: '🎮 משחקים ועוד',
+    color: '#ff6348',
+    cats: ['minigames','learn','exam','history','mistakes','friends','settings']
+  }
+];
+
+function buildGroupedGrid() {
+  const container = document.getElementById('groupedGrid');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const gc = window.GRADE_CONFIG;
+  const available = gc ? gc.availableCategories : null;
+
+  // Build a flat lookup of all cats by id
+  const catMap = {};
+  (typeof ALL_CATS !== 'undefined' ? ALL_CATS : []).forEach(c => { catMap[c.id] = c; });
+
+  CAT_GROUPS.forEach(group => {
+    // Filter to cats that exist AND are either available or special
+    const cats = group.cats
+      .map(id => catMap[id])
+      .filter(c => {
+        if (!c) return false;
+        if (c.special) return true;          // always show special tiles
+        if (!available) return true;
+        return available.includes(c.id);
+      });
+
+    if (cats.length === 0) return;
+
+    // Section header
+    const header = document.createElement('div');
+    header.className = 'sec-label';
+    header.style.cssText = `
+      width:100%;max-width:420px;
+      font-size:.8rem;font-weight:800;letter-spacing:1.5px;
+      color:${group.color};text-transform:uppercase;
+      margin:20px 0 8px;opacity:.9;
+      display:flex;align-items:center;gap:8px;
+    `;
+    header.innerHTML = `
+      <span style="flex:1;height:1px;background:linear-gradient(90deg,${group.color}44,transparent)"></span>
+      <span>${group.label}</span>
+      <span style="flex:1;height:1px;background:linear-gradient(270deg,${group.color}44,transparent)"></span>
+    `;
+    container.appendChild(header);
+
+    // Grid for this group
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    grid.style.cssText = 'margin-bottom:4px;';
+
+    cats.forEach(cat => {
+      const isLocked = !cat.special && typeof LOCKED_TOPICS !== 'undefined' &&
+        LOCKED_TOPICS[cat.id] && !st.learnedTopics.includes(LOCKED_TOPICS[cat.id]);
+      const isAvail = cat.special || !available || available.includes(cat.id);
+
+      const btn = document.createElement('button');
+      btn.className = 'cbt' + (cat.cls ? ' ' + cat.cls : '') + (isLocked ? ' locked' : '');
+      if (cat.id === 'minigames') btn.id = 'minigamesBtn';
+      if (cat.borderColor) btn.style.borderColor = cat.borderColor + '55';
+
+      // onclick
+      if (cat.special === 'minigames') btn.setAttribute('onclick', 'openMinigames()');
+      else if (cat.special === 'learn')    btn.setAttribute('onclick', 'openLearn()');
+      else if (cat.special === 'exam')     btn.setAttribute('onclick', 'openExamPre()');
+      else if (cat.special === 'history')  btn.setAttribute('onclick', 'openHistory()');
+      else if (cat.special === 'mistakes') btn.setAttribute('onclick', 'openMistakes()');
+      else if (cat.special === 'friends')  btn.setAttribute('onclick', 'openFriends()');
+      else if (cat.special === 'settings') btn.setAttribute('onclick', 'openSettings()');
+      else btn.setAttribute('onclick', `openCat('${cat.id}')`);
+
+      btn.innerHTML = `
+        <span class="ci">${cat.icon}</span>
+        <div class="cn">${cat.name}</div>
+        <div class="cs">${cat.sub}</div>
+        ${isLocked ? '<div style="font-size:.65rem;color:var(--a1);margin-top:4px">🔒 נעול</div>' : ''}
+      `;
+      grid.appendChild(btn);
+    });
+
+    container.appendChild(grid);
+  });
+}
+
+// Patch updateHome to also rebuild grouped grid
+var _origUpdateHome2;
+function _patchGroupedGrid() {
+  if (!window.updateHome) { setTimeout(_patchGroupedGrid, 120); return; }
   var orig = window.updateHome;
   window.updateHome = function() {
     orig.apply(this, arguments);
-    // Fix minigames button if it ended up with empty onclick
+    buildGroupedGrid();
+    // Fix minigames button
     var btn = document.getElementById('minigamesBtn');
-    if (btn && !btn.getAttribute('onclick')) {
-      btn.setAttribute('onclick', 'openMinigames()');
-    }
+    if (btn && !btn.getAttribute('onclick')) btn.setAttribute('onclick', 'openMinigames()');
   };
 }
-_patchUpdateHome();
+_patchGroupedGrid();
+
 </script>
 </body>
 </html>
