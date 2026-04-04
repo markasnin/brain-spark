@@ -1,8 +1,16 @@
 // ══════════════════════════════════════════════
-// GRADE 4 — כיתה ד
-// חיבור, חיסור, כפל, חילוק, שברים, גיאומטריה, אחוזים (מבוא),
-// כסף, נתונים, מדידה, זמן
-// מספרים: עד 10,000
+// GRADE 4 — כיתה ד  |  תוכנית משרד החינוך תשס"ו
+// ────────────────────────────────────────────
+// מספרים: ללא הגבלה, מבנה עשרוני, ישר מספרים, אינסופיות
+// פעולות: 4 פעולות, כפל במאונך, חילוק ארוך, סדר פעולות+סוגריים, אומדן
+// שברים: מגוון רחב, שתי משמעויות (חלק מהשלם + חלק מכמות)
+//         שברים עשרוניים — היכרות ראשונה
+//         ** אין אחוזים בכיתה ד! **
+// גאומטריה (גופים — כיתה ד!): תיבות — קדקודים, צלעות, פאות, פריסות, אלכסונים
+//                                ריבוע+מלבן — הגדרות ותכונות, אלכסון
+//                                תכונות צלעות ופינות במשולש
+//                                סימטריה (תיבה)
+// מדידה: שטח ביחידות מקובלות, נוסחאות שטח+היקף מלבן, נפח תיבה, חישובי זמן
 // ══════════════════════════════════════════════
 window.GRADE_CONFIG = {
   gradeId: 'ד',
@@ -10,21 +18,44 @@ window.GRADE_CONFIG = {
   gradeEmoji: '🔮',
   gradeColor: '#9b59b6',
 
-  availableCategories: ['add','sub','mul','div','word','fractions','perimeter','area','angles','shapes3d','patterns1','time','money','data','measurement'],
-  availableLearnTopics: ['division','shapes','fractions','perimeter_learn','area_learn','angles_learn','shapes3d_learn','measurement_learn'],
-  availableExamTopics:  ['add','sub','mul','div','word','fractions','perimeter','area','angles','shapes3d','time','money','measurement'],
+  availableCategories: ['add','sub','mul','div','word','fractions','decimal_intro','perimeter','area','shapes3d','measurement','data'],
+  availableLearnTopics: ['division','shapes','fractions','perimeter_learn','area_learn','shapes3d_learn','measurement_learn'],
+  availableExamTopics:  ['add','sub','mul','div','word','fractions','decimal_intro','perimeter','area','shapes3d','measurement','data'],
 
   ranges: {
-    add: { easy:{aMin:100,aMax:999,bMin:50,bMax:999}, medium:{aMin:500,aMax:4999,bMin:200,bMax:4999}, hard:{aMin:1000,aMax:9999,bMin:500,bMax:9999} },
-    sub: { easy:{aMin:100,aMax:999}, medium:{aMin:500,aMax:4999}, hard:{aMin:1000,aMax:9999} },
-    mul: { easy:{aMin:2,aMax:9,bMin:2,bMax:9}, medium:{aMin:5,aMax:12,bMin:5,bMax:12}, hard:{aMin:10,aMax:25,bMin:10,bMax:25} },
-    div: { easy:{bMin:2,bMax:9,qMin:2,qMax:9}, medium:{bMin:3,bMax:12,qMin:3,qMax:12}, hard:{bMin:4,bMax:15,qMin:4,qMax:15} },
-    fractions: { easy:{pairs:[[1,2],[1,4],[3,4]],totalMax:20}, medium:{pairs:[[1,3],[2,3],[1,5],[2,5],[3,4]],totalMax:40}, hard:{pairs:[[3,5],[1,6],[5,6],[1,8],[3,8],[2,5]],totalMax:80} },
+    add: {
+      easy:   { aMin:100,  aMax:9999,  bMin:50,  bMax:9999  },
+      medium: { aMin:1000, aMax:99999, bMin:500, bMax:99999 },
+      hard:   { aMin:10000,aMax:999999,bMin:1000,bMax:999999},
+    },
+    sub: {
+      easy:   { aMin:100,  aMax:9999   },
+      medium: { aMin:1000, aMax:99999  },
+      hard:   { aMin:10000,aMax:999999 },
+    },
+    mul: {
+      // כפל במאונך: דו-ספרתי × חד-ספרתי, דו × דו
+      easy:   { aMin:10, aMax:99, bMin:2,  bMax:9  },
+      medium: { aMin:10, aMax:99, bMin:10, bMax:99 },
+      hard:   { aMin:20, aMax:999,bMin:10, bMax:99 },
+    },
+    div: {
+      // חילוק ארוך
+      easy:   { bMin:2,  bMax:9,  qMin:2, qMax:20 },
+      medium: { bMin:2,  bMax:9,  qMin:10,qMax:99 },
+      hard:   { bMin:10, bMax:99, qMin:2, qMax:9  },
+    },
+    fractions: {
+      // מגוון רחב — לא רק שברי יחידה
+      easy:   { pairs:[[1,2],[1,4],[3,4],[2,3],[1,3]],       totalMax:40  },
+      medium: { pairs:[[1,5],[2,5],[3,5],[4,5],[1,6],[5,6]], totalMax:60  },
+      hard:   { pairs:[[3,8],[5,8],[2,7],[3,7],[4,9],[7,9]], totalMax:120 },
+    },
   },
 
   pts: { easy:6, medium:13, hard:22 },
-  welcome: 'כיתה ד — שברים, גיאומטריה, נתונים וכסף! 🔮',
-  tip: 'שברים שווי-ערך: 1/2 = 2/4 = 3/6 🍕',
+  welcome: 'כיתה ד — שברים, מבנה עשרוני, שטח וגופים! 🔮',
+  tip: 'שבר = חלק מהשלם וגם חלק מכמות! 🍕',
 
   generators: {
     add(diff) {
@@ -33,12 +64,13 @@ window.GRADE_CONFIG = {
       const th=pick(GAME_THEMES);
       const stories=[
         `${a.toLocaleString()} + ${b.toLocaleString()} = ?`,
-        `בעיר גרים ${a.toLocaleString()} איש. הגיעו עוד ${b.toLocaleString()}. כמה גרים עכשיו?`,
-        `ספרייה יש ${a.toLocaleString()} ספרים. נוספו ${b.toLocaleString()}. כמה בסך הכל?`,
+        `בעיר גרים ${a.toLocaleString()} איש. הגיעו עוד ${b.toLocaleString()}. כמה גרים?`,
+        `ספרייה: ${a.toLocaleString()} ספרים. נוספו ${b.toLocaleString()}. כמה בסך הכל?`,
+        `קופה א': ${a.toLocaleString()} ש"ח. קופה ב': ${b.toLocaleString()} ש"ח. כמה יחד?`,
       ];
-      return {type:'num',cat:'add',diff,label:th.label,gameLabel:brainrotLabel(),
+      return { type:'num',cat:'add',diff,label:th.label,gameLabel:brainrotLabel(),
         text:pick(stories),answer:a+b,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'decompose',a,b},showMul:false,dir:'rtl'};
+        hint:{type:'decompose',a,b},showMul:false,dir:'rtl' };
     },
     sub(diff) {
       const r=window.GRADE_CONFIG.ranges.sub[diff];
@@ -46,12 +78,12 @@ window.GRADE_CONFIG = {
       const th=pick(GAME_THEMES);
       const stories=[
         `${total.toLocaleString()} - ${b.toLocaleString()} = ?`,
-        `היו ${total.toLocaleString()} מוצרים במחסן. נמכרו ${b.toLocaleString()}. כמה נשאר?`,
-        `מרחק הטיול ${total.toLocaleString()} מ'. עברנו ${b.toLocaleString()} מ'. כמה נותר?`,
+        `היו ${total.toLocaleString()} מוצרים. נמכרו ${b.toLocaleString()}. כמה נשאר?`,
+        `אוכלוסיית עיר: ${total.toLocaleString()}. עזבו ${b.toLocaleString()}. כמה נשארו?`,
       ];
-      return {type:'num',cat:'sub',diff,label:th.label,gameLabel:brainrotLabel(),
+      return { type:'num',cat:'sub',diff,label:th.label,gameLabel:brainrotLabel(),
         text:pick(stories),answer:a,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${total} - ${b} = ${a}`},showMul:false,dir:'rtl'};
+        hint:{type:'text',msg:`💡 ${total.toLocaleString()} - ${b.toLocaleString()} = ${a.toLocaleString()}`},showMul:false,dir:'rtl' };
     },
     mul(diff) {
       const r=window.GRADE_CONFIG.ranges.mul[diff];
@@ -59,25 +91,26 @@ window.GRADE_CONFIG = {
       const th=pick(GAME_THEMES); const emoji=pick(th.items);
       const stories=[
         `${a} × ${b} = ?`,
-        `${a} חבילות, בכל חבילה ${b} פריטים. כמה פריטים בסך הכל?`,
-        `${b} ימים × ${a} שעות ביום = כמה שעות?`,
+        `${a} חבילות, בכל חבילה ${b} פריטים. כמה פריטים?`,
+        `${b} ימים × ${a} ש"ח ביום = כמה ש"ח?`,
+        `גן עם ${a} עצים בכל שורה. יש ${b} שורות. כמה עצים?`,
       ];
-      return {type:'num',cat:'mul',diff,label:th.label,gameLabel:brainrotLabel(),
+      return { type:'num',cat:'mul',diff,label:th.label,gameLabel:brainrotLabel(),
         text:pick(stories),answer:a*b,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'groups',a,b,emoji},showMul:true,mulA:a,mulB:b,mulEmoji:emoji,dir:'rtl'};
+        hint:{type:'groups',a,b,emoji},showMul:true,mulA:a,mulB:b,mulEmoji:emoji,dir:'rtl' };
     },
     div(diff) {
       const r=window.GRADE_CONFIG.ranges.div[diff];
       const b=rnd(r.bMin,r.bMax), q=rnd(r.qMin,r.qMax), a=b*q;
       const th=pick(GAME_THEMES); const emoji=pick(th.items);
       const stories=[
-        `${a} ÷ ${b} = ?`,
-        `${a} פריטים מחולקים ל-${b} קבוצות שוות. כמה בכל קבוצה?`,
-        `${a} ק"מ ב-${b} ימים שווה. כמה ק"מ ביום?`,
+        `${a.toLocaleString()} ÷ ${b} = ?`,
+        `${a.toLocaleString()} פריטים מחולקים ל-${b} קבוצות שוות. כמה בכל קבוצה?`,
+        `${a.toLocaleString()} ק"מ ב-${b} ימים. כמה ק"מ ביום?`,
       ];
-      return {type:'num',cat:'div',diff,label:th.label,gameLabel:brainrotLabel(),
+      return { type:'num',cat:'div',diff,label:th.label,gameLabel:brainrotLabel(),
         text:pick(stories),answer:q,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'groups',a:q,b,emoji},showMul:true,mulA:q,mulB:b,mulEmoji:emoji,dir:'rtl'};
+        hint:{type:'groups',a:q,b,emoji},showMul:true,mulA:q,mulB:b,mulEmoji:emoji,dir:'rtl' };
     },
     word: null,
     fractions(diff) {
@@ -87,112 +120,109 @@ window.GRADE_CONFIG = {
       const part=(total/d)*n;
       const th=pick(GAME_THEMES);
       const stories=[
-        `כמה זה ${n}/${d} מתוך ${total}?`,
-        `יש ${total} ${pick(th.items)}. ${n}/${d} מהם אדומים. כמה אדומים?`,
-        `מ-${total} תלמידים, ${n}/${d} בנות. כמה בנות יש?`,
+        `${n}/${d} מתוך ${total} = ?`,
+        `מ-${total} תלמידים, ${n}/${d} בנות. כמה בנות?`,
+        `${n}/${d} מ-${total} ק"מ עברנו. כמה ק"מ?`,
+        `${total} ש"ח. ${n}/${d} מהם הוצאו. כמה הוצא?`,
       ];
-      return {type:'num',cat:'fractions',diff,label:'½ שברים',gameLabel:'',
+      return { type:'num',cat:'fractions',diff,label:'½ שברים',gameLabel:'',
         text:pick(stories),answer:part,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${total}÷${d}=${total/d} לחלק. קח ${n} חלקים = ${part}`},showMul:false,dir:'rtl'};
+        hint:{type:'text',msg:`💡 ${total}÷${d}=${total/d} לכל חלק. ×${n}=${part}`},showMul:false,dir:'rtl' };
     },
-    perimeter(diff) {
-      if (window.genGeometryCategory) return window.genGeometryCategory('perimeter',diff);
-      const s=rnd(3,12); return {type:'num',cat:'perimeter',diff,label:'📏 היקף',gameLabel:'',
-        text:`היקף ריבוע עם צלע ${s} ס"מ = ?`,answer:4*s,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 4×${s}=${4*s}`},showMul:false,dir:'rtl'};
-    },
-    area(diff) {
-      if (window.genGeometryCategory) return window.genGeometryCategory('area',diff);
-      const w=rnd(3,12),h=rnd(2,8); return {type:'num',cat:'area',diff,label:'📐 שטח',gameLabel:'',
-        text:`שטח מלבן ${w}×${h} ס"מ = ?`,answer:w*h,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${w}×${h}=${w*h} ס"מ²`},showMul:false,dir:'rtl'};
-    },
-    angles(diff) {
-      if (window.genGeometryCategory) return window.genGeometryCategory('angles',diff);
-      return {type:'num',cat:'angles',diff,label:'📐 זוויות',gameLabel:'',
-        text:'סכום זוויות כל משולש = ?°',answer:180,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:'💡 סכום = 180°'},showMul:false,dir:'rtl'};
-    },
-    shapes3d(diff) {
-      if (window.genGeometryCategory) return window.genGeometryCategory('shapes3d',diff);
-      return {type:'num',cat:'shapes3d',diff,label:'🧊 גופים 3D',gameLabel:'',
-        text:'כמה פנים לקוביה?',answer:6,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:'💡 קוביה = 6 פנים'},showMul:false,dir:'rtl'};
-    },
-    patterns1(diff) {
-      const pools={
-        easy:[{seq:'5,10,15,20,25',next:30,hint:'ספירה ב-5'},{seq:'100,200,300,400',next:500,hint:'ספירה ב-100'}],
-        medium:[{seq:'1,2,4,8,16',next:32,hint:'כופלים ב-2'},{seq:'1000,900,800,700',next:600,hint:'יורדים ב-100'}],
-        hard:[{seq:'1,1,2,3,5,8',next:13,hint:'כל מספר = סכום שניים לפניו (פיבונאצ׳י)'},{seq:'2,6,18,54',next:162,hint:'כופלים ב-3'}],
-      };
-      const p=pick(pools[diff]||pools.easy);
-      return {type:'num',cat:'patterns1',diff,label:'🔄 דפוסים',gameLabel:'',
-        text:`הסדרה: ${p.seq} , ___ — מה הבא?`,answer:p.next,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${p.hint}`},showMul:false,dir:'rtl'};
-    },
-    time(diff) {
+    decimal_intro(diff) {
+      // שברים עשרוניים — היכרות ראשונה (כיתה ד)
+      // עשיריות ומאיות — המרה משבר לעשרוני
       const qs={
         easy:[
-          {text:'כמה דקות ב-3 שעות?',answer:180,hint:'3 × 60 = 180'},
-          {text:'כמה שעות ב-2 ימים?',answer:48,hint:'2 × 24 = 48'},
-          {text:'שיעור מ-8:20 עד 9:05. כמה דקות?',answer:45,hint:'מ-8:20 ל-9:05 = 45 דקות'},
+          {text:'כתוב כמספר עשרוני: שלושה עשרוניות (0._ ?) — 3 עשיריות',answer:3,hint:'💡 3 עשיריות = 0.3 (כתוב 3)'},
+          {text:'5 עשיריות = 0._  (כתוב הספרה)',answer:5,hint:'💡 5 עשיריות = 0.5'},
+          {text:'0.7 = כמה עשיריות?',answer:7,hint:'💡 0.7 = 7 עשיריות'},
+          {text:'½ = 0._ (כתוב הספרה)',answer:5,hint:'💡 1/2 = 0.5'},
         ],
         medium:[
-          {text:'טיסה ארכה 3 שעות ו-40 דקות. כמה דקות בסך הכל?',answer:220,hint:'3×60+40=180+40=220'},
-          {text:'כמה דקות ב-2 ימים?',answer:2880,hint:'2×24×60=2880'},
+          {text:'0.25 = כמה מאיות?',answer:25,hint:'💡 0.25 = 25 מאיות'},
+          {text:'0.3 + 0.4 = 0.?',answer:7,hint:'💡 0.3+0.4=0.7 (כתוב 7)'},
+          {text:'0.5 + 0.5 = ?',answer:1,hint:'💡 0.5+0.5=1'},
+          {text:'¼ = 0.?5 (כתוב 25)',answer:25,hint:'💡 1/4 = 0.25'},
         ],
         hard:[
-          {text:'הטיול ארך 5 ימים ו-6 שעות. כמה שעות בסך הכל?',answer:126,hint:'5×24+6=120+6=126'},
-          {text:'כמה שניות ב-1 שעה?',answer:3600,hint:'60×60=3600'},
+          {text:'1.5 - 0.7 = 0.?',answer:8,hint:'💡 1.5-0.7=0.8'},
+          {text:'0.6 + 0.7 = 1.?',answer:3,hint:'💡 0.6+0.7=1.3'},
+          {text:'מה גדול יותר: 0.8 או 0.75? (כתוב 1 ל-0.8, כתוב 2 ל-0.75)',answer:1,hint:'💡 0.80 > 0.75'},
         ],
       };
       const q=pick(qs[diff]||qs.easy);
-      return {type:'num',cat:'time',diff,label:'⏰ זמן',gameLabel:'',
+      return { type:'num',cat:'decimal_intro',diff,label:'🔢 שברים עשרוניים',gameLabel:'',
         text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${q.hint}`},showMul:false,dir:'rtl'};
+        hint:{type:'text',msg:q.hint},showMul:false,dir:'rtl' };
     },
-    money(diff) {
-      const fns={
-        easy:[
-          ()=>{const p=rnd(10,50),n=rnd(2,6);return{text:`${n} ספרים ב-${p} ש"ח כל אחד. כמה שילמתי?`,answer:p*n,hint:`${n}×${p}=${p*n}`};},
-          ()=>{const t=rnd(50,200),s=rnd(10,Math.floor(t/2));return{text:`יש לי ${t} ש"ח. קניתי ב-${s} ש"ח. כמה נשאר?`,answer:t-s,hint:`${t}-${s}=${t-s}`};},
-        ],
-        medium:[
-          ()=>{const p=rnd(15,40),n=rnd(3,8),disc=rnd(5,15);return{text:`${n} פריטים ב-${p} ש"ח + הנחה ${disc}% (כתוב את הסכום אחרי הנחה). ראשית: ${n}×${p}=${n*p}, ואז חסר ${disc}% = ${Math.round(n*p*disc/100)} ש"ח`,answer:Math.round(n*p*(1-disc/100)),hint:`${n}×${p}=${n*p}, הנחה ${disc}%=${Math.round(n*p*disc/100)}, נשאר ${Math.round(n*p*(1-disc/100))}`};},
-        ],
-        hard:[
-          ()=>{const d=rnd(5,10),p=rnd(8,15),n=rnd(4,8);return{text:`קניתי ${n} פריטים ב-${p} ש"ח. שילמתי עם שטר של ${d*p+rnd(1,10)} ש"ח. כמה עודף?`,answer:((d*p+rnd(1,10))-(n*p)),hint:`שטר - עלות = עודף`};},
-        ],
-      };
-      const pool=fns[diff]||fns.easy; const q=pick(pool)();
-      return {type:'num',cat:'money',diff,label:'💰 כסף',gameLabel:'',
+    perimeter(diff) {
+      if (window.genGeometryCategory) return window.genGeometryCategory('perimeter',diff);
+      const w=rnd(3,diff==='hard'?20:12), h=rnd(2,w-1);
+      return { type:'num',cat:'perimeter',diff,label:'📏 היקף',gameLabel:'',
+        text:`היקף מלבן ${w}×${h} ס"מ = ?`,answer:2*(w+h),pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:`💡 2×(${w}+${h})=${2*(w+h)}`},showMul:false,dir:'rtl' };
+    },
+    area(diff) {
+      // שטח ביחידות מקובלות + נוסחת שטח מלבן — כיתה ד
+      if (window.genGeometryCategory) return window.genGeometryCategory('area',diff);
+      const w=rnd(3,diff==='hard'?15:10), h=rnd(2,w);
+      return { type:'num',cat:'area',diff,label:'📐 שטח',gameLabel:'',
+        text:`שטח מלבן ${w}×${h} ס"מ = ?`,answer:w*h,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:`💡 ${w}×${h}=${w*h} ס"מ²`},showMul:false,dir:'rtl' };
+    },
+    shapes3d(diff) {
+      // תיבות: קדקודים, צלעות, פאות — כיתה ד (גופים!)
+      if (window.genGeometryCategory) return window.genGeometryCategory('shapes3d',diff);
+      const qs=[
+        {text:'כמה פאות (פנים) לתיבה (קוביה)?',answer:6,hint:'💡 תיבה = 6 פאות'},
+        {text:'כמה קדקודים לתיבה?',answer:8,hint:'💡 תיבה = 8 קדקודים'},
+        {text:'כמה צלעות לתיבה?',answer:12,hint:'💡 תיבה = 12 צלעות'},
+        {text:'כמה פאות יש לפירמידה ריבועית?',answer:5,hint:'💡 4 פאות משולשות + 1 בסיס = 5 פאות'},
+      ];
+      const q=pick(qs);
+      return { type:'num',cat:'shapes3d',diff,label:'🧊 גופים',gameLabel:'',
         text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:`💡 ${q.hint}`},showMul:false,dir:'rtl'};
-    },
-    data(diff) {
-      // קריאת נתונים פשוטה — ממוצע, מינימום, מקסימום
-      const n=rnd(3,5);
-      const vals=Array.from({length:n},()=>rnd(diff==='easy'?2:diff==='medium'?5:10, diff==='easy'?10:diff==='medium'?20:50));
-      const sum=vals.reduce((a,b)=>a+b,0);
-      const avg=Math.round(sum/n);
-      const mx=Math.max(...vals), mn=Math.min(...vals);
-      const type=diff==='easy'?'max':diff==='medium'?'min':'avg';
-      const text=type==='max'?`הציונים: ${vals.join(', ')}. מה הציון הגבוה ביותר?`
-               :type==='min'?`המדידות: ${vals.join(', ')}. מה הקטן ביותר?`
-               :`הציונים: ${vals.join(', ')}. מה הממוצע (עגל למספר שלם)?`;
-      const answer=type==='max'?mx:type==='min'?mn:avg;
-      const hint=type==='max'?`💡 הגדול ביותר מבין: ${vals.join(', ')} הוא ${mx}`
-               :type==='min'?`💡 הקטן ביותר: ${mn}`
-               :`💡 סכום: ${sum}, מחולק ב-${n} = ${avg}`;
-      return {type:'num',cat:'data',diff,label:'📊 נתונים',gameLabel:'',
-        text,answer,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:hint},showMul:false,dir:'rtl'};
+        hint:{type:'text',msg:q.hint},showMul:false,dir:'rtl' };
     },
     measurement(diff) {
       if (window.genGeometryCategory) return window.genGeometryCategory('measurement',diff);
-      return {type:'num',cat:'measurement',diff,label:'📏 מדידה',gameLabel:'',
-        text:"1 ק\"ג = כמה גרם?",answer:1000,pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:'💡 1 ק"ג = 1000 גרם'},showMul:false,dir:'rtl'};
+      const qs={
+        easy:[
+          {text:"1 מ' = כמה מ\"מ?",answer:1000,hint:"💡 1 מ' = 100 ס\"מ = 1000 מ\"מ"},
+          {text:"נפח תיבה 3×4×2 ס\"מ = ?",answer:24,hint:"💡 3×4×2=24 ס\"מ³"},
+          {text:"כמה שניות ב-1 דקה?",answer:60,hint:"💡 1 דקה = 60 שניות"},
+        ],
+        medium:[
+          {text:"נפח תיבה 5×5×5 ס\"מ = ?",answer:125,hint:"💡 5×5×5=125 ס\"מ³"},
+          {text:"שטח ריבוע עם צלע 8 ס\"מ = ?",answer:64,hint:"💡 8×8=64 ס\"מ²"},
+          {text:"3 שעות = כמה שניות?",answer:10800,hint:"💡 3×60×60=10800 שניות"},
+        ],
+        hard:[
+          {text:"נפח תיבה 12×8×5 ס\"מ = ?",answer:480,hint:"💡 12×8×5=480 ס\"מ³"},
+          {text:"שטח מלבן 15×9 ס\"מ = ?",answer:135,hint:"💡 15×9=135 ס\"מ²"},
+        ],
+      };
+      const q=pick(qs[diff]||qs.easy);
+      return { type:'num',cat:'measurement',diff,label:'📏 מדידה',gameLabel:'',
+        text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:q.hint},showMul:false,dir:'rtl' };
+    },
+    data(diff) {
+      const n=rnd(3,5);
+      const vals=Array.from({length:n},()=>rnd(diff==='easy'?5:diff==='medium'?10:20,diff==='easy'?25:diff==='medium'?50:100));
+      const sum=vals.reduce((a,b)=>a+b,0);
+      const avg=Math.round(sum/n);
+      const mx=Math.max(...vals), mn=Math.min(...vals);
+      const type=diff==='easy'?'max':diff==='medium'?'avg':'range';
+      const q=type==='max'
+        ?{text:`הנתונים: ${vals.join(', ')}. מה הגדול ביותר?`,answer:mx,hint:`💡 הגדול: ${mx}`}
+        :type==='avg'
+        ?{text:`הנתונים: ${vals.join(', ')}. מה הממוצע? (עגל)`,answer:avg,hint:`💡 ${sum}÷${n}≈${avg}`}
+        :{text:`הנתונים: ${vals.join(', ')}. מה הטווח (מקס פחות מינ)?`,answer:mx-mn,hint:`💡 ${mx}-${mn}=${mx-mn}`};
+      return { type:'num',cat:'data',diff,label:'📊 נתונים',gameLabel:'',
+        text:q.text,answer:q.answer,pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'text',msg:q.hint},showMul:false,dir:'rtl' };
     },
   },
 };
