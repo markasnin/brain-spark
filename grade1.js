@@ -1,112 +1,125 @@
 // ══════════════════════════════════════════════
-// GRADE 1 — כיתה א  |  תוכנית משרד החינוך תשס"ו
-// ────────────────────────────────────────────
-// מספרים: ספירה ומנייה עד 100, זוגיות ואי-זוגיות, ישר המספרים
-// פעולות: חיבור וחיסור עד 20 (ויותר לפי יכולת), עשרות שלמות
-//          מבוא לכפל וחילוק עד 20
-// גאומטריה: מצולעים (היכרות גלובלית), הזזה ושיקוף
-// מדידה: אורך בס"מ, זמן בשעות שלמות
-// שברים: היכרות עם חצי (ללא סמל פורמלי)
+// GRADE 1 — כיתה א (תשפ"ה / תשפ"ו)
+// Official Israeli curriculum (משרד החינוך):
+//   Numbers: 0–100, place value (tens/ones)
+//   Operations: add/sub up to 20 (extending to 30)
+//   Number line, even/odd, counting sequences
+//   Shapes: circle/triangle/square/rectangle — sides & corners
+//   Measurement: non-standard → standard (cm), comparing lengths/weights
+//   NO fractions, NO decimals, NO multiplication, NO division
 // ══════════════════════════════════════════════
 window.GRADE_CONFIG = {
-  gradeId: 'א',
-  gradeName: 'כיתה א',
-  gradeEmoji: '🌱',
-  gradeColor: '#2ed573',
-
-  availableCategories: ['add', 'sub', 'evens', 'shapes2d', 'measurement'],
-  availableLearnTopics: ['shapes2d_learn', 'measurement_learn'],
-  availableExamTopics:  ['add', 'sub', 'evens', 'shapes2d', 'measurement'],
-
+  gradeId: 'א', gradeName: 'כיתה א', gradeEmoji: '🌱', gradeColor: '#2ed573',
+  availableCategories: ['add', 'sub', 'shapes', 'measurement'],
+  availableLearnTopics: ['shapes', 'measurement'],
+  availableExamTopics:  ['add', 'sub', 'shapes', 'measurement'],
   ranges: {
-    add: {
-      easy:   { aMin:1, aMax:9,  bMin:1, bMax:9  },   // חיבור עד 20
-      medium: { aMin:5, aMax:15, bMin:3, bMax:15 },
-      hard:   { aMin:8, aMax:18, bMin:2, bMax:18 },
-    },
-    sub: {
-      easy:   { aMin:2, aMax:10 },   // חיסור עד 20
-      medium: { aMin:6, aMax:18 },
-      hard:   { aMin:10,aMax:20 },
-    },
+    add: { easy:{aMin:1,aMax:9,bMin:1,bMax:9},    medium:{aMin:5,aMax:15,bMin:1,bMax:10}, hard:{aMin:10,aMax:20,bMin:1,bMax:10} },
+    sub: { easy:{aMin:2,aMax:9},                   medium:{aMin:5,aMax:15},                hard:{aMin:10,aMax:20} },
   },
-
   pts: { easy:3, medium:6, hard:10 },
-  welcome: 'ברוכים הבאים לכיתה א! נלמד חיבור, חיסור וצורות! 🌱',
-  tip: 'ספור על האצבעות — זה עוזר! 🖐️',
-
+  welcome: 'ברוך הבא לכיתה א! חיבור, חיסור, צורות ומדידה! 🌱',
+  tip: 'ספור על האצבעות — זה בסדר גמור! 🤞',
   generators: {
     add(diff) {
       const r = window.GRADE_CONFIG.ranges.add[diff];
-      const a = rnd(r.aMin, r.aMax), b = rnd(r.bMin, r.bMax);
-      if (a + b > 20 && diff === 'easy') return window.GRADE_CONFIG.generators.add(diff);
-      const th = pick(GAME_THEMES);
-      return { type:'num', cat:'add', diff, label:th.label, gameLabel:brainrotLabel(),
-        text:`${a} + ${b} = ?`, answer:a+b, pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'decompose',a,b}, showMul:false, dir:'ltr' };
+      const a = rnd(r.aMin,r.aMax), b = rnd(r.bMin,r.bMax);
+      // Ensure sum stays in grade 1 range
+      const safeB = diff==='easy' ? Math.min(b, 10-a) || 1 : b;
+      const theme = pick(GAME_THEMES);
+      return { type:'num', cat:'add', diff, label:theme.label, gameLabel:brainrotLabel(),
+        text:`${a} + ${safeB} = ?`, answer:a+safeB, pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'decompose',a,b:safeB}, showMul:false, dir:'ltr' };
     },
     sub(diff) {
       const r = window.GRADE_CONFIG.ranges.sub[diff];
-      const total = rnd(r.aMin, r.aMax);
-      const b = rnd(1, total - 1);
-      const a = total - b;
-      const th = pick(GAME_THEMES);
-      return { type:'num', cat:'sub', diff, label:th.label, gameLabel:brainrotLabel(),
-        text:`${total} - ${b} = ?`, answer:a, pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'cubes',total,remove:b}, showMul:false, dir:'ltr' };
+      const a = rnd(r.aMin,r.aMax), b = rnd(1, a-1);
+      const theme = pick(GAME_THEMES);
+      return { type:'num', cat:'sub', diff, label:theme.label, gameLabel:brainrotLabel(),
+        text:`${a} - ${b} = ?`, answer:a-b, pts:window.GRADE_CONFIG.pts[diff],
+        hint:{type:'cubes',total:a,remove:b}, showMul:false, dir:'ltr' };
     },
-    evens(diff) {
-      // זוגיות ואי-זוגיות — תוכנית כיתה א
-      const max = diff==='easy' ? 10 : diff==='medium' ? 20 : 30;
-      const n = rnd(1, max);
-      const isEven = n % 2 === 0;
-      const types = [
-        { text:`האם ${n} הוא מספר זוגי? (1=כן, 2=לא)`, answer: isEven?1:2,
-          hint:`💡 ${isEven ? `${n} זוגי — מתחלק ב-2 בדיוק` : `${n} אי-זוגי — לא מתחלק ב-2 בדיוק`}` },
-        { text:`כמה אחד לפני ${n}?`, answer: n-1, hint:`💡 לפני ${n} בא ${n-1}` },
-        { text:`כמה אחד אחרי ${n}?`, answer: n+1, hint:`💡 אחרי ${n} בא ${n+1}` },
-        { text:`מה המספר שבין ${n-1} ל-${n+1}?`, answer: n, hint:`💡 בין ${n-1} ל-${n+1} נמצא ${n}` },
-      ];
-      const q = pick(types);
-      const gc = window.GRADE_CONFIG;
-      return { type:'num', cat:'evens', diff, label:'🔢 מספרים', gameLabel:'',
-        text:q.text, answer:q.answer, pts:gc.pts[diff],
-        hint:{type:'text',msg:q.hint}, showMul:false, dir:'rtl' };
-    },
-    shapes2d(diff) {
-      if (window.genGeometryCategory) return window.genGeometryCategory('shapes2d', diff);
-      const qs = [
-        {text:'כמה פינות יש למשולש?', answer:3, hint:'💡 משולש = 3 פינות ו-3 צלעות'},
-        {text:'כמה צלעות יש לריבוע?', answer:4, hint:'💡 ריבוע = 4 צלעות שוות'},
-        {text:'כמה פינות יש למלבן?', answer:4, hint:'💡 מלבן = 4 פינות ו-4 צלעות'},
-        {text:'לעיגול יש כמה פינות?', answer:0, hint:'💡 לעיגול אין פינות כלל!'},
-      ];
-      const q = pick(qs);
-      return { type:'num', cat:'shapes2d', diff, label:'🔷 צורות', gameLabel:'',
-        text:q.text, answer:q.answer, pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:q.hint}, showMul:false, dir:'rtl' };
-    },
-    measurement(diff) {
-      // מדידת אורך בס"מ וזמן בשעות שלמות — תוכנית כיתה א
-      const qs = {
+    shapes(diff) {
+      const pts = window.GRADE_CONFIG.pts[diff];
+      const theme = pick(GAME_THEMES);
+      const pools = {
+        // Grade 1 shapes: identifying shapes, counting sides/corners, even/odd, number line basics
         easy: [
-          {text:'כמה שעות ביום שלם?', answer:24, hint:'💡 יום = 24 שעות'},
-          {text:'כמה ימים יש בשבוע?', answer:7, hint:'💡 7 ימים בשבוע'},
-          {text:'אצבע אחת ארוכה בערך כמה ס"מ? (כתוב 1)', answer:1, hint:'💡 אצבע ≈ 1 ס"מ'},
+          {text:'כמה צלעות יש למשולש?', answer:3, hint:'💡 ספור את הקווים של המשולש!'},
+          {text:'כמה פינות יש למשולש?', answer:3, hint:'💡 3 צלעות = 3 פינות!'},
+          {text:'כמה צלעות יש לריבוע?', answer:4, hint:'💡 לריבוע 4 צלעות שוות!'},
+          {text:'כמה פינות יש לריבוע?', answer:4, hint:'💡 4 פינות ישרות!'},
+          {text:'כמה צלעות יש למלבן?', answer:4, hint:'💡 2 ארוכות ו-2 קצרות = 4!'},
+          {text:'לעיגול יש כמה צלעות?', answer:0, hint:'💡 לעיגול אין צלעות — הוא עגול!'},
+          {text:'מה המספר שאחרי 5?', answer:6, hint:'💡 5+1=6!'},
+          {text:'מה המספר שלפני 4?', answer:3, hint:'💡 4-1=3!'},
+          {text:'מה המספר שאחרי 9?', answer:10, hint:'💡 9+1=10!'},
+          {text:'האם 2 זוגי? (כן=1 לא=0)', answer:1, hint:'💡 2 מתחלק ב-2 בדיוק — זוגי!'},
+          {text:'האם 3 זוגי? (כן=1 לא=0)', answer:0, hint:'💡 3 לא מתחלק ב-2 — אי-זוגי!'},
+          {text:'האם 6 זוגי? (כן=1 לא=0)', answer:1, hint:'💡 6÷2=3 — זוגי!'},
         ],
         medium: [
-          {text:'עיפרון ארוך 15 ס"מ. קשרו עוד 5 ס"מ. מה האורך?', answer:20, hint:'💡 15+5=20 ס"מ'},
-          {text:'כמה שעות מ-8 בבוקר עד 12 בצהריים?', answer:4, hint:'💡 12-8=4 שעות'},
+          {text:'כמה צלעות יש למחומש?', answer:5, hint:'💡 חמש = 5 צלעות!'},
+          {text:'כמה צלעות יש למשושה?', answer:6, hint:'💡 שש = 6 צלעות!'},
+          {text:'כמה עשרות יש ב-23?', answer:2, hint:'💡 23 = 2 עשרות + 3 יחידות'},
+          {text:'כמה יחידות יש ב-37?', answer:7, hint:'💡 37 = 3 עשרות + 7 יחידות'},
+          {text:'כמה יחידות יש ב-54?', answer:4, hint:'💡 54 = 5 עשרות + 4 יחידות'},
+          {text:'10 + 5 = ?', answer:15, hint:'💡 עשרה ועוד חמש = חמישה עשר!'},
+          {text:'20 + 3 = ?', answer:23, hint:'💡 עשרים ועוד שלוש!'},
+          {text:'האם 10 זוגי? (כן=1 לא=0)', answer:1, hint:'💡 10÷2=5 — זוגי!'},
+          {text:'האם 7 זוגי? (כן=1 לא=0)', answer:0, hint:'💡 7 הוא אי-זוגי!'},
+          {text:'מה גדול יותר: 13 או 8?', answer:13, hint:'💡 13 נמצא ימינה בסרגל המספרים!'},
+          // Challenge: shape unknowns (שאלות אתגר with shapes)
+          {text:'🔺 + 🔺 = 6. כמה שווה 🔺?', answer:3, hint:'💡 צריך 2 מספרים שווים שסכומם 6. 3+3=6!'},
+          {text:'⬜ + ⬜ = 8. כמה שווה ⬜?', answer:4, hint:'💡 4+4=8!'},
         ],
         hard: [
-          {text:'חוט ארוך 20 ס"מ. חתכו 8 ס"מ. כמה נשאר?', answer:12, hint:'💡 20-8=12 ס"מ'},
-          {text:'כמה שעות מ-7 בבוקר עד 3 אחר הצהריים?', answer:8, hint:'💡 15-7=8 שעות'},
+          {text:'כמה עשרות יש ב-80?', answer:8, hint:'💡 80 = 8 עשרות!'},
+          {text:'30 + ? = 50. מה החסר?', answer:20, hint:'💡  50 - 30 = 20!'},
+          {text:'מה המספר שמגיע לפני 40?', answer:39, hint:'💡 40 - 1 = 39!'},
+          // Shape unknowns — grade 1 style (concrete, with pictures in question)
+          {text:'🔺 + 3 = 7. כמה שווה 🔺?', answer:4, hint:'💡 7 - 3 = 4!'},
+          {text:'⬜ - 2 = 5. כמה שווה ⬜?', answer:7, hint:'💡 5 + 2 = 7!'},
+          {text:'🔵 + 🔵 + 🔵 = 9. כמה שווה 🔵?', answer:3, hint:'💡 9 ÷ 3 = 3!'},
+          {text:'ספור קדימה מ-37: 37, 38, 39, ?', answer:40, hint:'💡 אחרי 39 מגיע 40!'},
+          {text:'ספור אחורה מ-22: 22, 21, 20, ?', answer:19, hint:'💡 לפני 20 מגיע 19!'},
         ],
       };
-      const q = pick(qs[diff] || qs.easy);
-      return { type:'num', cat:'measurement', diff, label:'📏 מדידה', gameLabel:'',
-        text:q.text, answer:q.answer, pts:window.GRADE_CONFIG.pts[diff],
-        hint:{type:'text',msg:q.hint}, showMul:false, dir:'rtl' };
+      const q = pick(pools[diff]);
+      return { type:'num', cat:'shapes', diff, label:theme.label, gameLabel:'',
+        text:q.text, answer:q.answer, pts, hint:{type:'text',msg:q.hint}, showMul:false, dir:'rtl' };
+    },
+    measurement(diff) {
+      const pts = window.GRADE_CONFIG.pts[diff];
+      const theme = pick(GAME_THEMES);
+      const pools = {
+        // Grade 1 measurement: comparing, ordering, basic units (no conversions with decimals)
+        easy: [
+          {text:'מה ארוך יותר: עיפרון של 10 ס"מ או סרגל של 15 ס"מ? (עיפרון=1 סרגל=2)', answer:2, hint:'💡 15 > 10, הסרגל ארוך יותר!'},
+          {text:'מה כבד יותר: ספר או נוצה? (ספר=1 נוצה=2)', answer:1, hint:'💡 ספר כבד הרבה יותר מנוצה!'},
+          {text:'מה גבוה יותר: עץ או ספסל? (עץ=1 ספסל=2)', answer:1, hint:'💡 עץ גבוה הרבה יותר!'},
+          {text:'כמה ס"מ יש ב-1 מטר?', answer:100, hint:'💡 מטר = 100 ס"מ!'},
+          {text:'כמה דקות יש בשעה?', answer:60, hint:'💡 שעה = 60 דקות!'},
+          {text:'כמה שניות יש בדקה?', answer:60, hint:'💡 דקה = 60 שניות!'},
+        ],
+        medium: [
+          {text:'חבל של 5 ס"מ ועוד חבל של 3 ס"מ. כמה ס"מ ביחד?', answer:8, hint:'💡 5+3=8 ס"מ'},
+          {text:'סרגל 20 ס"מ. קטעתי 6 ס"מ. כמה נשאר?', answer:14, hint:'💡 20-6=14 ס"מ'},
+          {text:'כמה ס"מ ב-2 מטר?', answer:200, hint:'💡 2×100=200 ס"מ'},
+          {text:'2 עפרונות, כל אחד 8 ס"מ. כמה ס"מ ביחד?', answer:16, hint:'💡 8+8=16 ס"מ'},
+          {text:'שעון מראה 3:00. עוד 2 שעות יהיה השעה?', answer:5, hint:'💡 3+2=5 — השעה 5:00!'},
+        ],
+        hard: [
+          {text:'3 מטר = כמה ס"מ?', answer:300, hint:'💡 3×100=300 ס"מ'},
+          {text:'2 שעות = כמה דקות?', answer:120, hint:'💡 2×60=120 דקות'},
+          {text:'שעה אחת וחצי = כמה דקות?', answer:90, hint:'💡 60+30=90 דקות'},
+          {text:'ילד גבוה 120 ס"מ. כמה מטר ועוד ס"מ? (כמה ס"מ מעל מטר)', answer:20, hint:'💡 120-100=20 ס"מ מעל מטר'},
+          {text:'מחבר 15 ס"מ. שולחן ארוך פי 10. כמה ס"מ?', answer:150, hint:'💡 15×10=150 ס"מ'},
+        ],
+      };
+      const q = pick(pools[diff]);
+      return { type:'num', cat:'measurement', diff, label:theme.label, gameLabel:'',
+        text:q.text, answer:q.answer, pts, hint:{type:'text',msg:q.hint}, showMul:false, dir:'rtl' };
     },
   },
 };
