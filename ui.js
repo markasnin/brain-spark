@@ -158,9 +158,9 @@ function buildRecommendation() {
     const ratio = v.bad/total; if (ratio>worstRatio) { worstRatio=ratio; worstCat=c; }
   }
   if (!worstCat || worstRatio<0.3) { box.style.display='none'; return; }
-  const catNames = {add:'חיבור',sub:'חיסור',mul:'כפל',div:'חילוק',word:'מילוליות'};
   box.style.display='flex';
-  txt.innerHTML = `💡 ממליץ לתרגל: <strong>${catNames[worstCat]||worstCat}</strong> — טועה ${Math.round(worstRatio*100)}% מהפעמים!`;
+  const _dispName = (CAT_NAMES[worstCat]||worstCat).replace(/^[^א-ת]*/, '').trim();
+  txt.innerHTML = `💡 ממליץ לתרגל: <strong>${_dispName}</strong> — טועה ${Math.round(worstRatio*100)}% מהפעמים!`;
 }
 
 // ══ FRIENDS ══
