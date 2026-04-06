@@ -149,51 +149,36 @@
 
 <!-- ══ HOME ══ -->
 <div class="scr" id="home">
-
-  <!-- Top bar: logo + logout (full width) -->
-  <div class="home-topbar">
+  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:900px;margin-bottom:4px">
     <div class="logo" style="font-size:2.4rem;animation:none">⚡ Brain Spark</div>
     <button class="logout-btn" onclick="fbLogout()">התנתק</button>
   </div>
-
-  <!-- Two-column body -->
-  <div class="home-body">
-
-    <!-- LEFT SIDEBAR -->
-    <aside class="home-sidebar">
-      <div class="pcard">
-        <div class="pname" id="playerName">⭐ שחקן</div>
-        <div class="plevel" id="levelDisplay">רמה 1</div>
-        <div id="gradeBadgeWrap"></div>
-        <div class="xp-outer"><div class="xp-inner" id="xpBar" style="width:0%"></div></div>
-        <div class="xp-txt" id="xpTxt">0 / 50 נקודות לרמה הבאה</div>
-        <div class="streak-badge" id="streakBadge" style="display:none">🔥 <span id="streakCount">0</span> ברצף!</div>
-      </div>
-      <div class="lb-card" id="homeLbCard">
-        <div class="lb-title">🏆 לוח חברים</div>
-        <div id="homeLbList"><div style="color:var(--txt2);font-size:.85rem;text-align:center;padding:8px">טוען...</div></div>
-        <button onclick="openFriends()" style="width:100%;margin-top:10px;padding:9px;border-radius:10px;border:1px solid rgba(30,144,255,.3);background:rgba(30,144,255,.08);color:var(--a4);font-family:'Rubik',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;">👥 כל החברים ←</button>
-      </div>
-      <div class="recommend" id="recommendBox" style="display:none">
-        <div class="recommend-icon">💡</div>
-        <div class="recommend-text" id="recommendText"></div>
-      </div>
-      <div class="daily-banner" id="dailyBanner" onclick="startDaily()">
-        <div style="font-size:2rem">📅</div>
-        <div>
-          <div style="font-weight:700;font-size:1rem;color:var(--a2)">משימה יומית!</div>
-          <div style="font-size:.82rem;color:var(--txt2)" id="dailyDesc">2 שאלות מיוחדות מחכות לך</div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- RIGHT: Categories -->
-    <main class="home-main">
-      <div class="sec-label">קטגוריות</div>
-      <div class="grid" id="mainGrid"></div>
-    </main>
-
-  </div><!-- /home-body -->
+  <div class="pcard" style="margin-top:10px">
+    <div class="pname" id="playerName">⭐ שחקן</div>
+    <div class="plevel" id="levelDisplay">רמה 1</div>
+    <div id="gradeBadgeWrap"></div>
+    <div class="xp-outer"><div class="xp-inner" id="xpBar" style="width:0%"></div></div>
+    <div class="xp-txt" id="xpTxt">0 / 50 נקודות לרמה הבאה</div>
+    <div class="streak-badge" id="streakBadge" style="display:none">🔥 <span id="streakCount">0</span> ברצף!</div>
+  </div>
+  <div class="lb-card" id="homeLbCard">
+    <div class="lb-title">🏆 לוח חברים</div>
+    <div id="homeLbList"><div style="color:var(--txt2);font-size:.85rem;text-align:center;padding:8px">טוען...</div></div>
+    <button onclick="openFriends()" style="width:100%;margin-top:10px;padding:9px;border-radius:10px;border:1px solid rgba(30,144,255,.3);background:rgba(30,144,255,.08);color:var(--a4);font-family:'Rubik',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;">👥 כל החברים ←</button>
+  </div>
+  <div class="recommend" id="recommendBox" style="display:none">
+    <div class="recommend-icon">💡</div>
+    <div class="recommend-text" id="recommendText"></div>
+  </div>
+  <div class="daily-banner" id="dailyBanner" onclick="startDaily()">
+    <div style="font-size:2rem">📅</div>
+    <div>
+      <div style="font-weight:700;font-size:1rem;color:var(--a2)">משימה יומית!</div>
+      <div style="font-size:.82rem;color:var(--txt2)" id="dailyDesc">2 שאלות מיוחדות מחכות לך</div>
+    </div>
+  </div>
+  <div class="sec-label">קטגוריות</div>
+  <div class="grid" id="mainGrid"></div>
 </div>
 
 <!-- ══ FRIENDS ══ -->
