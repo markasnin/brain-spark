@@ -149,7 +149,7 @@
 
 <!-- ══ HOME ══ -->
 <div class="scr" id="home">
-  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:420px;margin-bottom:4px">
+  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:100%;margin-bottom:4px">
     <div class="logo" style="font-size:2.4rem;animation:none">⚡ Brain Spark</div>
     <button class="logout-btn" onclick="fbLogout()">התנתק</button>
   </div>
@@ -177,18 +177,18 @@
       <div style="font-size:.82rem;color:var(--txt2)" id="dailyDesc">2 שאלות מיוחדות מחכות לך</div>
     </div>
   </div>
-  <div id="groupedGrid"></div>
-  <div class="grid" id="mainGrid" style="display:none"></div>
+  <div class="sec-label">קטגוריות</div>
+  <div class="grid" id="mainGrid"></div>
 </div>
 
 <!-- ══ FRIENDS ══ -->
 <div class="scr" id="friends-scr">
   <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:var(--a4);margin-bottom:6px;">👥 חברים</div>
-  <div style="width:100%;max-width:500px;margin-bottom:18px;">
+  <div style="width:100%;max-width:100%;margin-bottom:18px;">
     <div style="font-weight:700;font-size:.85rem;color:var(--a2);margin-bottom:10px;letter-spacing:1px;">🏆 לוח תוצאות</div>
     <div id="leaderboardList" style="display:flex;flex-direction:column;gap:8px;"></div>
   </div>
-  <div style="width:100%;max-width:500px;background:linear-gradient(135deg,var(--card),var(--card2));border-radius:16px;padding:18px;border:1px solid rgba(255,255,255,.08);margin-bottom:18px;">
+  <div style="width:100%;max-width:100%;background:linear-gradient(135deg,var(--card),var(--card2));border-radius:16px;padding:18px;border:1px solid rgba(255,255,255,.08);margin-bottom:18px;">
     <div style="font-weight:700;margin-bottom:10px;color:var(--a4)">➕ הוסף חבר</div>
     <div style="display:flex;gap:8px;">
       <input class="auth-inp" id="friendSearch" style="margin-bottom:0;flex:1" placeholder="שם משתמש של החבר" type="text" onkeydown="if(event.key==='Enter')fbSearchUser()">
@@ -196,7 +196,7 @@
     </div>
     <div id="friendResults"></div>
   </div>
-  <div style="width:100%;max-width:500px;">
+  <div style="width:100%;max-width:100%;">
     <div style="font-weight:700;font-size:.85rem;color:var(--txt2);margin-bottom:10px;letter-spacing:1px;">החברים שלי</div>
     <div class="friends-list" id="friendsList"></div>
   </div>
@@ -337,20 +337,20 @@
     </div>
   </div>
   <div class="prog-bar"><div class="prog-inner" id="examBar" style="width:10%"></div></div>
-  <div id="examQArea" style="width:100%;max-width:580px;"></div>
+  <div id="examQArea" style="width:100%;max-width:100%;"></div>
   <div id="examResults" style="display:none;width:100%;max-width:560px;"></div>
 </div>
 
 <!-- ══ HISTORY ══ -->
 <div class="scr" id="history-scr">
   <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:#00d2d3;margin-bottom:16px;">📊 היסטוריה ★</div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:500px;margin-bottom:18px;" id="histStats"></div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;width:100%;max-width:500px;">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:100%;margin-bottom:18px;" id="histStats"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;width:100%;max-width:100%;">
     <button onclick="filterHist('all')" id="hfAll" class="qbtn" style="padding:7px 14px;font-size:.82rem;background:rgba(30,144,255,.2);color:var(--a4);border:1px solid var(--a4);">הכל</button>
     <button onclick="filterHist('ok')"  id="hfOk"  class="qbtn" style="padding:7px 14px;font-size:.82rem;background:rgba(255,255,255,.06);color:var(--txt2);">✅ נכון</button>
     <button onclick="filterHist('bad')" id="hfBad" class="qbtn" style="padding:7px 14px;font-size:.82rem;background:rgba(255,255,255,.06);color:var(--txt2);">❌ שגוי</button>
   </div>
-  <div style="display:flex;flex-direction:column;gap:9px;width:100%;max-width:500px;" id="histList"></div>
+  <div style="display:flex;flex-direction:column;gap:9px;width:100%;max-width:100%;" id="histList"></div>
   <button class="back" onclick="show('home')" style="margin-top:16px;">← חזרה</button>
 </div>
 
@@ -358,18 +358,18 @@
 <div class="scr" id="mistakes-scr">
   <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:var(--streak);margin-bottom:8px;">🔄 לחזור על טעויות</div>
   <div style="color:var(--txt2);font-size:.88rem;margin-bottom:18px;">תרגל שוב את מה שלא הצלחת</div>
-  <div style="display:flex;flex-direction:column;gap:9px;width:100%;max-width:500px;" id="mistakesList"></div>
+  <div style="display:flex;flex-direction:column;gap:9px;width:100%;max-width:100%;" id="mistakesList"></div>
   <button id="practiceMistakesBtn" style="display:none;margin-top:16px;padding:13px 28px;border-radius:99px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--streak),var(--a1));color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;" onclick="startMistakesPractice()">🔥 תרגל את כל הטעויות!</button>
   <button class="back" onclick="show('home')" style="margin-top:12px;">← חזרה</button>
 </div>
 
 <!-- ══ SETTINGS ══ -->
 <div class="scr" id="settings-scr">
-  <div id="settingsTopTabs" style="display:none;gap:0;background:rgba(255,255,255,.06);border-radius:12px;overflow:hidden;margin-bottom:20px;width:100%;max-width:500px;">
+  <div id="settingsTopTabs" style="display:none;gap:0;background:rgba(255,255,255,.06);border-radius:12px;overflow:hidden;margin-bottom:20px;width:100%;max-width:100%;">
     <button class="auth-tab active" id="parentsTabBtn" onclick="switchSettingsTab('parents')" style="flex:1;">🔐 הגדרות הורים</button>
     <button class="auth-tab" id="adminTabBtn" onclick="switchSettingsTab('admin')" style="flex:1;background:linear-gradient(135deg,#00d2d3,#9b59b6);color:#fff;">👑 הגדרות מנהלים</button>
   </div>
-  <div id="settingsParentsSection" style="width:100%;max-width:500px;">
+  <div id="settingsParentsSection" style="width:100%;max-width:100%;">
     <div id="pgateWrap">
       <div class="pgate">
         <div class="pgate-title">🔐 שטח הורים</div>
@@ -464,7 +464,7 @@
       <button onclick="saveSettings()" style="width:100%;padding:14px;border-radius:14px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--a3),#1dd1a1);color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;margin-top:6px;">💾 שמור הגדרות</button>
     </div>
   </div>
-  <div id="settingsAdminSection" style="display:none;width:100%;max-width:500px;">
+  <div id="settingsAdminSection" style="display:none;width:100%;max-width:100%;">
     <div style="font-family:'Fredoka',sans-serif;font-size:1.8rem;margin-bottom:6px;text-align:center;background:linear-gradient(135deg,#00d2d3,#9b59b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">👑 הגדרות מנהלים</div>
     <div style="font-size:.82rem;color:var(--txt2);text-align:center;margin-bottom:20px;">רק למשתמשים מיוחדים ✨</div>
     <div class="set-section">
@@ -561,316 +561,32 @@
   <script src="minigames.js"></script>
 
 <script>
-// ── PATCH: fix show(), minigames tile onclick, and grouped grid ──
+// ── PATCH: fix minigames tile onclick and export helpers to window ──
 window.show = function(id) {
   document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
   var el = document.getElementById(id);
   if (el) el.classList.add('on');
   if (id === 'home' && window.updateHome) window.updateHome();
 };
-
-// Patch openCat to allow 'word' (game.js has an old hardcoded block)
-function _patchOpenCat() {
-  if (typeof openCat === 'undefined') { setTimeout(_patchOpenCat, 100); return; }
-  var _origOpenCat = openCat;
-  window.openCat = function(cat) {
-    if (cat === 'word') {
-      // Skip the hardcoded block — word is fully implemented
-      var gc = window.GRADE_CONFIG;
-      if (gc && !gc.availableCategories.includes(cat)) { showToast('🔒 נושא זה לא זמין בכיתה שלך'); return; }
-      qs.cat = cat;
-      document.getElementById('diffTitle').textContent = CAT_NAMES[cat] || cat;
-      show('diff-scr');
-      return;
-    }
-    _origOpenCat.apply(this, arguments);
-  };
-}
-_patchOpenCat();
-
-// ══ GROUPED CATEGORY GRID — REDESIGNED ══
-
-const CAT_GROUPS = [
-  {
-    id: 'cheshbon', label: 'חשבון', emoji: '🔢',
-    color: '#2ed573', glow: 'rgba(46,213,115,.18)',
-    grad: 'linear-gradient(135deg,#0a2e1a,#0d3d22)',
-    cats: ['add','sub','mul','div','word']
-  },
-  {
-    id: 'fractions', label: 'שברים', emoji: '½',
-    color: '#54a0ff', glow: 'rgba(84,160,255,.18)',
-    grad: 'linear-gradient(135deg,#0a1a3e,#0d2255)',
-    cats: ['fractions','fractions_half','fractions_unit','fractions_mul','fractions_div','fractions_part','decimal_intro','decimals','decimals_mul','percentages_intro','percentages','ratio']
-  },
-  {
-    id: 'geometry', label: 'הנדסה', emoji: '📐',
-    color: '#c77dff', glow: 'rgba(199,125,255,.18)',
-    grad: 'linear-gradient(135deg,#1a0a2e,#25104a)',
-    cats: ['shapes','shapes2d','symmetry','perimeter','area','angles','shapes3d','volume','circle','coordinates','scale','measurement']
-  },
-  {
-    id: 'numbers', label: 'נתונים ומספרים', emoji: '📊',
-    color: '#ffd32a', glow: 'rgba(255,211,42,.18)',
-    grad: 'linear-gradient(135deg,#2a1e00,#3a2a00)',
-    cats: ['data','evens','rounding','integers_intro']
-  },
-  {
-    id: 'games', label: 'משחקים ועוד', emoji: '🎮',
-    color: '#ff6348', glow: 'rgba(255,99,72,.18)',
-    grad: 'linear-gradient(135deg,#2e0a0a,#401010)',
-    cats: ['minigames','learn','exam','history','mistakes','friends','settings']
-  }
-];
-
-// ─── inject styles once ───
-(function injectGroupStyles(){
-  if (document.getElementById('gg-styles')) return;
-  const s = document.createElement('style');
-  s.id = 'gg-styles';
-  s.textContent = `
-    #groupedGrid {
-      width:100%; max-width:440px;
-      display:flex; flex-direction:column; gap:14px;
-      padding-bottom:24px;
-    }
-
-    /* ── Section panel ── */
-    .gg-section {
-      width:100%; border-radius:24px; overflow:hidden;
-      border:1.5px solid var(--gg-color,rgba(255,255,255,.1));
-      box-shadow:0 8px 32px rgba(0,0,0,.5), 0 0 0 0 var(--gg-glow);
-      background:var(--card);
-    }
-
-    /* ── Section header ── */
-    .gg-head {
-      display:flex; align-items:center; gap:12px;
-      padding:16px 20px 14px;
-      background:var(--gg-grad);
-      position:relative; overflow:hidden;
-      border-bottom:1px solid rgba(255,255,255,.06);
-    }
-    .gg-head::before {
-      content:''; position:absolute; inset:0;
-      background:linear-gradient(135deg,rgba(255,255,255,.07) 0%,transparent 60%);
-      pointer-events:none;
-    }
-    /* glow orb behind emoji */
-    .gg-head::after {
-      content:''; position:absolute; right:-10px; top:-20px;
-      width:80px; height:80px; border-radius:50%;
-      background:var(--gg-glow); filter:blur(22px);
-      pointer-events:none; opacity:.6;
-    }
-    .gg-head-emoji {
-      font-size:2.2rem; line-height:1; position:relative; z-index:1;
-      filter:drop-shadow(0 0 12px var(--gg-color));
-      animation:gg-bounce 2.8s ease-in-out infinite;
-    }
-    @keyframes gg-bounce {
-      0%,100%{transform:translateY(0) scale(1);}
-      50%{transform:translateY(-4px) scale(1.08);}
-    }
-    .gg-head-text { flex:1; position:relative; z-index:1; }
-    .gg-head-label {
-      font-family:'Fredoka',sans-serif; font-size:1.35rem; font-weight:700;
-      color:var(--gg-color); text-shadow:0 0 18px var(--gg-color);
-      line-height:1;
-    }
-    .gg-head-sub { font-size:.72rem; color:rgba(255,255,255,.45); margin-top:2px; }
-    .gg-head-count {
-      position:relative; z-index:1;
-      font-size:.78rem; font-weight:800;
-      padding:5px 12px; border-radius:99px;
-      background:rgba(0,0,0,.35);
-      border:1.5px solid var(--gg-color);
-      color:var(--gg-color);
-      box-shadow:0 0 10px var(--gg-glow);
-    }
-
-    /* ── Card grid ── */
-    .gg-grid {
-      display:grid; grid-template-columns:repeat(3,1fr);
-      gap:1px; background:rgba(255,255,255,.04);
-    }
-    @media(max-width:340px){ .gg-grid{grid-template-columns:repeat(2,1fr);} }
-
-    /* ── Individual card ── */
-    .gg-card {
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      gap:6px; padding:18px 6px 16px;
-      background:linear-gradient(160deg,rgba(255,255,255,.03) 0%, transparent 100%);
-      cursor:pointer; border:none; text-align:center;
-      position:relative; overflow:hidden;
-      transition:transform .2s cubic-bezier(.34,1.56,.64,1), background .18s;
-      min-height:100px;
-    }
-    /* color accent top bar */
-    .gg-card::before {
-      content:''; position:absolute; top:0; left:0; right:0; height:2.5px;
-      background:var(--gg-color); opacity:.45;
-    }
-    /* hover shimmer */
-    .gg-card::after {
-      content:''; position:absolute; inset:0;
-      background:radial-gradient(circle at 50% 30%, var(--gg-glow) 0%, transparent 70%);
-      opacity:0; transition:opacity .2s; pointer-events:none;
-    }
-    .gg-card:hover:not(.gg-locked) { transform:translateY(-4px) scale(1.04); z-index:2; }
-    .gg-card:hover:not(.gg-locked)::after { opacity:1; }
-    .gg-card:hover:not(.gg-locked) .gg-card-icon { transform:scale(1.22) translateY(-3px); }
-    .gg-card:active:not(.gg-locked) { transform:scale(.94); }
-    .gg-card.gg-locked { opacity:.32; cursor:not-allowed; filter:grayscale(.8); }
-
-    .gg-card-icon {
-      font-size:2.2rem; line-height:1;
-      filter:drop-shadow(0 2px 8px rgba(0,0,0,.5));
-      transition:transform .2s cubic-bezier(.34,1.56,.64,1);
-    }
-    .gg-card-name {
-      font-size:.82rem; font-weight:700; color:#fff;
-      line-height:1.2; letter-spacing:.2px;
-    }
-    .gg-card-sub {
-      font-size:.62rem; color:rgba(255,255,255,.4);
-      line-height:1.3;
-    }
-    .gg-lock-tag {
-      font-size:.58rem; padding:2px 7px; border-radius:99px;
-      background:rgba(255,71,87,.18); color:#ff6b6b;
-      border:1px solid rgba(255,71,87,.35);
-    }
-
-    /* ── Wide card (full row, for settings/friends) ── */
-    .gg-card.gg-wide {
-      grid-column:1/-1; flex-direction:row; gap:14px;
-      justify-content:flex-start; padding:14px 22px; min-height:auto;
-    }
-    .gg-card.gg-wide .gg-card-icon { font-size:1.7rem; }
-    .gg-card.gg-wide .gg-card-name { font-size:.9rem; }
-    .gg-card.gg-wide::before { width:3px; height:100%; top:0; right:0; left:auto; }
-  `;
-  document.head.appendChild(s);
-})();
-
-function _getCatOnclick(cat) {
-  if (cat.special === 'minigames') return 'openMinigames()';
-  if (cat.special === 'learn')     return 'openLearn()';
-  if (cat.special === 'exam')      return 'openExamPre()';
-  if (cat.special === 'history')   return 'openHistory()';
-  if (cat.special === 'mistakes')  return 'openMistakes()';
-  if (cat.special === 'friends')   return 'openFriends()';
-  if (cat.special === 'settings')  return 'openSettings()';
-  return `openCat('${cat.id}')`;
-}
-
-function buildGroupedGrid() {
-  const container = document.getElementById('groupedGrid');
-  if (!container) return;
-  container.innerHTML = '';
-
-  const gc = window.GRADE_CONFIG;
-  const available = gc ? gc.availableCategories : null;
-  const catMap = {};
-  (typeof ALL_CATS !== 'undefined' ? ALL_CATS : []).forEach(c => { catMap[c.id] = c; });
-
-  // Subtitle per group
-  const subtitles = {
-    cheshbon: '4 פעולות החשבון + מילוליות',
-    fractions: 'שברים, עשרוניים, אחוזים, יחס',
-    geometry:  'צורות, מדידה, שטח, היקף',
-    numbers:   'נתונים, ממוצע, דפוסים',
-    games:     'משחקים, לימוד, מבחנים',
-  };
-
-  CAT_GROUPS.forEach(group => {
-    const cats = group.cats
-      .map(id => catMap[id])
-      .filter(c => {
-        if (!c) return false;
-        if (c.special) return true;
-        if (!available) return true;
-        return available.includes(c.id);
-      });
-
-    if (cats.length === 0) return;
-
-    // ── Section panel with CSS vars ──
-    const section = document.createElement('div');
-    section.className = 'gg-section';
-    section.style.cssText = `
-      --gg-color:${group.color};
-      --gg-glow:${group.glow};
-      --gg-grad:${group.grad};
-      border-color:${group.color}33;
-    `;
-
-    // ── Header ──
-    const head = document.createElement('div');
-    head.className = 'gg-head';
-    head.innerHTML = `
-      <span class="gg-head-emoji">${group.emoji}</span>
-      <div class="gg-head-text">
-        <div class="gg-head-label">${group.label}</div>
-        <div class="gg-head-sub">${subtitles[group.id] || ''}</div>
-      </div>
-      <span class="gg-head-count">${cats.length}</span>
-    `;
-    section.appendChild(head);
-
-    // ── Card grid ──
-    const grid = document.createElement('div');
-    grid.className = 'gg-grid';
-    // Pass CSS vars down to cards via grid
-    grid.style.cssText = `--gg-color:${group.color};--gg-glow:${group.glow};`;
-
-    cats.forEach(cat => {
-      const isLocked = !cat.special
-        && typeof LOCKED_TOPICS !== 'undefined'
-        && LOCKED_TOPICS[cat.id]
-        && typeof st !== 'undefined'
-        && !st.learnedTopics.includes(LOCKED_TOPICS[cat.id]);
-
-      const isWide = cat.special === 'settings' || cat.special === 'friends';
-
-      const card = document.createElement('button');
-      card.className = 'gg-card' + (isLocked ? ' gg-locked' : '') + (isWide ? ' gg-wide' : '');
-      if (cat.id === 'minigames') card.id = 'minigamesBtn';
-
-      // Per-card accent color
-      const accent = cat.borderColor || group.color;
-      card.style.cssText = `--gg-color:${accent};--gg-glow:${accent}28;`;
-
-      card.setAttribute('onclick', _getCatOnclick(cat));
-
-      card.innerHTML = `
-        <span class="gg-card-icon">${cat.icon}</span>
-        <div class="gg-card-name">${cat.name}</div>
-        <div class="gg-card-sub">${cat.sub}</div>
-        ${isLocked ? '<span class="gg-lock-tag">🔒 נעול</span>' : ''}
-      `;
-      grid.appendChild(card);
-    });
-
-    section.appendChild(grid);
-    container.appendChild(section);
-  });
-}
-
-// Patch updateHome to also rebuild grouped grid
-function _patchGroupedGrid() {
-  if (!window.updateHome) { setTimeout(_patchGroupedGrid, 120); return; }
+// Patch minigames button after DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  // nothing needed here - grid is built dynamically by updateHome
+});
+// Override buildGrid to always include openMinigames
+var _origUpdateHome;
+function _patchUpdateHome() {
+  if (!window.updateHome) { setTimeout(_patchUpdateHome, 100); return; }
   var orig = window.updateHome;
   window.updateHome = function() {
     orig.apply(this, arguments);
-    buildGroupedGrid();
+    // Fix minigames button if it ended up with empty onclick
     var btn = document.getElementById('minigamesBtn');
-    if (btn && !btn.getAttribute('onclick')) btn.setAttribute('onclick', 'openMinigames()');
+    if (btn && !btn.getAttribute('onclick')) {
+      btn.setAttribute('onclick', 'openMinigames()');
+    }
   };
 }
-_patchGroupedGrid();
-
+_patchUpdateHome();
 </script>
 </body>
 </html>
