@@ -112,31 +112,68 @@ function updateHome() {
   if (window._grade) selectSetGrade(window._grade);
 }
 
-// ══ GRID ══
+// ══ GROUPED CATEGORY GRID ══
+const CAT_GROUPS = [
+  { id:'ops',       label:'פעולות חשבון',      emoji:'🔢', color:'#2ed573', colorRgb:'46,213,115',   cats:['add','sub','mul','div','word'] },
+  { id:'fractions', label:'שברים ומספרים',     emoji:'½',  color:'#54a0ff', colorRgb:'84,160,255',   cats:['fractions','decimals','percent','negatives','ratio'] },
+  { id:'geometry',  label:'הנדסה ומדידה',      emoji:'📐', color:'#c77dff', colorRgb:'199,125,255',  cats:['shapes','measurement'] },
+  { id:'data',      label:'נתונים',             emoji:'📊', color:'#ffd32a', colorRgb:'255,211,42',   cats:['data'] },
+  { id:'tools',     label:'כלים ועוד',          emoji:'🎮', color:'#ff6348', colorRgb:'255,99,72',    cats:['minigames','learn','exam','history','mistakes','friends','settings'] }
+];
+
+function _catOnclick(cat) {
+  const m = {minigames:'openMinigames()',learn:'openLearn()',exam:'openExamPre()',history:'openHistory()',mistakes:'openMistakes()',friends:'openFriends()',settings:'openSettings()'};
+  if (cat.special && m[cat.special]) return m[cat.special];
+  return `openCat('${cat.id}')`;
+}
+
 function buildGrid() {
-  const gc        = window.GRADE_CONFIG;
-  const available = gc ? gc.availableCategories : ['add','sub','mul','word'];
-  const grid      = document.getElementById('mainGrid');
-  grid.innerHTML  = '';
-  ALL_CATS.forEach(cat => {
-    if (!cat.special && !available.includes(cat.id)) return;
-    const div = document.createElement('div');
-    div.className = 'cbt' + (cat.cls ? ' '+cat.cls : '');
-    if (cat.borderColor) div.style.borderColor = cat.borderColor + '40';
-    const onclick = cat.special
-      ? ({'learn':'openLearn()','history':'openHistory()','mistakes':'openMistakes()','exam':'openExamPre()','friends':'openFriends()','settings':'openSettings()','minigames':'openMinigames()'}[cat.special]||'')
-      : `openCat('${cat.id}')`;
-    div.setAttribute('onclick', onclick);
-    div.id = cat.id + 'Btn';
-    div.innerHTML = `<span class="ci">${cat.icon}</span><div class="cn">${cat.name}</div><div class="cs">${cat.sub}</div>`;
-    grid.appendChild(div);
+  const gc       = window.GRADE_CONFIG;
+  const available= gc ? gc.availableCategories : ['add','sub','mul','word'];
+  const grid     = document.getElementById('mainGrid');
+  grid.innerHTML = '';
+  const catMap   = {};
+  ALL_CATS.forEach(c => { catMap[c.id] = c; });
+
+  CAT_GROUPS.forEach(group => {
+    const cats = group.cats.map(id => catMap[id]).filter(c => {
+      if (!c) return false;
+      if (c.special) return true;
+      return available.includes(c.id);
+    });
+    if (!cats.length) return;
+
+    const section = document.createElement('div');
+    section.className = 'cg-section';
+    section.style.cssText = `--gc:${group.color};--gcr:${group.colorRgb};`;
+
+    const head = document.createElement('div');
+    head.className = 'cg-head';
+    head.innerHTML = `<span class="cg-emoji">${group.emoji}</span><span class="cg-label">${group.label}</span><span class="cg-count">${cats.length}</span>`;
+    section.appendChild(head);
+
+    const row = document.createElement('div');
+    row.className = 'cg-row';
+
+    cats.forEach(cat => {
+      const isLocked = !cat.special && LOCKED_TOPICS[cat.id] && !st.learnedTopics.includes(LOCKED_TOPICS[cat.id]);
+      const pill = document.createElement('button');
+      pill.className = 'cg-pill' + (isLocked ? ' cg-locked' : '');
+      pill.id = cat.id + 'Btn';
+      if (cat.borderColor) pill.style.setProperty('--pc', cat.borderColor);
+      pill.setAttribute('onclick', _catOnclick(cat));
+      pill.innerHTML = `<span class="cg-picon">${cat.icon}</span><span class="cg-pname">${cat.name}</span>${isLocked ? '<span class="cg-plock">🔒</span>' : ''}`;
+      row.appendChild(pill);
+    });
+
+    section.appendChild(row);
+    grid.appendChild(section);
   });
-  // Dynamically lock/unlock every category that has a LOCKED_TOPICS entry
+
   Object.entries(LOCKED_TOPICS).forEach(([catId, topicKey]) => {
     lockCat(catId + 'Btn', !st.learnedTopics.includes(topicKey));
   });
 }
-
 function lockCat(id, locked) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -158,9 +195,9 @@ function buildRecommendation() {
     const ratio = v.bad/total; if (ratio>worstRatio) { worstRatio=ratio; worstCat=c; }
   }
   if (!worstCat || worstRatio<0.3) { box.style.display='none'; return; }
+  const catNames = {add:'חיבור',sub:'חיסור',mul:'כפל',div:'חילוק',word:'מילוליות'};
   box.style.display='flex';
-  const _dispName = (CAT_NAMES[worstCat]||worstCat).replace(/^[^א-ת]*/, '').trim();
-  txt.innerHTML = `💡 ממליץ לתרגל: <strong>${_dispName}</strong> — טועה ${Math.round(worstRatio*100)}% מהפעמים!`;
+  txt.innerHTML = `💡 ממליץ לתרגל: <strong>${catNames[worstCat]||worstCat}</strong> — טועה ${Math.round(worstRatio*100)}% מהפעמים!`;
 }
 
 // ══ FRIENDS ══
