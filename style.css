@@ -467,3 +467,240 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
   #groupedGrid,#mainGrid,.lb-card,.pcard,.recommend,.daily-banner,.sec-label{max-width:1160px;}
   #home > div:first-child{max-width:1160px!important;}
 }
+
+/* ══════════════════════════════════════════
+   GROUPED CATEGORY GRID
+   .cg-section  — one panel per topic group
+   .cg-head     — colored header bar
+   .cg-row      — horizontal pill row
+   .cg-pill     — individual sub-category button
+══════════════════════════════════════════ */
+
+/* The outer container */
+#mainGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: var(--w, 520px);
+  padding-bottom: 32px;
+}
+
+/* ── Section panel ── */
+.cg-section {
+  width: 100%;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1.5px solid rgba(var(--gcr, 255,255,255), .25);
+  background: linear-gradient(160deg, var(--card2), var(--card3));
+  box-shadow:
+    0 4px 24px rgba(0,0,0,.4),
+    0 0 0 0 rgba(var(--gcr,255,255,255),.0),
+    inset 0 1px 0 rgba(255,255,255,.06);
+  transition: box-shadow .25s;
+}
+.cg-section:hover {
+  box-shadow:
+    0 8px 36px rgba(0,0,0,.5),
+    0 0 24px rgba(var(--gcr,255,255,255),.08),
+    inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+/* ── Header ── */
+.cg-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px 13px;
+  background: linear-gradient(135deg,
+    rgba(var(--gcr,255,255,255),.14) 0%,
+    rgba(var(--gcr,255,255,255),.06) 100%);
+  border-bottom: 1px solid rgba(var(--gcr,255,255,255),.15);
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  user-select: none;
+}
+/* Glow orb in corner */
+.cg-head::after {
+  content: '';
+  position: absolute;
+  left: -18px; top: -24px;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: rgba(var(--gcr,255,255,255),.18);
+  filter: blur(24px);
+  pointer-events: none;
+}
+/* Shimmer highlight */
+.cg-head::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+.cg-emoji {
+  font-size: 1.85rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 10px var(--gc, #fff));
+  animation: cg-bounce 3s ease-in-out infinite;
+  flex-shrink: 0;
+  position: relative; z-index: 1;
+}
+@keyframes cg-bounce {
+  0%,100% { transform: translateY(0) rotate(0deg); }
+  40%      { transform: translateY(-4px) rotate(-4deg); }
+  70%      { transform: translateY(-2px) rotate(2deg); }
+}
+.cg-label {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--gc, #fff);
+  text-shadow: 0 0 16px rgba(var(--gcr,255,255,255),.5);
+  flex: 1;
+  position: relative; z-index: 1;
+  letter-spacing: .3px;
+}
+.cg-count {
+  font-size: .75rem;
+  font-weight: 800;
+  padding: 4px 11px;
+  border-radius: 99px;
+  background: rgba(var(--gcr,255,255,255),.14);
+  border: 1.5px solid rgba(var(--gcr,255,255,255),.3);
+  color: var(--gc, #fff);
+  letter-spacing: .5px;
+  position: relative; z-index: 1;
+  flex-shrink: 0;
+}
+
+/* ── Pill row ── */
+.cg-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  padding: 14px 16px 16px;
+}
+
+/* ── Individual sub-category pill ── */
+.cg-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px 9px 12px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(var(--gcr,255,255,255),.2);
+  background: rgba(var(--gcr,255,255,255),.07);
+  cursor: pointer;
+  font-family: 'Rubik', sans-serif;
+  transition:
+    transform .2s cubic-bezier(.34,1.56,.64,1),
+    background .18s,
+    border-color .18s,
+    box-shadow .2s;
+  position: relative;
+  overflow: hidden;
+  /* Accent via --pc (per-cat) or --gc (group) */
+  --active-color: var(--pc, var(--gc, #fff));
+  --active-rgb: var(--gcr, 255,255,255);
+}
+/* Subtle top shimmer line */
+.cg-pill::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: rgba(var(--gcr,255,255,255),.2);
+  transition: opacity .2s;
+}
+/* Hover glow sweep */
+.cg-pill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(var(--gcr,255,255,255),.18) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity .2s;
+  border-radius: 14px;
+  pointer-events: none;
+}
+
+.cg-pill:hover:not(.cg-locked) {
+  transform: translateY(-3px) scale(1.05);
+  background: rgba(var(--gcr,255,255,255),.16);
+  border-color: var(--gc, rgba(255,255,255,.5));
+  box-shadow:
+    0 6px 22px rgba(var(--gcr,255,255,255),.18),
+    0 2px 8px rgba(0,0,0,.4),
+    inset 0 1px 0 rgba(255,255,255,.12);
+}
+.cg-pill:hover:not(.cg-locked)::after { opacity: 1; }
+.cg-pill:active:not(.cg-locked) { transform: scale(.94); }
+
+.cg-pill.cg-locked {
+  opacity: .35;
+  cursor: not-allowed;
+  filter: grayscale(.7);
+}
+
+.cg-picon {
+  font-size: 1.35rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px rgba(0,0,0,.6));
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1);
+  flex-shrink: 0;
+}
+.cg-pill:hover:not(.cg-locked) .cg-picon {
+  transform: scale(1.25) rotate(-6deg);
+}
+
+.cg-pname {
+  font-size: .88rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  letter-spacing: .2px;
+}
+
+.cg-plock {
+  font-size: .75rem;
+  opacity: .7;
+  flex-shrink: 0;
+}
+
+/* ══ DESKTOP: pills get bigger, more per row ══ */
+@media(min-width:820px) {
+  #mainGrid { gap: 16px; }
+  .cg-head  { padding: 16px 24px 15px; }
+  .cg-row   { gap: 11px; padding: 16px 20px 20px; }
+  .cg-pill  { padding: 11px 20px 11px 14px; border-radius: 16px; }
+  .cg-picon { font-size: 1.5rem; }
+  .cg-pname { font-size: .92rem; }
+  .cg-label { font-size: 1.3rem; }
+  .cg-emoji { font-size: 2rem; }
+}
+
+@media(min-width:1100px) {
+  .cg-pill  { padding: 12px 22px 12px 16px; }
+  .cg-pname { font-size: .95rem; }
+}
+
+/* ══ MOBILE: full-width pills ══ */
+@media(max-width:420px) {
+  .cg-row  { gap: 7px; padding: 12px 12px 14px; }
+  .cg-pill { padding: 9px 13px 9px 10px; }
+  .cg-pname{ font-size: .82rem; }
+  .cg-picon{ font-size: 1.2rem; }
+}
+
+/* Override .grid defaults for #mainGrid — grouped layout overrides the card grid */
+#mainGrid {
+  display: flex !important;
+  flex-direction: column !important;
+  grid-template-columns: unset !important;
+}
