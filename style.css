@@ -577,3 +577,197 @@ html,body { min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg)
 @media(min-width:1400px) {
   :root { --content-max:1100px; }
 }
+
+
+/* ══════════════════════════════════════════
+   HOME SCREEN — TWO-COLUMN DESKTOP LAYOUT
+   Uses explicit .home-topbar / .home-body /
+   .home-sidebar / .home-main wrappers in HTML
+══════════════════════════════════════════ */
+
+/* ── Top bar (logo + logout) ── */
+.home-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-bottom: 16px;
+  margin-bottom: 6px;
+}
+
+/* ── Body: stacked on mobile, two-column on desktop ── */
+.home-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+/* ── Sidebar (player card, friends, daily) ── */
+.home-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+/* ── Main (categories) ── */
+.home-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+}
+
+/* ── Mobile: ensure everything fills width correctly ── */
+.home-sidebar .pcard,
+.home-sidebar .lb-card,
+.home-sidebar .recommend,
+.home-sidebar .daily-banner {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 0;
+}
+
+.home-sidebar .pcard {
+  padding: 20px 20px;
+  background: linear-gradient(145deg, var(--card2), var(--card3));
+  border-color: rgba(255,255,255,.18);
+  box-shadow: 0 8px 32px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.07);
+}
+
+/* ══════════════════════════════════════════
+   DESKTOP: two-column layout kicks in
+══════════════════════════════════════════ */
+@media(min-width:820px) {
+
+  /* Stretch #home to full width, no flex centering */
+  #home {
+    align-items: stretch !important;
+    padding-left: 40px !important;
+    padding-right: 40px !important;
+    max-width: 1280px !important;
+    margin: 0 auto;
+  }
+
+  .home-topbar {
+    padding-bottom: 20px;
+  }
+
+  .home-body {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 28px;
+  }
+
+  /* Fixed-width sidebar */
+  .home-sidebar {
+    width: 300px;
+    min-width: 300px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 24px;
+    /* sticky sidebar stays while you scroll categories */
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* hide scrollbar visually */
+    scrollbar-width: none;
+  }
+  .home-sidebar::-webkit-scrollbar { display: none; }
+
+  /* Main fills remaining space */
+  .home-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Bigger category cards on desktop */
+  .home-main .grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 16px;
+  }
+
+  .home-main .grid .cbt {
+    padding: 26px 14px 20px;
+    border-radius: 22px;
+  }
+
+  .home-main .grid .cbt .ci {
+    font-size: 2.8rem;
+    margin-bottom: 11px;
+  }
+
+  .home-main .grid .cbt .cn {
+    font-size: 1rem;
+  }
+
+  .home-main .grid .cbt .cs {
+    font-size: .74rem;
+    margin-top: 5px;
+  }
+
+  /* Sidebar cards: slightly more refined */
+  .home-sidebar .pcard {
+    padding: 24px 22px;
+    border-radius: 24px;
+  }
+
+  .home-sidebar .lb-card {
+    border-radius: 22px;
+    padding: 16px 18px;
+    background: linear-gradient(145deg, var(--card), var(--card2));
+  }
+
+  .home-sidebar .daily-banner {
+    border-radius: 20px;
+    padding: 16px 18px;
+  }
+
+  .home-sidebar .recommend {
+    border-radius: 16px;
+    padding: 13px 16px;
+  }
+
+  /* Section label sits right above the grid */
+  .home-main .sec-label {
+    margin-top: 0;
+    margin-bottom: 14px;
+  }
+}
+
+@media(min-width:1100px) {
+  #home {
+    padding-left: 56px !important;
+    padding-right: 56px !important;
+    max-width: 1400px !important;
+  }
+  .home-sidebar {
+    width: 320px;
+    min-width: 320px;
+  }
+  .home-body {
+    gap: 32px;
+  }
+  .home-main .grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
+@media(min-width:1440px) {
+  #home {
+    padding-left: 80px !important;
+    padding-right: 80px !important;
+  }
+  .home-sidebar {
+    width: 340px;
+    min-width: 340px;
+  }
+}
+
+/* ── Logo on home screen ── */
+@media(min-width:820px) {
+  .home-topbar .logo {
+    font-size: 2.6rem !important;
+  }
+}
