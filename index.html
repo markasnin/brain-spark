@@ -149,46 +149,61 @@
 
 <!-- ══ HOME ══ -->
 <div class="scr" id="home">
-  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:100%;margin-bottom:4px">
+
+  <!-- Top bar: logo + logout (full width) -->
+  <div class="home-topbar">
     <div class="logo" style="font-size:2.4rem;animation:none">⚡ Brain Spark</div>
     <button class="logout-btn" onclick="fbLogout()">התנתק</button>
   </div>
-  <div class="pcard" style="margin-top:10px">
-    <div class="pname" id="playerName">⭐ שחקן</div>
-    <div class="plevel" id="levelDisplay">רמה 1</div>
-    <div id="gradeBadgeWrap"></div>
-    <div class="xp-outer"><div class="xp-inner" id="xpBar" style="width:0%"></div></div>
-    <div class="xp-txt" id="xpTxt">0 / 50 נקודות לרמה הבאה</div>
-    <div class="streak-badge" id="streakBadge" style="display:none">🔥 <span id="streakCount">0</span> ברצף!</div>
-  </div>
-  <div class="lb-card" id="homeLbCard">
-    <div class="lb-title">🏆 לוח חברים</div>
-    <div id="homeLbList"><div style="color:var(--txt2);font-size:.85rem;text-align:center;padding:8px">טוען...</div></div>
-    <button onclick="openFriends()" style="width:100%;margin-top:10px;padding:9px;border-radius:10px;border:1px solid rgba(30,144,255,.3);background:rgba(30,144,255,.08);color:var(--a4);font-family:'Rubik',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;">👥 כל החברים ←</button>
-  </div>
-  <div class="recommend" id="recommendBox" style="display:none">
-    <div class="recommend-icon">💡</div>
-    <div class="recommend-text" id="recommendText"></div>
-  </div>
-  <div class="daily-banner" id="dailyBanner" onclick="startDaily()">
-    <div style="font-size:2rem">📅</div>
-    <div>
-      <div style="font-weight:700;font-size:1rem;color:var(--a2)">משימה יומית!</div>
-      <div style="font-size:.82rem;color:var(--txt2)" id="dailyDesc">2 שאלות מיוחדות מחכות לך</div>
-    </div>
-  </div>
-  <div class="sec-label">קטגוריות</div>
-  <div class="grid" id="mainGrid"></div>
+
+  <!-- Two-column body -->
+  <div class="home-body">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="home-sidebar">
+      <div class="pcard">
+        <div class="pname" id="playerName">⭐ שחקן</div>
+        <div class="plevel" id="levelDisplay">רמה 1</div>
+        <div id="gradeBadgeWrap"></div>
+        <div class="xp-outer"><div class="xp-inner" id="xpBar" style="width:0%"></div></div>
+        <div class="xp-txt" id="xpTxt">0 / 50 נקודות לרמה הבאה</div>
+        <div class="streak-badge" id="streakBadge" style="display:none">🔥 <span id="streakCount">0</span> ברצף!</div>
+      </div>
+      <div class="lb-card" id="homeLbCard">
+        <div class="lb-title">🏆 לוח חברים</div>
+        <div id="homeLbList"><div style="color:var(--txt2);font-size:.85rem;text-align:center;padding:8px">טוען...</div></div>
+        <button onclick="openFriends()" style="width:100%;margin-top:10px;padding:9px;border-radius:10px;border:1px solid rgba(30,144,255,.3);background:rgba(30,144,255,.08);color:var(--a4);font-family:'Rubik',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;">👥 כל החברים ←</button>
+      </div>
+      <div class="recommend" id="recommendBox" style="display:none">
+        <div class="recommend-icon">💡</div>
+        <div class="recommend-text" id="recommendText"></div>
+      </div>
+      <div class="daily-banner" id="dailyBanner" onclick="startDaily()">
+        <div style="font-size:2rem">📅</div>
+        <div>
+          <div style="font-weight:700;font-size:1rem;color:var(--a2)">משימה יומית!</div>
+          <div style="font-size:.82rem;color:var(--txt2)" id="dailyDesc">2 שאלות מיוחדות מחכות לך</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT: Categories -->
+    <main class="home-main">
+      <div class="sec-label">קטגוריות</div>
+      <div class="grid" id="mainGrid"></div>
+    </main>
+
+  </div><!-- /home-body -->
 </div>
 
 <!-- ══ FRIENDS ══ -->
 <div class="scr" id="friends-scr">
   <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:var(--a4);margin-bottom:6px;">👥 חברים</div>
-  <div style="width:100%;max-width:100%;margin-bottom:18px;">
+  <div style="width:100%;max-width:500px;margin-bottom:18px;">
     <div style="font-weight:700;font-size:.85rem;color:var(--a2);margin-bottom:10px;letter-spacing:1px;">🏆 לוח תוצאות</div>
     <div id="leaderboardList" style="display:flex;flex-direction:column;gap:8px;"></div>
   </div>
-  <div style="width:100%;max-width:100%;background:linear-gradient(135deg,var(--card),var(--card2));border-radius:16px;padding:18px;border:1px solid rgba(255,255,255,.08);margin-bottom:18px;">
+  <div style="width:100%;max-width:500px;background:linear-gradient(135deg,var(--card),var(--card2));border-radius:16px;padding:18px;border:1px solid rgba(255,255,255,.08);margin-bottom:18px;">
     <div style="font-weight:700;margin-bottom:10px;color:var(--a4)">➕ הוסף חבר</div>
     <div style="display:flex;gap:8px;">
       <input class="auth-inp" id="friendSearch" style="margin-bottom:0;flex:1" placeholder="שם משתמש של החבר" type="text" onkeydown="if(event.key==='Enter')fbSearchUser()">
@@ -196,7 +211,7 @@
     </div>
     <div id="friendResults"></div>
   </div>
-  <div style="width:100%;max-width:100%;">
+  <div style="width:100%;max-width:500px;">
     <div style="font-weight:700;font-size:.85rem;color:var(--txt2);margin-bottom:10px;letter-spacing:1px;">החברים שלי</div>
     <div class="friends-list" id="friendsList"></div>
   </div>
@@ -337,20 +352,20 @@
     </div>
   </div>
   <div class="prog-bar"><div class="prog-inner" id="examBar" style="width:10%"></div></div>
-  <div id="examQArea" style="width:100%;max-width:100%;"></div>
+  <div id="examQArea" style="width:100%;max-width:580px;"></div>
   <div id="examResults" style="display:none;width:100%;max-width:560px;"></div>
 </div>
 
 <!-- ══ HISTORY ══ -->
 <div class="scr" id="history-scr">
   <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:#00d2d3;margin-bottom:16px;">📊 היסטוריה ★</div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:100%;margin-bottom:18px;" id="histStats"></div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;width:100%;max-width:100%;">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:500px;margin-bottom:18px;" id="histStats"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;width:100%;max-width:500px;">
     <button onclick="filterHist('all')" id="hfAll" class="qbtn" style="padding:7px 14px;font-size:.82rem;background:rgba(30,144,255,.2);color:var(--a4);border:1px solid var(--a4);">הכל</button>
     <button onclick="filterHist('ok')"  id="hfOk"  class="qbtn" style="padding:7px 14px;font-size:.82rem;background:rgba(255,255,255,.06);color:var(--txt2);">✅ נכון</button>
     <button onclick="filterHist('bad')" id="hfBad" class="qbtn" style="padding:7px 14px;font-size:.82rem;background:rgba(255,255,255,.06);color:var(--txt2);">❌ שגוי</button>
   </div>
-  <div style="display:flex;flex-direction:column;gap:9px;width:100%;max-width:100%;" id="histList"></div>
+  <div style="display:flex;flex-direction:column;gap:9px;width:100%;max-width:500px;" id="histList"></div>
   <button class="back" onclick="show('home')" style="margin-top:16px;">← חזרה</button>
 </div>
 
@@ -358,18 +373,18 @@
 <div class="scr" id="mistakes-scr">
   <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:var(--streak);margin-bottom:8px;">🔄 לחזור על טעויות</div>
   <div style="color:var(--txt2);font-size:.88rem;margin-bottom:18px;">תרגל שוב את מה שלא הצלחת</div>
-  <div style="display:flex;flex-direction:column;gap:9px;width:100%;max-width:100%;" id="mistakesList"></div>
+  <div style="display:flex;flex-direction:column;gap:9px;width:100%;max-width:500px;" id="mistakesList"></div>
   <button id="practiceMistakesBtn" style="display:none;margin-top:16px;padding:13px 28px;border-radius:99px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--streak),var(--a1));color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;" onclick="startMistakesPractice()">🔥 תרגל את כל הטעויות!</button>
   <button class="back" onclick="show('home')" style="margin-top:12px;">← חזרה</button>
 </div>
 
 <!-- ══ SETTINGS ══ -->
 <div class="scr" id="settings-scr">
-  <div id="settingsTopTabs" style="display:none;gap:0;background:rgba(255,255,255,.06);border-radius:12px;overflow:hidden;margin-bottom:20px;width:100%;max-width:100%;">
+  <div id="settingsTopTabs" style="display:none;gap:0;background:rgba(255,255,255,.06);border-radius:12px;overflow:hidden;margin-bottom:20px;width:100%;max-width:500px;">
     <button class="auth-tab active" id="parentsTabBtn" onclick="switchSettingsTab('parents')" style="flex:1;">🔐 הגדרות הורים</button>
     <button class="auth-tab" id="adminTabBtn" onclick="switchSettingsTab('admin')" style="flex:1;background:linear-gradient(135deg,#00d2d3,#9b59b6);color:#fff;">👑 הגדרות מנהלים</button>
   </div>
-  <div id="settingsParentsSection" style="width:100%;max-width:100%;">
+  <div id="settingsParentsSection" style="width:100%;max-width:500px;">
     <div id="pgateWrap">
       <div class="pgate">
         <div class="pgate-title">🔐 שטח הורים</div>
@@ -464,7 +479,7 @@
       <button onclick="saveSettings()" style="width:100%;padding:14px;border-radius:14px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--a3),#1dd1a1);color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;margin-top:6px;">💾 שמור הגדרות</button>
     </div>
   </div>
-  <div id="settingsAdminSection" style="display:none;width:100%;max-width:100%;">
+  <div id="settingsAdminSection" style="display:none;width:100%;max-width:500px;">
     <div style="font-family:'Fredoka',sans-serif;font-size:1.8rem;margin-bottom:6px;text-align:center;background:linear-gradient(135deg,#00d2d3,#9b59b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">👑 הגדרות מנהלים</div>
     <div style="font-size:.82rem;color:var(--txt2);text-align:center;margin-bottom:20px;">רק למשתמשים מיוחדים ✨</div>
     <div class="set-section">
