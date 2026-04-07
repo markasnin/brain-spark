@@ -633,32 +633,23 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
   flex-shrink: 0;
 }
 
-/* Per-group color: give each section's pills their group color on hover */
-/* ops group — green */
-.cg-section[style*="2ed573"] .cg-pill:hover:not(.cg-locked) {
-  border-color: #2ed573;
-  box-shadow: 0 6px 20px rgba(46,213,115,.25), 0 0 14px rgba(46,213,115,.15);
-}
-/* fractions group — blue */
-.cg-section[style*="54a0ff"] .cg-pill:hover:not(.cg-locked) {
-  border-color: #54a0ff;
-  box-shadow: 0 6px 20px rgba(84,160,255,.25), 0 0 14px rgba(84,160,255,.15);
-}
-/* geometry group — purple */
-.cg-section[style*="c77dff"] .cg-pill:hover:not(.cg-locked) {
-  border-color: #c77dff;
-  box-shadow: 0 6px 20px rgba(199,125,255,.25), 0 0 14px rgba(199,125,255,.15);
-}
-/* data group — yellow */
-.cg-section[style*="ffd32a"] .cg-pill:hover:not(.cg-locked) {
-  border-color: #ffd32a;
-  box-shadow: 0 6px 20px rgba(255,211,42,.25), 0 0 14px rgba(255,211,42,.15);
-}
-/* tools group — orange */
-.cg-section[style*="ff6348"] .cg-pill:hover:not(.cg-locked) {
-  border-color: #ff6348;
-  box-shadow: 0 6px 20px rgba(255,99,72,.25), 0 0 14px rgba(255,99,72,.15);
-}
+/* Per-group pill hover colors */
+/* ops — green */
+.cg-section[style*="2ed573"] .cg-pill:hover:not(.cg-locked) { border-color:#2ed573; box-shadow:0 6px 20px rgba(46,213,115,.28),0 0 14px rgba(46,213,115,.16); }
+/* fractions — blue */
+.cg-section[style*="54a0ff"] .cg-pill:hover:not(.cg-locked) { border-color:#54a0ff; box-shadow:0 6px 20px rgba(84,160,255,.28),0 0 14px rgba(84,160,255,.16); }
+/* geometry — purple */
+.cg-section[style*="c77dff"] .cg-pill:hover:not(.cg-locked) { border-color:#c77dff; box-shadow:0 6px 20px rgba(199,125,255,.28),0 0 14px rgba(199,125,255,.16); }
+/* data — yellow */
+.cg-section[style*="ffd32a"] .cg-pill:hover:not(.cg-locked) { border-color:#ffd32a; box-shadow:0 6px 20px rgba(255,211,42,.28),0 0 14px rgba(255,211,42,.16); }
+/* minigames — orange */
+.cg-section[style*="ff6348"] .cg-pill:hover:not(.cg-locked) { border-color:#ff6348; box-shadow:0 6px 20px rgba(255,99,72,.28),0 0 14px rgba(255,99,72,.16); }
+/* exam/practice — teal */
+.cg-section[style*="00d2d3"] .cg-pill:hover:not(.cg-locked) { border-color:#00d2d3; box-shadow:0 6px 20px rgba(0,210,211,.28),0 0 14px rgba(0,210,211,.16); }
+/* account/history — lavender */
+.cg-section[style*="a29bfe"] .cg-pill:hover:not(.cg-locked) { border-color:#a29bfe; box-shadow:0 6px 20px rgba(162,155,254,.28),0 0 14px rgba(162,155,254,.16); }
+/* friends — pink */
+.cg-section[style*="fd79a8"] .cg-pill:hover:not(.cg-locked) { border-color:#fd79a8; box-shadow:0 6px 20px rgba(253,121,168,.28),0 0 14px rgba(253,121,168,.16); }
 
 /* ── Desktop: bigger pills ── */
 @media(min-width:820px) {
