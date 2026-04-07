@@ -29,7 +29,6 @@
 <script src="ui.js"></script>
 <script type="module" src="firebase.js"></script>
 
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 <div id="bg"></div>
@@ -154,6 +153,7 @@
     <div class="logo" style="font-size:2.4rem;animation:none">⚡ Brain Spark</div>
     <button class="logout-btn" onclick="fbLogout()">התנתק</button>
   </div>
+  <div id="home-top-row">
   <div class="pcard" style="margin-top:10px">
     <div class="pname" id="playerName">⭐ שחקן</div>
     <div class="plevel" id="levelDisplay">רמה 1</div>
@@ -166,6 +166,7 @@
     <div class="lb-title">🏆 לוח חברים</div>
     <div id="homeLbList"><div style="color:var(--txt2);font-size:.85rem;text-align:center;padding:8px">טוען...</div></div>
     <button onclick="openFriends()" style="width:100%;margin-top:10px;padding:9px;border-radius:10px;border:1px solid rgba(30,144,255,.3);background:rgba(30,144,255,.08);color:var(--a4);font-family:'Rubik',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;">👥 כל החברים ←</button>
+  </div>
   </div>
   <div class="recommend" id="recommendBox" style="display:none">
     <div class="recommend-icon">💡</div>
