@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════
-// minigame-dungeon.js  —  ⚔️ Math Dungeon
+// minigame-dungeon.js  —  &#x2694;&#xFE0F; Math Dungeon
 // ══════════════════════════════════════════════════════════════
 
 window.DungeonGame = (function () {
@@ -51,9 +51,9 @@ window.DungeonGame = (function () {
     {id:'bat',   name:'עטלף',      emoji:'🦇',hp:2,gold:6, xp:4, diff:'easy',  color:'#a9b8c3'},
     {id:'rat',   name:'עכברוש',    emoji:'🐀',hp:3,gold:8, xp:5, diff:'easy',  color:'#adb5bd'},
     {id:'goblin',name:'גובלין',    emoji:'👺',hp:3,gold:12,xp:8, diff:'medium',color:'#69db7c'},
-    {id:'zombie',name:'זומבי',     emoji:'🧟',hp:4,gold:14,xp:10,diff:'medium',color:'#8eb994'},
-    {id:'witch', name:'מכשפה',     emoji:'🧙',hp:4,gold:16,xp:12,diff:'medium',color:'#cc5de8'},
-    {id:'knight',name:'אביר רע',   emoji:'🗡️',hp:5,gold:22,xp:18,diff:'hard',  color:'#74c0fc'},
+    {id:'zombie',name:'זומבי',     emoji:'&#x1F9DF;',hp:4,gold:14,xp:10,diff:'medium',color:'#8eb994'},
+    {id:'witch', name:'מכשפה',     emoji:'&#x1F9D9;',hp:4,gold:16,xp:12,diff:'medium',color:'#cc5de8'},
+    {id:'knight',name:'אביר רע',   emoji:'&#x1F5E1;',hp:5,gold:22,xp:18,diff:'hard',  color:'#74c0fc'},
     {id:'dragon',name:'דרקון',     emoji:'🐲',hp:6,gold:35,xp:28,diff:'hard',  color:'#ff8c42'},
     {id:'boss',  name:'הבוס הגדול',emoji:'👹',hp:8,gold:60,xp:50,diff:'hard',  color:'#ff6b6b'},
   ];
@@ -65,7 +65,21 @@ window.DungeonGame = (function () {
   let st={phase:'map',room:0,heroHp:HERO_MAX_HP,gold:0,xp:0,heroLv:1,monster:null,monsterHp:0,activeQ:null,qTimer:null,qTimeLeft:0,streak:0,inventory:[],log:[]};
 
   function hpBar(cur,max,col){const p=Math.max(0,Math.min(100,(cur/max)*100));return `<div style="background:rgba(255,255,255,.1);border-radius:6px;height:10px;overflow:hidden"><div style="width:${p}%;height:100%;background:${col};border-radius:6px;transition:width .3s"></div></div>`;}
-  function heroStatus(){return `<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 12px;margin-bottom:8px"><div style="font-size:1.8rem">🧙‍♂️</div><div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:#fff;font-family:'Fredoka',sans-serif;font-size:.95rem">גיבור Lv.${st.heroLv}</span><span style="color:#ffd43b;font-size:.8rem">🪙 ${st.gold} זהב | ✨ ${st.xp} ניסיון</span></div>${hpBar(st.heroHp,HERO_MAX_HP,'#ff6b6b')}<div style="font-size:.7rem;color:#adb5bd;margin-top:2px">❤️ ${st.heroHp}/${HERO_MAX_HP}</div></div></div>`;}
+  function heroStatus(){
+    const hpDots = Array.from({length:HERO_MAX_HP},(_,i)=>
+      `<span style="color:${i<st.heroHp?'#ff6b6b':'#444'};font-size:.9rem">&#9829;</span>`
+    ).join('');
+    return `<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 12px;margin-bottom:8px">
+      <div style="font-size:1.8rem">&#x1F9D9;</div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="color:#fff;font-family:'Fredoka',sans-serif;font-size:.95rem">&#x1F9D9; Lv.${st.heroLv}</span>
+          <span style="color:#ffd43b;font-size:.8rem">&#x1FA99; ${st.gold} | &#x2728; ${st.xp}</span>
+        </div>
+        ${hpBar(st.heroHp,HERO_MAX_HP,'#ff6b6b')}
+        <div style="font-size:.72rem;color:#adb5bd;margin-top:3px">HP: ${hpDots} ${st.heroHp}/${HERO_MAX_HP}</div>
+      </div>
+    </div>`;}
 
   function render(){
     const el=document.getElementById('dungeonWrap');if(!el)return;
@@ -79,11 +93,11 @@ window.DungeonGame = (function () {
   function renderMap(el){
     const bgColor=ROOM_BG[st.room%ROOM_BG.length],roomName=ROOMS[st.room%ROOMS.length],isLast=st.room>=7;
     el.innerHTML=`
-      <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:#ffd43b;text-align:center;margin-bottom:6px">⚔️ מבוך המתמטיקה</div>
-      ${helpBtn("⚔️ מבוך המתמטיקה\n\n• בחר: קרב מפלצת או חיפוש אוצר\n• קרב: פתור תרגיל לפני שהזמן נגמר\n• נכון → פוגע במפלצת | שגוי → אתה נפגע\n• נגמר הזמן → אתה נפגע אוטומטית\n• אוצר: פתור תרגיל להשיג זהב\n• 8 חדרים להשלים — בהצלחה!")}
+      <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:#ffd43b;text-align:center;margin-bottom:6px">&#x2694;&#xFE0F; מבוך המתמטיקה</div>
+      ${helpBtn("&#x2694;&#xFE0F; מבוך המתמטיקה\n\n• בחר: קרב מפלצת או חיפוש אוצר\n• קרב: פתור תרגיל לפני שהזמן נגמר\n• נכון → פוגע במפלצת | שגוי → אתה נפגע\n• נגמר הזמן → אתה נפגע אוטומטית\n• אוצר: פתור תרגיל להשיג זהב\n• 8 חדרים להשלים — בהצלחה!")}
       ${heroStatus()}
       <div style="background:${bgColor};border-radius:16px;padding:16px;text-align:center;margin-bottom:10px;border:1px solid rgba(255,255,255,.1)">
-        <div style="font-size:3rem;margin-bottom:4px">${isLast?'🏆':'🚪'}</div>
+        <div style="font-size:3rem;margin-bottom:4px">${isLast?'&#x1F3C6;':'🚪'}</div>
         <div style="font-family:'Fredoka',sans-serif;font-size:1.1rem;color:#fff;margin-bottom:4px">${roomName}</div>
         <div style="color:#adb5bd;font-size:.78rem">חדר ${st.room+1} מתוך 8</div>
         <div style="display:flex;gap:6px;justify-content:center;margin-top:10px">
@@ -91,10 +105,10 @@ window.DungeonGame = (function () {
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-        <button onclick="window.DungeonGame.enterRoom('monster')" style="padding:14px;background:linear-gradient(135deg,#7f1d1d,#991b1b);border:2px solid #ef4444;color:#fff;border-radius:14px;font-family:'Fredoka',sans-serif;font-size:1rem;cursor:pointer">⚔️ הילחם במפלצת</button>
-        <button onclick="window.DungeonGame.enterRoom('treasure')" style="padding:14px;background:linear-gradient(135deg,#713f12,#92400e);border:2px solid #fbbf24;color:#fff;border-radius:14px;font-family:'Fredoka',sans-serif;font-size:1rem;cursor:pointer">🎁 חפש אוצר</button>
+        <button onclick="window.DungeonGame.enterRoom('monster')" style="padding:14px;background:linear-gradient(135deg,#7f1d1d,#991b1b);border:2px solid #ef4444;color:#fff;border-radius:14px;font-family:'Fredoka',sans-serif;font-size:1rem;cursor:pointer">&#x2694;&#xFE0F; הילחם במפלצת</button>
+        <button onclick="window.DungeonGame.enterRoom('treasure')" style="padding:14px;background:linear-gradient(135deg,#713f12,#92400e);border:2px solid #fbbf24;color:#fff;border-radius:14px;font-family:'Fredoka',sans-serif;font-size:1rem;cursor:pointer">&#x1F381; חפש אוצר</button>
       </div>
-      ${st.inventory.includes('potion')?`<button onclick="window.DungeonGame.usePotion()" style="width:100%;padding:10px;background:rgba(239,68,68,.15);border:1px solid #ef4444;color:#fca5a5;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.85rem;cursor:pointer;margin-bottom:6px">🧪 כוס מרפא (❤️+1)</button>`:''}
+      ${st.inventory.includes('potion')?`<button onclick="window.DungeonGame.usePotion()" style="width:100%;padding:10px;background:rgba(239,68,68,.15);border:1px solid #ef4444;color:#fca5a5;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.85rem;cursor:pointer;margin-bottom:6px">&#x1F9EA; כוס מרפא (&#x2764;&#xFE0F;+1)</button>`:''}
       <button onclick="window.DungeonGame.exit()" style="width:100%;padding:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#6b7280;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.82rem;cursor:pointer">← עזוב מבוך</button>
       ${st.log.length?`<div style="margin-top:8px;color:#6b7280;font-size:.72rem;font-family:Rubik,sans-serif;text-align:center">${st.log[st.log.length-1]}</div>`:''}
     `;
@@ -105,13 +119,13 @@ window.DungeonGame = (function () {
     const totalSecs=_diffSecs(m.diff), pct=Math.max(0,st.qTimeLeft/totalSecs*100);
     const timeColor=st.qTimeLeft<=10?'#ff6b6b':st.qTimeLeft<=20?'#ffd43b':'#69db7c';
     el.innerHTML=`
-      <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:#ff6b6b;text-align:center;margin-bottom:6px">⚔️ קרב!</div>
+      <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:#ff6b6b;text-align:center;margin-bottom:6px">&#x2694;&#xFE0F; קרב!</div>
       ${heroStatus()}
       <div style="background:linear-gradient(135deg,${m.color}22,rgba(0,0,0,.3));border:2px solid ${m.color}55;border-radius:16px;padding:14px;text-align:center;margin-bottom:10px">
         <div style="font-size:3.5rem;margin-bottom:4px">${m.emoji}</div>
         <div style="font-family:'Fredoka',sans-serif;font-size:1.2rem;color:${m.color};margin-bottom:4px">${m.name}</div>
         ${hpBar(st.monsterHp,m.hp,m.color)}
-        <div style="font-size:.7rem;color:#adb5bd;margin-top:2px">❤️ ${st.monsterHp}/${m.hp}</div>
+        <div style="font-size:.7rem;color:#adb5bd;margin-top:2px">&#x2764;&#xFE0F; ${st.monsterHp}/${m.hp}</div>
       </div>
       <div style="background:rgba(255,255,255,.06);border-radius:14px;padding:12px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -124,7 +138,7 @@ window.DungeonGame = (function () {
         <div style="display:flex;gap:8px">
           <input id="dungAns" type="number" placeholder="?" onkeydown="if(event.key==='Enter')window.DungeonGame.submitAns()" autofocus
             style="flex:1;padding:11px;background:rgba(255,255,255,.1);border:2px solid ${m.color}66;color:#fff;border-radius:12px;font-size:1.2rem;font-family:'Rubik',sans-serif;text-align:center;outline:none">
-          <button onclick="window.DungeonGame.submitAns()" style="padding:11px 18px;background:${m.color};border:none;border-radius:12px;font-size:1.2rem;cursor:pointer;font-weight:900">⚔️</button>
+          <button onclick="window.DungeonGame.submitAns()" style="padding:11px 18px;background:${m.color};border:none;border-radius:12px;font-size:1.2rem;cursor:pointer;font-weight:900">&#x2694;&#xFE0F;</button>
         </div>
       </div>
       <div style="text-align:center;color:#6b7280;font-size:.75rem;font-family:Rubik,sans-serif">נכון=פוגע | שגוי=נפגע | זמן נגמר=נפגע</div>
@@ -138,7 +152,7 @@ window.DungeonGame = (function () {
       <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:#ffd43b;text-align:center;margin-bottom:6px">💰 חיפוש אוצר!</div>
       ${heroStatus()}
       <div style="background:linear-gradient(135deg,#713f12,#92400e);border:2px solid #fbbf24;border-radius:16px;padding:20px;text-align:center;margin-bottom:10px">
-        <div style="font-size:3rem;margin-bottom:8px">🎁</div>
+        <div style="font-size:3rem;margin-bottom:8px">&#x1F381;</div>
         <div style="font-family:'Fredoka',sans-serif;font-size:1.1rem;color:#fbbf24;margin-bottom:10px">פתח את הארגז! פתור:</div>
         <div style="font-family:'Rubik',sans-serif;font-size:1.1rem;color:#fff;font-weight:700;margin-bottom:12px;direction:ltr">${st.activeQ.text}</div>
         <div style="display:flex;gap:8px;justify-content:center">
@@ -150,8 +164,8 @@ window.DungeonGame = (function () {
     setTimeout(()=>{const i=document.getElementById('treasAns');if(i)i.focus();},100);
   }
 
-  function renderGameOver(el){el.innerHTML=`<div style="text-align:center;padding:20px"><div style="font-size:4rem;margin-bottom:12px">💀</div><div style="font-family:'Fredoka',sans-serif;font-size:1.8rem;color:#ff6b6b;margin-bottom:8px">נפלת בקרב!</div><div style="color:#adb5bd;font-family:Rubik,sans-serif;font-size:.9rem;margin-bottom:20px">הגעת עד חדר ${st.room+1} עם ${st.gold} 🪙</div><button onclick="window.DungeonGame.restart()" style="width:100%;padding:14px;background:linear-gradient(135deg,#991b1b,#7f1d1d);border:2px solid #ef4444;color:#fff;border-radius:14px;font-family:'Fredoka',sans-serif;font-size:1.1rem;cursor:pointer;margin-bottom:8px">🔄 נסה שוב</button><button onclick="window.DungeonGame.exit()" style="width:100%;padding:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#6b7280;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.85rem;cursor:pointer">← עזוב</button></div>`;}
-  function renderVictory(el){el.innerHTML=`<div style="text-align:center;padding:20px"><div style="font-size:4rem;margin-bottom:12px">🏆</div><div style="font-family:'Fredoka',sans-serif;font-size:1.8rem;color:#ffd43b;margin-bottom:8px">ניצחת את המבוך!</div><div style="color:#adb5bd;font-family:Rubik,sans-serif;font-size:.9rem;margin-bottom:4px">זהב: 🪙 ${st.gold} | XP: ✨ ${st.xp}</div><div style="color:#69db7c;font-family:Rubik,sans-serif;font-size:.9rem;margin-bottom:20px">כל הכבוד!</div><button onclick="window.DungeonGame.restart()" style="width:100%;padding:14px;background:linear-gradient(135deg,#713f12,#92400e);border:2px solid #fbbf24;color:#fff;border-radius:14px;font-family:'Fredoka',sans-serif;font-size:1.1rem;cursor:pointer;margin-bottom:8px">🔄 שחק שוב</button><button onclick="window.DungeonGame.exit()" style="width:100%;padding:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#6b7280;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.85rem;cursor:pointer">← חזרה לבית</button></div>`;if(window.spawnConf)window.spawnConf(50);if(window.addPts)window.addPts(st.gold);if(window.showPtsPop)window.showPtsPop(st.gold);}
+  function renderGameOver(el){el.innerHTML=`<div style="text-align:center;padding:20px"><div style="font-size:4rem;margin-bottom:12px">&#x1F480;</div><div style="font-family:'Fredoka',sans-serif;font-size:1.8rem;color:#ff6b6b;margin-bottom:8px">נפלת בקרב!</div><div style="color:#adb5bd;font-family:Rubik,sans-serif;font-size:.9rem;margin-bottom:20px">הגעת עד חדר ${st.room+1} עם ${st.gold} &#x1FA99;</div><button onclick="window.DungeonGame.restart()" style="width:100%;padding:14px;background:linear-gradient(135deg,#991b1b,#7f1d1d);border:2px solid #ef4444;color:#fff;border-radius:14px;font-family:'Fredoka',sans-serif;font-size:1.1rem;cursor:pointer;margin-bottom:8px">&#x1F504; נסה שוב</button><button onclick="window.DungeonGame.exit()" style="width:100%;padding:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#6b7280;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.85rem;cursor:pointer">← עזוב</button></div>`;}
+  function renderVictory(el){el.innerHTML=`<div style="text-align:center;padding:20px"><div style="font-size:4rem;margin-bottom:12px">&#x1F3C6;</div><div style="font-family:'Fredoka',sans-serif;font-size:1.8rem;color:#ffd43b;margin-bottom:8px">ניצחת את המבוך!</div><div style="color:#adb5bd;font-family:Rubik,sans-serif;font-size:.9rem;margin-bottom:4px">זהב: &#x1FA99; ${st.gold} | XP: &#x2728; ${st.xp}</div><div style="color:#69db7c;font-family:Rubik,sans-serif;font-size:.9rem;margin-bottom:20px">כל הכבוד!</div><button onclick="window.DungeonGame.restart()" style="width:100%;padding:14px;background:linear-gradient(135deg,#713f12,#92400e);border:2px solid #fbbf24;color:#fff;border-radius:14px;font-family:'Fredoka',sans-serif;font-size:1.1rem;cursor:pointer;margin-bottom:8px">&#x1F504; שחק שוב</button><button onclick="window.DungeonGame.exit()" style="width:100%;padding:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#6b7280;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.85rem;cursor:pointer">← חזרה לבית</button></div>`;if(window.spawnConf)window.spawnConf(50);if(window.addPts)window.addPts(st.gold);if(window.showPtsPop)window.showPtsPop(st.gold);}
 
   // ── Timer — easy=40s, medium=60s, hard=90s ──
   function _diffSecs(d){return d==='hard'?90:d==='medium'?60:40;}
@@ -175,7 +189,7 @@ window.DungeonGame = (function () {
   function clearTimer(){if(st.qTimer){clearInterval(st.qTimer);st.qTimer=null;}}
 
   function heroHit(){st.heroHp--;log('💥 המפלצת פגעה! HP:'+st.heroHp);if(st.heroHp<=0){st.phase='gameover';render();return;}st.activeQ=makeQ(st.monster.diff);render();}
-  function monsterHit(){st.monsterHp--;st.streak++;log('⚔️ פגעת ב'+st.monster.name+'! HP:'+st.monsterHp);if(st.monsterHp<=0){clearTimer();const gold=st.monster.gold+(st.streak>=3?5:0);st.gold+=gold;st.xp+=st.monster.xp;if(window.addPts)window.addPts(gold);if(Math.random()<.25){st.inventory.push('potion');window.showToast&&window.showToast('🧪 מצאת כוס מרפא! (+❤️)');}window.showToast&&window.showToast('🎉 ניצחת! +'+gold+'🪙');st.room++;mgSave({room:st.room,gold:st.gold,xp:st.xp,heroHp:st.heroHp,inventory:st.inventory});if(st.room>=8)st.phase='victory';else st.phase='map';st.streak=0;render();}else{st.activeQ=makeQ(st.monster.diff);render();}}
+  function monsterHit(){st.monsterHp--;st.streak++;log('&#x2694;&#xFE0F; פגעת ב'+st.monster.name+'! HP:'+st.monsterHp);if(st.monsterHp<=0){clearTimer();const gold=st.monster.gold+(st.streak>=3?5:0);st.gold+=gold;st.xp+=st.monster.xp;if(window.addPts)window.addPts(gold);if(Math.random()<.25){st.inventory.push('potion');window.showToast&&window.showToast('&#x1F9EA; מצאת כוס מרפא! (+&#x2764;&#xFE0F;)');}window.showToast&&window.showToast('🎉 ניצחת! +'+gold+'&#x1FA99;');st.room++;mgSave({room:st.room,gold:st.gold,xp:st.xp,heroHp:st.heroHp,inventory:st.inventory});if(st.room>=8)st.phase='victory';else st.phase='map';st.streak=0;render();}else{st.activeQ=makeQ(st.monster.diff);render();}}
   function log(msg){st.log.push(msg);if(st.log.length>10)st.log.shift();}
 
   function enterRoom(type){
@@ -185,8 +199,8 @@ window.DungeonGame = (function () {
   }
 
   function submitAns(){clearTimer();const inp=document.getElementById('dungAns');if(!inp)return;const ua=parseInt(inp.value);if(isNaN(ua)){startTimer();return;}if(ua===st.activeQ.answer)monsterHit();else heroHit();}
-  function submitTreasure(){const inp=document.getElementById('treasAns');if(!inp)return;const ua=parseInt(inp.value);if(isNaN(ua))return;if(ua===st.activeQ.answer){const gold=_rnd(5,20+st.room*4);st.gold+=gold;if(Math.random()<.3)st.inventory.push('potion');window.addPts&&window.addPts(gold);window.showToast&&window.showToast('🎁 מצאת '+gold+'🪙!');st.room++;if(st.room>=8)st.phase='victory';else st.phase='map';}else{window.showToast&&window.showToast('🔒 שגוי — הארגז נשאר נעול!');st.phase='map';}render();}
-  function usePotion(){const idx=st.inventory.indexOf('potion');if(idx<0)return;st.inventory.splice(idx,1);st.heroHp=Math.min(HERO_MAX_HP,st.heroHp+1);window.showToast&&window.showToast('🧪 +1 ❤️');render();}
+  function submitTreasure(){const inp=document.getElementById('treasAns');if(!inp)return;const ua=parseInt(inp.value);if(isNaN(ua))return;if(ua===st.activeQ.answer){const gold=_rnd(5,20+st.room*4);st.gold+=gold;if(Math.random()<.3)st.inventory.push('potion');window.addPts&&window.addPts(gold);window.showToast&&window.showToast('&#x1F381; מצאת '+gold+'&#x1FA99;!');st.room++;if(st.room>=8)st.phase='victory';else st.phase='map';}else{window.showToast&&window.showToast('🔒 שגוי — הארגז נשאר נעול!');st.phase='map';}render();}
+  function usePotion(){const idx=st.inventory.indexOf('potion');if(idx<0)return;st.inventory.splice(idx,1);st.heroHp=Math.min(HERO_MAX_HP,st.heroHp+1);window.showToast&&window.showToast('&#x1F9EA; +1 &#x2764;&#xFE0F;');render();}
   function restart(){clearTimer();st={phase:'map',room:0,heroHp:HERO_MAX_HP,gold:0,xp:0,heroLv:1,monster:null,monsterHp:0,activeQ:null,qTimer:null,qTimeLeft:0,streak:0,inventory:[],log:[]};render();}
   function exit(){clearTimer();if(window.show)window.show('home');}
   function open(){const wrap=document.getElementById('minigameScreen');if(!wrap)return;wrap.innerHTML=`<div id="dungeonWrap" style="max-width:420px;margin:0 auto;padding:12px"></div>`;document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));wrap.classList.add('on');const saved=mgLoad();if(saved&&saved.room>0){st.room=saved.room||0;st.gold=saved.gold||0;st.xp=saved.xp||0;st.heroHp=saved.heroHp||5;st.inventory=saved.inventory||[];}else{restart();return;}render();}
