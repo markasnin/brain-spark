@@ -48,6 +48,8 @@ window.FishingGame = (function () {
     phase: 'idle',
     castAnim: null,
     cancelCb: null,
+    fishTimer: null,
+    fishTimerLeft: 0,
   };
 
   function _gradePool(diff) {
@@ -141,14 +143,40 @@ window.FishingGame = (function () {
     </button>`;
   }
 
+  // ── Fishing question timer ──
+  function _fSecs(d){return d==='hard'?90:d==='medium'?60:40;}
+  function _fFmt(s){const m=Math.floor(s/60),sec=s%60;return s>=60?m+':'+(sec<10?'0':'')+sec:s+'ש';}
+  function startFishTimer(){
+    clearFishTimer();
+    const diff=state.hookedFish?state.hookedFish.diff:'easy';
+    state.fishTimerLeft=_fSecs(diff);
+    const total=state.fishTimerLeft;
+    state.fishTimer=setInterval(()=>{
+      state.fishTimerLeft--;
+      const el=document.getElementById('fishTimer');
+      const color=state.fishTimerLeft<=10?'#ff6b6b':state.fishTimerLeft<=20?'#ffd43b':'#74c0fc';
+      if(el){el.textContent='⏱ '+_fFmt(state.fishTimerLeft);el.style.color=color;}
+      if(state.fishTimerLeft<=0){
+        clearFishTimer();
+        showToast('⏱️ הדג ברח! לא הספקת...');
+        state.phase='idle'; render();
+      }
+    },1000);
+  }
+  function clearFishTimer(){if(state.fishTimer){clearInterval(state.fishTimer);state.fishTimer=null;}}
+
   function renderQuestion() {
     const q = state.activeQ, f = state.hookedFish;
+    const secs = _fSecs(f.diff);
     return `
       <div style="background:linear-gradient(135deg,${f.color}22,rgba(255,255,255,.04));border:2px solid ${f.color}66;border-radius:16px;padding:14px;text-align:center">
         <div style="font-size:2.5rem;margin-bottom:4px">${f.emoji}</div>
         <div style="font-family:'Fredoka',sans-serif;font-size:1.1rem;color:${f.color};margin-bottom:2px">${f.name}</div>
-        <div style="font-size:.78rem;color:${RARITY_COLORS[f.rarity]};font-weight:700;margin-bottom:10px">${RARITY_NAMES[f.rarity]} • +${f.pts} נק'</div>
-        <div style="font-family:'Rubik',sans-serif;font-size:1.15rem;color:#fff;font-weight:700;margin-bottom:12px;direction:ltr">${q.text}</div>
+        <div style="font-size:.78rem;color:${RARITY_COLORS[f.rarity]};font-weight:700;margin-bottom:8px">${RARITY_NAMES[f.rarity]} • +${f.pts} נק'</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.25);border-radius:10px;padding:6px 12px;margin-bottom:10px">
+          <span style="font-family:'Rubik',sans-serif;font-size:1rem;color:#fff;font-weight:700;direction:ltr">${q.text}</span>
+          <span id="fishTimer" style="color:#74c0fc;font-family:'Fredoka',sans-serif;font-size:1.1rem;font-weight:900;white-space:nowrap;margin-right:8px">⏱ ${_fFmt(secs)}</span>
+        </div>
         <div style="display:flex;gap:8px">
           <input id="fishAns" type="number" placeholder="?" onkeydown="if(event.key==='Enter')window.FishingGame.submitAns()"
             style="flex:1;padding:12px;background:rgba(255,255,255,.1);border:2px solid ${f.color}66;color:#fff;border-radius:12px;font-size:1.2rem;font-family:'Rubik',sans-serif;text-align:center;outline:none">
@@ -199,7 +227,7 @@ window.FishingGame = (function () {
         setTimeout(() => { state.phase = 'idle'; render(); showToast('😅 רק זבל הפעם...'); }, 1500);
       } else {
         state.phase = 'question';
-        setTimeout(() => render(), 1200);
+        setTimeout(() => { render(); startFishTimer(); }, 1200);
       }
     }, 800);
   }
@@ -214,6 +242,7 @@ window.FishingGame = (function () {
   }
 
   function submitAns() {
+    clearFishTimer();
     const inp = document.getElementById('fishAns');
     if (!inp) return;
     const ua = parseInt(inp.value);
