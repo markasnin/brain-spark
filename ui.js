@@ -119,9 +119,9 @@ const CAT_GROUPS = [
   { id:'geometry',  label:'הנדסה ומדידה',  emoji:'📐', color:'#c77dff', colorRgb:'199,125,255', cats:['shapes','measurement'] },
   { id:'data',      label:'נתונים',         emoji:'📊', color:'#ffd32a', colorRgb:'255,211,42',  cats:['data'] },
   { id:'minigames', label:'מיני משחקים',   emoji:'🎮', color:'#ff6348', colorRgb:'255,99,72',   cats:['minigames'] },
+  { id:'social',    label:'חברים',         emoji:'👥', color:'#fd79a8', colorRgb:'253,121,168', cats:['friends'] },
   { id:'exam',      label:'מבחן ותרגול',   emoji:'📝', color:'#00d2d3', colorRgb:'0,210,211',   cats:['exam','mistakes','learn'] },
-  { id:'account',   label:'היסטוריה',      emoji:'📊', color:'#a29bfe', colorRgb:'162,155,254', cats:['history','settings'] },
-  { id:'social',    label:'חברים',         emoji:'👥', color:'#fd79a8', colorRgb:'253,121,168', cats:['friends'] }
+  { id:'account',   label:'היסטוריה',      emoji:'📊', color:'#a29bfe', colorRgb:'162,155,254', cats:['history','settings'] }
 ];
 
 function _catOnclick(cat) {
