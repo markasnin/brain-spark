@@ -90,21 +90,58 @@ window.RocketGame = (function () {
     if (!cv || !canvasCtx) return;
     const ctx=canvasCtx, W=400, H=220;
     ctx.clearRect(0,0,W,H);
+
+    // Space background
     const g=ctx.createLinearGradient(0,0,0,H);
     g.addColorStop(0,'#020817');g.addColorStop(1,'#0d1b2a');
     ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+
+    // Stars
     stars.forEach(s=>{
       s.x-=s.sp*(st.fuel/MAX_FUEL+.3); if(s.x<0)s.x=W;
       ctx.beginPath();ctx.arc(s.x,s.y,s.s,0,2*Math.PI);
       ctx.fillStyle=`rgba(255,255,255,${.4+s.s*.3})`;ctx.fill();
     });
-    if(st.planetIdx<PLANETS.length){ctx.font='32px serif';ctx.fillText(PLANETS[st.planetIdx].emoji,W-60,60);}
-    ctx.font='36px serif';ctx.fillText('🚀',60,rocketY);
-    ctx.fillStyle='rgba(255,255,255,.08)';ctx.fillRect(10,H-20,180,10);
+
+    // Planet ahead — draw as colored circle with label (no emoji = no glitch)
+    if(st.planetIdx<PLANETS.length){
+      const pl=PLANETS[st.planetIdx];
+      ctx.beginPath();ctx.arc(W-50,44,22,0,2*Math.PI);
+      ctx.fillStyle=pl.color+'99';ctx.fill();
+      ctx.strokeStyle=pl.color;ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle='#fff';ctx.font='bold 9px Rubik,sans-serif';ctx.textAlign='center';
+      ctx.fillText(pl.name.substring(0,6),W-50,48);
+      ctx.textAlign='start';
+    }
+
+    // Rocket — draw as simple triangle shape (no emoji)
+    ctx.save();
+    ctx.translate(60, rocketY-10);
+    // Body
+    ctx.beginPath();ctx.moveTo(0,-16);ctx.lineTo(10,12);ctx.lineTo(-10,12);ctx.closePath();
+    ctx.fillStyle='#a5d8ff';ctx.fill();
+    // Window
+    ctx.beginPath();ctx.arc(0,0,4,0,2*Math.PI);
+    ctx.fillStyle='#74c0fc';ctx.fill();
+    // Flame
+    ctx.beginPath();ctx.moveTo(-6,12);ctx.lineTo(0,20+(Math.random()*6));ctx.lineTo(6,12);ctx.closePath();
+    ctx.fillStyle=st.fuel>3?'#ff9f43':'#ff6348';ctx.fill();
+    ctx.restore();
+
+    // Fuel bar
+    ctx.fillStyle='rgba(255,255,255,.08)';ctx.fillRect(10,H-22,140,8);
     ctx.fillStyle=st.fuel>5?'#69db7c':st.fuel>2?'#ffd43b':'#ff6b6b';
-    ctx.fillRect(10,H-20,Math.max(0,180*(st.fuel/MAX_FUEL)),10);
-    ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='9px Rubik,sans-serif';ctx.fillText('⛽ דלק',14,H-6);
-    for(let i=0;i<MAX_HP;i++){ctx.font='12px serif';ctx.fillText(i<st.hp?'❤️':'🖤',W-28-i*18,H-6);}
+    ctx.fillRect(10,H-22,Math.max(0,140*(st.fuel/MAX_FUEL)),8);
+    ctx.fillStyle='rgba(255,255,255,.6)';ctx.font='8px Rubik,sans-serif';
+    ctx.fillText('FUEL '+st.fuel+'/'+MAX_FUEL,12,H-6);
+
+    // HP dots (colored circles — no emoji)
+    for(let i=0;i<MAX_HP;i++){
+      ctx.beginPath();ctx.arc(W-14-i*16,H-10,5,0,2*Math.PI);
+      ctx.fillStyle=i<st.hp?'#ff6b6b':'#333';ctx.fill();
+      ctx.strokeStyle=i<st.hp?'#ff4444':'#555';ctx.lineWidth=1;ctx.stroke();
+    }
+
     st.animFrame=requestAnimationFrame(drawFrame);
   }
 
