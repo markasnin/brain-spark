@@ -158,7 +158,7 @@ window.FishingGame = (function () {
       if(el){el.textContent='⏱ '+_fFmt(state.fishTimerLeft);el.style.color=color;}
       if(state.fishTimerLeft<=0){
         clearFishTimer();
-        showToast('⏱️ הדג ברח! לא הספקת...');
+        showToast('&#x23F1;&#xFE0F; הדג ברח! לא הספקת...');
         state.phase='idle'; render();
       }
     },1000);
@@ -224,7 +224,7 @@ window.FishingGame = (function () {
       const catch_ = document.getElementById('fishCatch');
       if (catch_) { catch_.textContent = f.emoji; catch_.style.opacity = '1'; }
       if (f.rarity === 'trash') {
-        setTimeout(() => { state.phase = 'idle'; render(); showToast('😅 רק זבל הפעם...'); }, 1500);
+        setTimeout(() => { state.phase = 'idle'; render(); showToast('&#x1F605; רק זבל הפעם...'); }, 1500);
       } else {
         state.phase = 'question';
         setTimeout(() => { render(); startFishTimer(); }, 1200);
@@ -256,7 +256,7 @@ window.FishingGame = (function () {
       if (window.showPtsPop) window.showPtsPop(f.pts);
       if (window.spawnConf && f.rarity === 'legendary') window.spawnConf(40);
       mgSave({ aquarium: state.aquarium, casts: state.casts, totalPts: state.totalPts });
-      showToast(`🎉 תפסת ${f.emoji} ${f.name}! +${f.pts}`);
+      showToast(`&#x1F389; תפסת ${f.emoji} ${f.name}! +${f.pts}`);
       state.phase = 'idle';
       render();
     } else {
