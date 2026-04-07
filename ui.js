@@ -114,11 +114,14 @@ function updateHome() {
 
 // ══ GROUPED CATEGORY GRID ══
 const CAT_GROUPS = [
-  { id:'ops',       label:'פעולות חשבון',      emoji:'🔢', color:'#2ed573', colorRgb:'46,213,115',   cats:['add','sub','mul','div','word'] },
-  { id:'fractions', label:'שברים ומספרים',     emoji:'½',  color:'#54a0ff', colorRgb:'84,160,255',   cats:['fractions','decimals','percent','negatives','ratio'] },
-  { id:'geometry',  label:'הנדסה ומדידה',      emoji:'📐', color:'#c77dff', colorRgb:'199,125,255',  cats:['shapes','measurement'] },
-  { id:'data',      label:'נתונים',             emoji:'📊', color:'#ffd32a', colorRgb:'255,211,42',   cats:['data'] },
-  { id:'tools',     label:'כלים ועוד',          emoji:'🎮', color:'#ff6348', colorRgb:'255,99,72',    cats:['minigames','learn','exam','history','mistakes','friends','settings'] }
+  { id:'ops',       label:'פעולות חשבון',  emoji:'🔢', color:'#2ed573', colorRgb:'46,213,115',  cats:['add','sub','mul','div','word'] },
+  { id:'fractions', label:'שברים ומספרים', emoji:'½',  color:'#54a0ff', colorRgb:'84,160,255',  cats:['fractions','decimals','percent','negatives','ratio'] },
+  { id:'geometry',  label:'הנדסה ומדידה',  emoji:'📐', color:'#c77dff', colorRgb:'199,125,255', cats:['shapes','measurement'] },
+  { id:'data',      label:'נתונים',         emoji:'📊', color:'#ffd32a', colorRgb:'255,211,42',  cats:['data'] },
+  { id:'minigames', label:'מיני משחקים',   emoji:'🎮', color:'#ff6348', colorRgb:'255,99,72',   cats:['minigames'] },
+  { id:'exam',      label:'מבחן ותרגול',   emoji:'📝', color:'#00d2d3', colorRgb:'0,210,211',   cats:['exam','mistakes','learn'] },
+  { id:'account',   label:'היסטוריה',      emoji:'📊', color:'#a29bfe', colorRgb:'162,155,254', cats:['history','settings'] },
+  { id:'social',    label:'חברים',         emoji:'👥', color:'#fd79a8', colorRgb:'253,121,168', cats:['friends'] }
 ];
 
 function _catOnclick(cat) {
