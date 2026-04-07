@@ -88,7 +88,6 @@ function loadQ(q) {
   const sl=document.getElementById('streakLive');
   if (st.streak>=3) { sl.style.display='inline-flex'; const spu=SPECIAL_USERS[(window._username||'').toLowerCase()]; if(spu?.streakDisplay)sl.innerHTML=spu.streakDisplay(st.streak); else sl.innerHTML=`🔥 <span id="streakLiveCnt">${st.streak}</span>`; } else sl.style.display='none';
   startHintTimer(q);
-  startSkipTimer();
   const inp=document.getElementById('ansInp'); if(inp)inp.disabled=false;
   const sb=document.querySelector('.bsubmit'); if(sb)sb.disabled=false;
   setTimeout(()=>document.getElementById('ansInp').focus(),200);
@@ -156,8 +155,7 @@ function submitAns() {
 
     } else if (eqResult === 'right-answer-wrong-equation') {
       // ❌ Right number but wrong equation → counts as wrong attempt, no points
-      qs.attempts++; updateSkipBtn();
-    updateSkipBtn();
+      qs.attempts++;
       inp.classList.add('bad');
       document.getElementById('ad'+(qs.attempts-1)).classList.add('used');
       inp.value=''; setTimeout(()=>inp.classList.remove('bad'), 400);
@@ -184,8 +182,7 @@ function submitAns() {
 
     } else {
       // ❌ Fully wrong
-      qs.attempts++; updateSkipBtn();
-    updateSkipBtn();
+      qs.attempts++;
       inp.classList.add('bad');
       document.getElementById('ad'+(qs.attempts-1)).classList.add('used');
       addPts(-cfg.ptsWrong);
@@ -219,8 +216,7 @@ function submitAns() {
     spawnConf();
     endQ();
   } else {
-    qs.attempts++; updateSkipBtn();
-    updateSkipBtn();
+    qs.attempts++;
     inp.classList.add('bad');
     document.getElementById('ad'+(qs.attempts-1)).classList.add('used');
     addPts(-cfg.ptsWrong);
@@ -306,64 +302,12 @@ function buildExpl(q){if(q.cat==='word'){let s=`התשובה: <strong>${q.answer
 
 function showFb(type,title,txt){const b=document.getElementById('fbBox');b.className='fb-box on fb-'+type;document.getElementById('fbTitle').textContent=title;document.getElementById('fbText').innerHTML=(txt||'').replace(/\n/g,'<br>');}
 
-function endQ(){qs.done=true;const inp=document.getElementById('ansInp');if(inp){inp.disabled=true;inp.blur();}const sb=document.querySelector('.bsubmit');if(sb)sb.disabled=true;document.getElementById('qBtns').style.display='none';document.getElementById('nextBtns').style.display='flex';if(qs.hintInterval){clearInterval(qs.hintInterval);qs.hintInterval=null;}if(qs.skipInterval){clearInterval(qs.skipInterval);qs.skipInterval=null;}document.getElementById('moreBtn').style.display=qs.idx>=qs.pool.length-1?'inline-flex':'none';}
+function endQ(){qs.done=true;const inp=document.getElementById('ansInp');if(inp){inp.disabled=true;inp.blur();}const sb=document.querySelector('.bsubmit');if(sb)sb.disabled=true;document.getElementById('qBtns').style.display='none';document.getElementById('nextBtns').style.display='flex';if(qs.hintInterval){clearInterval(qs.hintInterval);qs.hintInterval=null;}document.getElementById('moreBtn').style.display=qs.idx>=qs.pool.length-1?'inline-flex':'none';}
 
 function nextQ(){if(qs.isDaily){qs.isDailyIdx++;if(qs.isDailyIdx>=2){finishDaily();return;}qs.idx++;if(qs.idx<qs.pool.length)loadQ(qs.pool[qs.idx]);return;}qs.idx++;if(qs.idx>=qs.pool.length){genMore();return;}loadQ(qs.pool[qs.idx]);}
-
-// ── Skip button — unlocks after 2 wrong attempts AND 2 minutes ──
-const SKIP_MIN_ATTEMPTS = 2;
-const SKIP_MIN_SECS     = 120;
-
-function startSkipTimer() {
-  qs.skipSecs = SKIP_MIN_SECS;
-  if (qs.skipInterval) clearInterval(qs.skipInterval);
-  updateSkipBtn();
-  qs.skipInterval = setInterval(() => {
-    qs.skipSecs--;
-    updateSkipBtn();
-    if (qs.skipSecs <= 0) { clearInterval(qs.skipInterval); qs.skipInterval = null; updateSkipBtn(); }
-  }, 1000);
-}
-
-function updateSkipBtn() {
-  const btn = document.getElementById('skipBtn');
-  if (!btn || qs.done) return;
-  const timeOk     = qs.skipSecs <= 0;
-  const attemptsOk = qs.attempts >= SKIP_MIN_ATTEMPTS;
-  const canSkip    = timeOk && attemptsOk;
-  if (canSkip) {
-    btn.disabled = false;
-    btn.style.opacity = '1';
-    btn.style.cursor  = 'pointer';
-    btn.innerHTML = '⏭️ דלג';
-  } else {
-    btn.disabled = true;
-    btn.style.opacity = '.4';
-    btn.style.cursor  = 'not-allowed';
-    const parts = [];
-    if (!attemptsOk) parts.push((SKIP_MIN_ATTEMPTS - qs.attempts) + ' נסיונות');
-    if (!timeOk) { const m=Math.floor(qs.skipSecs/60),s=qs.skipSecs%60; parts.push(m>0?m+':'+s.toString().padStart(2,'0'):s+'ש׳'); }
-    btn.innerHTML = `⏭️ דלג <span style="font-size:.7rem;opacity:.7">(${parts.join(' + ')})</span>`;
-  }
-}
-
-function skipQ() {
-  const timeOk     = qs.skipSecs <= 0;
-  const attemptsOk = qs.attempts >= SKIP_MIN_ATTEMPTS;
-  if (!timeOk || !attemptsOk) {
-    const parts = [];
-    if (!attemptsOk) parts.push((SKIP_MIN_ATTEMPTS - qs.attempts) + ' ניסיון נוסף');
-    if (!timeOk) { const m=Math.floor(qs.skipSecs/60),s=qs.skipSecs%60; parts.push('עוד '+(m>0?m+':'+s.toString().padStart(2,'0'):s+' שניות')); }
-    showToast('⏳ דלג יהיה זמין: ' + parts.join(' + '));
-    return;
-  }
-  if (qs.skipInterval) { clearInterval(qs.skipInterval); qs.skipInterval = null; }
-  addPts(-1);
-  nextQ();
-}
-
+function skipQ(){addPts(-1);nextQ();}
 function genMore(){qs.pool=[...qs.pool,...genPool(qs.cat,qs.diff,10)];nextQ();}
-function exitToHome(){if(qs.hintInterval)clearInterval(qs.hintInterval);if(qs.skipInterval)clearInterval(qs.skipInterval);show('home');}
+function exitToHome(){if(qs.hintInterval)clearInterval(qs.hintInterval);show('home');}
 
 // ── Streak ──
 function handleStreak(correct){if(correct){st.streak++;if(st.streak>st.maxStreak)st.maxStreak=st.streak;let bonus=0,msg='';if(st.streak===3){bonus=cfg.streakBonus3;msg=`🔥 רצף 3! +${bonus}`;}else if(st.streak===5){bonus=cfg.streakBonus5;msg=`⚡ רצף 5! +${bonus}`;}else if(st.streak===10||st.streak%10===0){bonus=cfg.streakBonus10;msg=`💥 רצף ${st.streak}!! +${bonus}`;}if(bonus>0){addPts(bonus);const sf=document.getElementById('strkFire');document.getElementById('sfVal').textContent=`🔥 ${st.streak}`;document.getElementById('sfLbl').textContent=msg;sf.classList.add('show');setTimeout(()=>sf.classList.remove('show'),2000);}const slEl=document.getElementById('streakLive');if(slEl)slEl.style.display='inline-flex';const spu=SPECIAL_USERS[(window._username||'').toLowerCase()];if(spu?.streakDisplay){if(slEl)slEl.innerHTML=spu.streakDisplay(st.streak);}else{const sc=document.getElementById('streakLiveCnt');if(sc)sc.textContent=st.streak;}}else{st.streak=0;document.getElementById('streakLive').style.display='none';}save();}
@@ -397,13 +341,210 @@ function finishDaily(){st.dailyDone=true;save();addPts(20);showPtsPop(20);spawnC
 // ── Exam ──
 const EXAM_CATS=[{id:'add',n:'➕ חיבור'},{id:'sub',n:'➖ חיסור'},{id:'mul',n:'✖️ כפל'},{id:'div',n:'➗ חילוק',needs:'division'},{id:'word',n:'📖 מילוליות'},{id:'shapes',n:'📐 גיאומטריה',needs:'shapes'},{id:'fractions',n:'½ שברים',needs:'fractions'}];
 
-function openExamPre(){const gc=window.GRADE_CONFIG;const available=gc?.availableExamTopics||['add','sub','mul','word'];const g=document.getElementById('examTopicsGrid');g.innerHTML='';EXAM_CATS.forEach(cat=>{if(!available.includes(cat.id))return;const locked=cat.needs&&!st.learnedTopics.includes(cat.needs);const sel=st.examTopics.includes(cat.id);const b=document.createElement('button');b.className='etopic-btn'+(sel&&!locked?' sel':'')+(locked?' locked':'');b.textContent=cat.n+(locked?' 🔒':'');b.disabled=locked;b.onclick=()=>{if(locked)return;const i=st.examTopics.indexOf(cat.id);if(i>=0)st.examTopics.splice(i,1);else st.examTopics.push(cat.id);save();openExamPre();};g.appendChild(b);});['easy','medium','hard','mix'].forEach(d=>{const btn=document.getElementById('exD'+{easy:'e',medium:'m',hard:'h',mix:'x'}[d]);if(btn)btn.style.opacity=st.examDiff===d?1:.4;});document.getElementById('examPreInfo').textContent=`נושאים: ${st.examTopics.length} | 10 שאלות`;show('exam-pre-scr');}
+function openExamPre(){
+  const gc=window.GRADE_CONFIG;
+  const available=gc?.availableExamTopics||['add','sub','mul','word'];
+  const g=document.getElementById('examTopicsGrid');
+  g.innerHTML='';
+  EXAM_CATS.forEach(cat=>{
+    if(!available.includes(cat.id))return;
+    const locked=cat.needs&&!st.learnedTopics.includes(cat.needs);
+    const sel=st.examTopics.includes(cat.id);
+    const b=document.createElement('button');
+    b.className='etopic-btn'+(sel&&!locked?' sel':'')+(locked?' locked':'');
+    b.textContent=cat.n+(locked?' 🔒':'');
+    b.disabled=locked;
+    b.onclick=()=>{if(locked)return;const i=st.examTopics.indexOf(cat.id);if(i>=0)st.examTopics.splice(i,1);else st.examTopics.push(cat.id);save();openExamPre();};
+    g.appendChild(b);
+  });
+  ['easy','medium','hard','mix'].forEach(d=>{const btn=document.getElementById('exD'+{easy:'e',medium:'m',hard:'h',mix:'x'}[d]);if(btn)btn.style.opacity=st.examDiff===d?1:.4;});
+  document.getElementById('examPreInfo').textContent=`נושאים: ${st.examTopics.length} | 10 שאלות | ניסיון אחד בלבד`;
+  show('exam-pre-scr');
+}
+
 function setExamDiff(d){st.examDiff=d;save();openExamPre();}
-function startExam(){if(st.examTopics.length===0){showToast('בחר לפחות נושא אחד!');return;}qs.isExam=true;qs.isDaily=false;qs.isMistakes=false;qs.examPool=[];for(let i=0;i<10;i++){const cat=pick(st.examTopics);const diff=st.examDiff==='mix'?pick(['easy','medium','hard']):st.examDiff;qs.examPool.push(genQ(cat,diff));}qs.examIdx=0;qs.examScore=0;qs.examSecs=600;show('exam-scr');document.getElementById('examResults').style.display='none';document.getElementById('examQArea').style.display='block';loadExamQ();startExamTimer();}
-function loadExamQ(){if(qs.examIdx>=qs.examPool.length){finishExam();return;}const q=qs.examPool[qs.examIdx];qs.current=q;qs.attempts=0;qs.hintUsed=false;qs.done=false;document.getElementById('examProg').textContent=`שאלה ${qs.examIdx+1}/10`;document.getElementById('examBar').style.width=((qs.examIdx+1)/10*100)+'%';const area=document.getElementById('examQArea');area.innerHTML=`<div class="gcard"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><span class="lbadge ${q.diff==='easy'?'easy':q.diff==='medium'?'med':'hard'}">${q.diff==='easy'?'🌱 קל':q.diff==='medium'?'⚡ בינוני':'🔥 קשה'}</span><span class="pts-badge">+${q.pts}</span></div><div style="font-size:.78rem;color:var(--a6);text-align:center;margin-bottom:5px">${q.label||''}</div><div class="qtxt" style="direction:${q.dir||'rtl'}">${q.text}</div>${q.showMul?`<div id="emv" style="margin-bottom:10px"></div>`:''}<div class="ans-row"><input type="number" id="eInp" class="ans-inp" placeholder="?" onkeydown="if(event.key==='Enter')submitExamAns()"><div class="ans-eq">=</div></div><div class="atts" id="eAtts"><span style="color:var(--txt2);font-size:.8rem">ניסיונות:</span><div class="adot" id="ead0"></div><div class="adot" id="ead1"></div><div class="adot" id="ead2"></div></div><div class="fb-box" id="eFb"></div><div class="qbtns" id="eBtns"><button class="qbtn bsubmit" onclick="submitExamAns()">✅ בדוק</button></div><div class="qbtns" id="eNext" style="display:none"><button class="qbtn bnext" onclick="nextExamQ()">➡️ הבא</button></div></div>`;if(q.showMul){const emv=document.getElementById('emv');if(!emv)return;let h='<div class="mulvis-row">';for(let i=0;i<Math.min(q.mulA,6);i++){h+='<div class="mg">';for(let j=0;j<Math.min(q.mulB,8);j++)h+=`<div class="mi">${q.mulEmoji}</div>`;h+='</div>';}h+='</div>';emv.innerHTML=h;}setTimeout(()=>{const e=document.getElementById('eInp');if(e)e.focus();},150);}
-function submitExamAns(){const q=qs.current;if(!q||qs.done)return;const inp=document.getElementById('eInp');if(inp?.disabled)return;const ua=parseInt(inp.value);if(isNaN(ua))return;const ok=ua===q.answer;if(ok){inp.classList.add('ok');document.getElementById('ead'+qs.attempts).classList.add('ok');qs.examScore+=q.pts;recordHistory(q,ua,true);const fb=document.getElementById('eFb');fb.className='fb-box on fb-ok';fb.innerHTML='<div class="fb-title">🎉 נכון!</div>';qs.done=true;if(inp){inp.disabled=true;inp.blur();}document.getElementById('eBtns').style.display='none';document.getElementById('eNext').style.display='flex';}else{qs.attempts++;document.getElementById('ead'+(qs.attempts-1)).classList.add('used');inp.classList.add('bad');inp.value='';setTimeout(()=>inp.classList.remove('bad'),400);if(qs.attempts>=3){recordHistory(q,ua,false);const fb=document.getElementById('eFb');fb.className='fb-box on fb-bad';fb.innerHTML=`<div class="fb-title">❌ לא הצלחת</div><div>תשובה: <strong>${q.answer}</strong></div>`;qs.done=true;if(inp){inp.disabled=true;inp.blur();}document.getElementById('eBtns').style.display='none';document.getElementById('eNext').style.display='flex';}}}
+
+function startExam(){
+  if(st.examTopics.length===0){showToast('בחר לפחות נושא אחד!');return;}
+  qs.isExam=true;qs.isDaily=false;qs.isMistakes=false;
+  qs.examPool=[];
+  for(let i=0;i<10;i++){
+    const cat=pick(st.examTopics);
+    const diff=st.examDiff==='mix'?pick(['easy','medium','hard']):st.examDiff;
+    qs.examPool.push(genQ(cat,diff));
+  }
+  qs.examIdx=0;
+  qs.examScore=0;
+  qs.examSecs=600;
+  qs.examAnswers=[];  // [{q, userAns, correct}]
+  show('exam-scr');
+  document.getElementById('examResults').style.display='none';
+  document.getElementById('examQArea').style.display='block';
+  loadExamQ();
+  startExamTimer();
+}
+
+function loadExamQ(){
+  if(qs.examIdx>=qs.examPool.length){finishExam();return;}
+  const q=qs.examPool[qs.examIdx];
+  qs.current=q;qs.done=false;
+  const isLast=qs.examIdx===qs.examPool.length-1;
+  document.getElementById('examProg').textContent=`שאלה ${qs.examIdx+1}/10`;
+  document.getElementById('examBar').style.width=((qs.examIdx+1)/10*100)+'%';
+  const diffLabel=q.diff==='easy'?'🌱 קל':q.diff==='medium'?'⚡ בינוני':'🔥 קשה';
+  const diffCls=q.diff==='easy'?'easy':q.diff==='medium'?'med':'hard';
+  const area=document.getElementById('examQArea');
+  area.innerHTML=`
+    <div class="gcard">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <span class="lbadge ${diffCls}">${diffLabel}</span>
+        <span style="color:var(--txt2);font-size:.78rem">${qs.examIdx+1} / 10</span>
+      </div>
+      <div style="font-size:.78rem;color:var(--a6);text-align:center;margin-bottom:5px">${q.label||''}</div>
+      <div class="qtxt" style="direction:${q.dir||'rtl'}">${q.text}</div>
+      ${q.showMul?'<div id="emv" style="margin-bottom:10px"></div>':''}
+      <div style="background:rgba(255,71,87,.07);border:1.5px solid rgba(255,71,87,.28);border-radius:12px;padding:8px 14px;margin-bottom:16px;font-size:.8rem;color:#ff8090;text-align:center;font-weight:600">
+        ⚠️ ניסיון אחד בלבד — חשוב לפני שאתה מגיש!
+      </div>
+      <div class="ans-row">
+        <input type="number" id="eInp" class="ans-inp" placeholder="?" onkeydown="if(event.key==='Enter')submitExamAns()">
+        <div class="ans-eq">=</div>
+      </div>
+      <div class="fb-box" id="eFb"></div>
+      <div class="qbtns" id="eBtns">
+        <button class="qbtn bsubmit" onclick="submitExamAns()">✅ הגש תשובה</button>
+      </div>
+      <div class="qbtns" id="eNext" style="display:none">
+        <button class="qbtn bnext" onclick="nextExamQ()">${isLast?'🏁 סיים וראה תוצאות':'➡️ שאלה הבאה'}</button>
+      </div>
+    </div>`;
+  if(q.showMul){
+    const emv=document.getElementById('emv');
+    if(emv){let h='<div class="mulvis-row">';for(let i=0;i<Math.min(q.mulA,6);i++){h+='<div class="mg">';for(let j=0;j<Math.min(q.mulB,8);j++)h+=`<div class="mi">${q.mulEmoji}</div>`;h+='</div>';}h+='</div>';emv.innerHTML=h;}
+  }
+  setTimeout(()=>{const e=document.getElementById('eInp');if(e)e.focus();},150);
+}
+
+function submitExamAns(){
+  const q=qs.current;
+  if(!q||qs.done)return;
+  const inp=document.getElementById('eInp');
+  if(inp?.disabled)return;
+  const ua=parseInt(inp.value);
+  if(isNaN(ua)){showToast('✏️ הכנס מספר!');return;}
+  const ok=ua===q.answer;
+  qs.done=true;
+  qs.examAnswers.push({q,userAns:ua,correct:ok});
+  recordHistory(q,ua,ok);
+  if(inp){inp.disabled=true;inp.blur();}
+  if(ok){
+    qs.examScore+=q.pts;
+    inp.classList.add('ok');
+    const fb=document.getElementById('eFb');
+    fb.className='fb-box on fb-ok';
+    fb.innerHTML='<div class="fb-title">🎉 נכון!</div>';
+  } else {
+    inp.classList.add('bad');
+    const fb=document.getElementById('eFb');
+    fb.className='fb-box on fb-bad';
+    fb.innerHTML=`<div class="fb-title">❌ לא נכון</div><div>הגשת: <strong style="color:#ff8090">${ua}</strong> &nbsp;|&nbsp; נכון: <strong style="color:#68ffaa">${q.answer}</strong></div>`;
+  }
+  document.getElementById('eBtns').style.display='none';
+  document.getElementById('eNext').style.display='flex';
+}
+
 function nextExamQ(){qs.examIdx++;loadExamQ();}
-function startExamTimer(){qs.examTimer=setInterval(()=>{qs.examSecs--;const m=Math.floor(qs.examSecs/60),s=qs.examSecs%60;document.getElementById('examTmr').textContent=`⏱️ ${m}:${s.toString().padStart(2,'0')}`;if(qs.examSecs<=0){clearInterval(qs.examTimer);finishExam();}},1000);}
-function finishExam(){if(qs.examTimer)clearInterval(qs.examTimer);const total=qs.examPool.reduce((s,q)=>s+q.pts,0);const pct=Math.round(qs.examScore/total*100);let grade,msg;if(pct>=90){grade='A+ 🏆';msg='מדהים! גאון מתמטיקה!';}else if(pct>=75){grade='A 🌟';msg='מצוין מאוד!';}else if(pct>=60){grade='B ⚡';msg='טוב! אפשר לשפר!';}else if(pct>=40){grade='C 📚';msg='עוד קצת תרגול!';}else{grade='D 😊';msg='תלמד שוב ותנסה!';}addPts(Math.round(qs.examScore/10));document.getElementById('examQArea').style.display='none';const r=document.getElementById('examResults');r.style.display='block';r.innerHTML=`<div class="gcard" style="text-align:center"><div style="font-size:3rem;margin-bottom:8px">${pct>=75?'🏆':pct>=50?'⭐':'📚'}</div><div style="font-family:'Fredoka',sans-serif;font-size:2.5rem;color:var(--a2)">${grade}</div><div style="font-size:1rem;margin:10px 0">${msg}</div><div style="font-size:.9rem;color:var(--txt2)">${qs.examScore} / ${total} (${pct}%)</div><button class="lgo" style="margin-top:18px" onclick="show('home')">→ חזרה לבית</button></div>`;if(pct>=75)spawnConf(30);}
+
+function startExamTimer(){
+  qs.examTimer=setInterval(()=>{
+    qs.examSecs--;
+    const m=Math.floor(qs.examSecs/60),s=qs.examSecs%60;
+    document.getElementById('examTmr').textContent=`⏱️ ${m}:${s.toString().padStart(2,'0')}`;
+    if(qs.examSecs<=0){clearInterval(qs.examTimer);finishExam();}
+  },1000);
+}
+
+function finishExam(){
+  if(qs.examTimer)clearInterval(qs.examTimer);
+
+  const answers=qs.examAnswers||[];
+  const correct=answers.filter(a=>a.correct).length;
+  const wrong=answers.length-correct;
+  const total=qs.examPool.reduce((s,q)=>s+q.pts,0);
+  const pct=answers.length?Math.round(correct/answers.length*100):0;
+
+  // Numeric grade (Israeli scale 0-100)
+  const numericGrade = Math.round(pct);
+  let grade,gradeColor,gradeEmoji,msg;
+  if(pct>=95){grade=numericGrade;gradeColor='#68ffaa';gradeEmoji='🏆';msg='מדהים! גאון מתמטיקה!';}
+  else if(pct>=85){grade=numericGrade;gradeColor='#2ed573';gradeEmoji='🌟';msg='מצוין מאוד! עבודה יפה!';}
+  else if(pct>=75){grade=numericGrade;gradeColor='#a8e063';gradeEmoji='⭐';msg='טוב מאוד! כמעט מושלם!';}
+  else if(pct>=65){grade=numericGrade;gradeColor='#ffd32a';gradeEmoji='⚡';msg='טוב! עוד קצת ותהיה מושלם!';}
+  else if(pct>=55){grade=numericGrade;gradeColor='#ff9f43';gradeEmoji='📚';msg='עוד קצת תרגול ותשתפר!';}
+  else{grade=numericGrade;gradeColor='#ff6348';gradeEmoji='💪';msg='אל תתייאש — תרגל ונסה שוב!';}
+
+  addPts(Math.round(qs.examScore/10));
+
+  const catNames={add:'חיבור',sub:'חיסור',mul:'כפל',div:'חילוק',word:'מילוליות',shapes:'גיאומטריה',fractions:'שברים',measurement:'מדידה',data:'נתונים',decimals:'עשרוניים',percent:'אחוזים',negatives:'שליליים',ratio:'יחס'};
+
+  const breakdown=answers.map((a,i)=>{
+    const ok=a.correct;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${ok?'rgba(46,213,115,.08)':'rgba(255,71,87,.08)'};border:1px solid ${ok?'rgba(46,213,115,.22)':'rgba(255,71,87,.22)'};border-radius:12px;margin-bottom:7px">
+      <span style="font-size:1.3rem;flex-shrink:0">${ok?'✅':'❌'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.85rem;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i+1}. ${a.q.text}</div>
+        <div style="font-size:.72rem;color:var(--txt2);margin-top:1px">${catNames[a.q.cat]||a.q.cat} · ${a.q.diff==='easy'?'קל':a.q.diff==='medium'?'בינוני':'קשה'}</div>
+        ${!ok?`<div style="font-size:.78rem;margin-top:3px">הגשת <strong style="color:#ff8090">${a.userAns}</strong> · נכון: <strong style="color:#68ffaa">${a.q.answer}</strong></div>`:''}
+      </div>
+      <span style="font-weight:800;font-size:.85rem;color:${ok?'#68ffaa':'#ff8090'};flex-shrink:0">${ok?'+'+a.q.pts:'0'}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('examQArea').style.display='none';
+  const r=document.getElementById('examResults');
+  r.style.display='block';
+  r.innerHTML=`<div class="gcard">
+    <div style="text-align:center;padding:18px 0 22px">
+      <div style="font-size:4rem;margin-bottom:6px">${gradeEmoji}</div>
+      <div style="font-family:'Fredoka',sans-serif;font-size:3.5rem;font-weight:700;color:${gradeColor};line-height:1">${grade}</div>
+      <div style="font-size:1rem;color:#fff;margin:8px 0 3px;font-weight:600">${msg}</div>
+      <div style="font-size:.85rem;color:var(--txt2)">${correct} מתוך ${answers.length} נכון · ${qs.examScore} נקודות</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px">
+      <div style="background:rgba(46,213,115,.1);border:1.5px solid rgba(46,213,115,.3);border-radius:14px;padding:13px;text-align:center">
+        <div style="font-size:2rem;font-weight:900;color:#68ffaa">${correct}</div>
+        <div style="font-size:.72rem;color:var(--txt2);margin-top:2px">✅ נכון</div>
+      </div>
+      <div style="background:rgba(255,71,87,.1);border:1.5px solid rgba(255,71,87,.3);border-radius:14px;padding:13px;text-align:center">
+        <div style="font-size:2rem;font-weight:900;color:#ff8090">${wrong}</div>
+        <div style="font-size:.72rem;color:var(--txt2);margin-top:2px">❌ שגוי</div>
+      </div>
+      <div style="background:rgba(255,211,42,.1);border:1.5px solid rgba(255,211,42,.3);border-radius:14px;padding:13px;text-align:center">
+        <div style="font-size:2rem;font-weight:900;color:#ffd32a">${pct}%</div>
+        <div style="font-size:.72rem;color:var(--txt2);margin-top:2px">📊 ציון</div>
+      </div>
+    </div>
+    <div style="background:rgba(255,255,255,.08);border-radius:99px;height:10px;overflow:hidden;margin-bottom:22px">
+      <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,${gradeColor},#ffd32a);border-radius:99px"></div>
+    </div>
+    <div style="font-family:'Fredoka',sans-serif;font-size:1rem;color:var(--a4);margin-bottom:10px">📋 פירוט השאלות</div>
+    <div style="max-height:360px;overflow-y:auto;margin-bottom:18px">${breakdown}</div>
+    ${wrong>0?`<button onclick="practiceExamMistakes()" style="width:100%;padding:14px;background:linear-gradient(135deg,rgba(255,159,67,.18),rgba(255,99,72,.18));border:2px solid var(--streak);color:var(--streak);border-radius:14px;font-family:'Fredoka',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:10px;transition:transform .2s" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform=''">🔄 תרגל את הטעויות (${wrong} שאלות)</button>`:`<div style="background:rgba(46,213,115,.1);border:1.5px solid rgba(46,213,115,.3);border-radius:14px;padding:12px;text-align:center;margin-bottom:10px;color:#68ffaa;font-weight:700">🎉 מושלם! אפס טעויות!</div>`}
+    <button onclick="startExam()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--a4),var(--a5));border:none;color:#fff;border-radius:14px;font-family:'Fredoka',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;margin-bottom:8px;transition:transform .2s" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform=''">🔁 מבחן חדש</button>
+    <button onclick="show('home')" style="width:100%;padding:11px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.14);color:var(--txt2);border-radius:14px;font-family:'Fredoka',sans-serif;font-size:.9rem;cursor:pointer">🏠 חזרה לבית</button>
+  </div>`;
+  if(pct>=75)spawnConf(30);
+}
+
+function practiceExamMistakes(){
+  const mistakes=(qs.examAnswers||[]).filter(a=>!a.correct).map(a=>a.q);
+  if(!mistakes.length){showToast('אין טעויות לתרגל! 🎉');return;}
+  qs.pool=mistakes;qs.idx=0;
+  qs.isMistakes=true;qs.isDaily=false;qs.isExam=false;
+  qs.cat=qs.pool[0].cat;qs.diff=qs.pool[0].diff;
+  show('q-scr');loadQ(qs.pool[0]);
+}
+
+
 // ── Expose to ES module (firebase.js) ──
 window.loadGradeConfig = loadGradeConfig;
