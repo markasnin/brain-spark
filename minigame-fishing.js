@@ -7,7 +7,6 @@
 window.FishingGame = (function () {
   'use strict';
 
-  // ── Persistent state (saved via main st.minigames) ──────────
   function mgSave(data) {
     if (!window.st) return;
     if (!window.st.minigames) window.st.minigames = {};
@@ -19,26 +18,19 @@ window.FishingGame = (function () {
     return (window.st && window.st.minigames && window.st.minigames['fishing']) || null;
   }
 
-
-  // ── Fish registry ─────────────────────────────────────────
   const FISH = [
-    // common
     { id:'goldfish',   name:'דג זהב',     emoji:'🐠', rarity:'common',    color:'#ffa94d', pts:5,  diff:'easy'   },
     { id:'bluefish',   name:'דג כחול',    emoji:'🐟', rarity:'common',    color:'#74c0fc', pts:5,  diff:'easy'   },
     { id:'clownfish',  name:'דג ליצן',    emoji:'🐡', rarity:'common',    color:'#ff8c42', pts:8,  diff:'easy'   },
-    // uncommon
     { id:'turtle',     name:'צב ים',      emoji:'🐢', rarity:'uncommon',  color:'#69db7c', pts:15, diff:'medium' },
     { id:'squid',      name:'דיונון',     emoji:'🦑', rarity:'uncommon',  color:'#cc5de8', pts:15, diff:'medium' },
     { id:'crab',       name:'סרטן',       emoji:'🦀', rarity:'uncommon',  color:'#fa5252', pts:18, diff:'medium' },
-    // rare
     { id:'dolphin',    name:'דולפין',     emoji:'🐬', rarity:'rare',      color:'#4dabf7', pts:30, diff:'hard'   },
     { id:'shark',      name:'כריש',       emoji:'🦈', rarity:'rare',      color:'#74c0fc', pts:35, diff:'hard'   },
     { id:'octopus',    name:'תמנון',      emoji:'🐙', rarity:'rare',      color:'#f783ac', pts:35, diff:'hard'   },
-    // legendary
     { id:'whale',      name:'לווייתן',    emoji:'🐳', rarity:'legendary', color:'#a5d8ff', pts:60, diff:'hard'   },
     { id:'narwhal',    name:'נרוואל',     emoji:'🦄', rarity:'legendary', color:'#e5dbff', pts:60, diff:'hard'   },
     { id:'mermaid',    name:'בת ים',      emoji:'🧜', rarity:'legendary', color:'#ffd43b', pts:80, diff:'hard'   },
-    // trash
     { id:'boot',       name:'מגף ישן',   emoji:'👢', rarity:'trash',     color:'#868e96', pts:0,  diff:'easy'   },
     { id:'can',        name:'פחית',       emoji:'🥫', rarity:'trash',     color:'#adb5bd', pts:0,  diff:'easy'   },
   ];
@@ -47,20 +39,17 @@ window.FishingGame = (function () {
   const RARITY_COLORS  = { common:'#69db7c', uncommon:'#74b9ff', rare:'#a29bfe', legendary:'#ffd43b', trash:'#636e72' };
   const RARITY_NAMES   = { common:'נפוץ', uncommon:'לא נפוץ', rare:'נדיר', legendary:'אגדי', trash:'זבל' };
 
-  // ── State ─────────────────────────────────────────────────
   let state = {
-    aquarium: [],      // caught fish {id, name, emoji, color, rarity, pts, caughtAt, nickname}
+    aquarium: [],
     casts: 0,
     totalPts: 0,
     activeQ: null,
     hookedFish: null,
-    phase: 'idle',     // idle | casting | question | result | aquarium
+    phase: 'idle',
     castAnim: null,
     cancelCb: null,
   };
 
-
-  // ── Grade-aware question generator ───────────────────────
   function _gradePool(diff) {
     const gc = window.GRADE_CONFIG;
     const avail = (gc && gc.availableCategories) || ['add','sub'];
@@ -81,10 +70,9 @@ window.FishingGame = (function () {
     const md = (gr==='\u05d2'||gr==='\u05d3');
     if (cat==='add') { const m=sm?15:md?60:250; const a=r(1,m),b=r(1,m); return {text:`${a} + ${b} = ?`, answer:a+b}; }
     if (cat==='sub') { const m=sm?15:md?60:250; const a=r(3,m),b=r(1,a); return {text:`${a} - ${b} = ?`, answer:a-b}; }
-    if (cat==='mul') { const m=sm?5:md?9:12;    const a=r(2,m),b=r(2,m); return {text:`${a} \u00d7 ${b} = ?`, answer:a*b}; }
-    const m=md?9:12; const b=r(2,m),q=r(1,m);  return {text:`${b*q} \u00f7 ${b} = ?`, answer:q};
+    if (cat==='mul') { const m=sm?5:md?9:12;    const a=r(2,m),b=r(2,m); return {text:`${a} × ${b} = ?`, answer:a*b}; }
+    const m=md?9:12; const b=r(2,m),q=r(1,m);  return {text:`${b*q} ÷ ${b} = ?`, answer:q};
   }
-
 
   function helpBtn(msg) {
     const safe = msg.replace(/'/g,"&#39;").replace(/"/g,"&quot;");
@@ -95,7 +83,6 @@ window.FishingGame = (function () {
     </div>`;
   }
 
-  // ── Pick fish by rarity ───────────────────────────────────
   function pickFish() {
     let total = Object.values(RARITY_WEIGHTS).reduce((a,b)=>a+b,0);
     let r = Math.random()*total;
@@ -108,13 +95,10 @@ window.FishingGame = (function () {
 
   function _pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
 
-  // ── Main render ───────────────────────────────────────────
   function render() {
     const el = document.getElementById('fishingGameWrap');
     if (!el) return;
-
     if (state.phase === 'aquarium') { renderAquarium(el); return; }
-
     const aquaCount = state.aquarium.length;
     el.innerHTML = `
       <div style="font-family:'Fredoka',sans-serif;font-size:1.6rem;color:#74c0fc;text-align:center;margin-bottom:6px">🎣 דיג מתמטי</div>
@@ -152,7 +136,7 @@ window.FishingGame = (function () {
   }
 
   function renderCastBtn() {
-    return helpBtn('🎣 דיג מתמטי\n\n• לחץ \'זרוק חכה!\' כדי להטיל\n• כשדג נתפס — פתור תרגיל\n• נכון → תתפוס את הדג \n• טעות → הדג בורח\n• דגים נדירים = תרגילים קשים\n• צבור דגים באקווריום שלך!') + `<button id="castBtn" onclick="window.FishingGame.cast()" style="width:100%;padding:16px;background:linear-gradient(135deg,#0d3b6e,#1e6091);border:2px solid #74c0fc;color:#fff;border-radius:16px;font-family:'Fredoka',sans-serif;font-size:1.3rem;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 20px #74c0fc44">
+    return helpBtn('🎣 דיג מתמטי\n\n• לחץ \'זרוק חכה!\' כדי להטיל\n• כשדג נתפס — פתור תרגיל\n• נכון → תתפוס את הדג \n• טעות → הדג בורח\n• דגים נדירים = תרגילים קשים\n• לחץ ✏️ על דג באקווריום לשנות שם!') + `<button id="castBtn" onclick="window.FishingGame.cast()" style="width:100%;padding:16px;background:linear-gradient(135deg,#0d3b6e,#1e6091);border:2px solid #74c0fc;color:#fff;border-radius:16px;font-family:'Fredoka',sans-serif;font-size:1.3rem;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 20px #74c0fc44">
       🎣 זרוק חכה!
     </button>`;
   }
@@ -174,15 +158,20 @@ window.FishingGame = (function () {
       </div>`;
   }
 
-  // ── Aquarium renderer ─────────────────────────────────────
+  // ── Aquarium renderer ── PATCHED: added ✏️ pencil icon on each fish card
   function renderAquarium(el) {
     const aqua = state.aquarium;
     el.innerHTML = `
-      <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:#74c0fc;text-align:center;margin-bottom:8px">🐠 האקווריום שלי 🌊</div>
+      <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:#74c0fc;text-align:center;margin-bottom:4px">🐠 האקווריום שלי 🌊</div>
+      <div style="color:#adb5bd;font-size:.75rem;font-family:Rubik,sans-serif;text-align:center;margin-bottom:8px">לחץ על ✏️ כדי לתת שם לדג שלך!</div>
       <div style="background:linear-gradient(180deg,#0d3b6e,#1a5276);border-radius:16px;padding:10px;min-height:180px;border:1px solid #1e6091;margin-bottom:10px">
         ${aqua.length === 0 ? '<div style="color:#adb5bd;text-align:center;padding:40px 0;font-family:Rubik,sans-serif">אין דגים עדיין! לך לדוג! 🎣</div>' :
           `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${aqua.map((f,i) => `
-            <div onclick="window.FishingGame.inspectFish(${i})" style="background:${f.color}22;border:1px solid ${f.color}55;border-radius:12px;padding:8px;text-align:center;cursor:pointer;transition:transform .15s" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            <div onclick="window.FishingGame.inspectFish(${i})"
+              style="background:${f.color}22;border:1px solid ${f.color}55;border-radius:12px;padding:8px;text-align:center;cursor:pointer;transition:transform .15s,box-shadow .15s;position:relative"
+              onmouseover="this.style.transform='scale(1.06)';this.style.boxShadow='0 4px 16px rgba(0,0,0,.5)'"
+              onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
+              <div style="position:absolute;top:5px;left:6px;font-size:.85rem;line-height:1;opacity:.75;pointer-events:none">✏️</div>
               <div style="font-size:2rem">${f.emoji}</div>
               <div style="font-size:.7rem;color:${f.color};font-weight:700;font-family:Rubik,sans-serif">${f.nickname||f.name}</div>
               <div style="font-size:.65rem;color:${RARITY_COLORS[f.rarity]};font-family:Rubik,sans-serif">${RARITY_NAMES[f.rarity]}</div>
@@ -196,7 +185,6 @@ window.FishingGame = (function () {
       </div>`;
   }
 
-  // ── Animation ─────────────────────────────────────────────
   function animateCast() {
     const line = document.getElementById('fishLine');
     const hook = document.getElementById('fishHook');
@@ -216,7 +204,6 @@ window.FishingGame = (function () {
     }, 800);
   }
 
-  // ── Public API ────────────────────────────────────────────
   function cast() {
     if (state.phase !== 'idle') return;
     state.phase = 'casting';
@@ -233,7 +220,6 @@ window.FishingGame = (function () {
     const q = state.activeQ, f = state.hookedFish;
     if (isNaN(ua)) { inp.style.borderColor = '#fa5252'; setTimeout(() => inp.style.borderColor = f.color+'66', 600); return; }
     if (ua === q.answer) {
-      // Caught!
       const entry = { ...f, caughtAt: Date.now(), nickname: f.name };
       state.aquarium.push(entry);
       state.totalPts += f.pts;
@@ -258,25 +244,25 @@ window.FishingGame = (function () {
   function inspectFish(i) {
     const f = state.aquarium[i];
     if (!f) return;
-    const nick = prompt(`שם הדג שלך (${f.name}):`, f.nickname || f.name);
-    if (nick !== null && nick.trim()) { state.aquarium[i].nickname = nick.trim(); mgSave({ aquarium: state.aquarium, casts: state.casts, totalPts: state.totalPts }); }
+    const nick = prompt(`✏️ שם הדג שלך (${f.emoji} ${f.name}):`, f.nickname || f.name);
+    if (nick !== null && nick.trim()) {
+      state.aquarium[i].nickname = nick.trim();
+      mgSave({ aquarium: state.aquarium, casts: state.casts, totalPts: state.totalPts });
+    }
     renderAquarium(document.getElementById('fishingGameWrap'));
   }
 
   function showAquarium() { state.phase = 'aquarium'; render(); }
   function backToFishing() { state.phase = 'idle'; render(); }
   function exit() { if (window.show) window.show('home'); }
-
   function showToast(msg) { if (window.showToast) window.showToast(msg); }
 
-  // ── Open ──────────────────────────────────────────────────
   function open() {
     const wrap = document.getElementById('minigameScreen');
     if (!wrap) return;
     wrap.innerHTML = `<div id="fishingGameWrap" style="max-width:420px;margin:0 auto;padding:12px"></div>`;
     document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
     wrap.classList.add('on');
-    // Restore saved state
     const saved = mgLoad();
     if (saved) {
       state.aquarium   = saved.aquarium   || [];
