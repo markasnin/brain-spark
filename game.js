@@ -17,13 +17,9 @@ async function loadGradeConfig(grade) {
 
 function applyGradeConfig() {
   const gc = window.GRADE_CONFIG; if (!gc) return;
-  let changed = false;
-  (gc.availableLearnTopics||[]).forEach(t => {
-    if (!st.learnedTopics.includes(t)) { st.learnedTopics.push(t); changed = true; }
-  });
+  (gc.availableLearnTopics||[]).forEach(t => { if(!st.learnedTopics.includes(t)) st.learnedTopics.push(t); });
   st.examTopics = st.examTopics.filter(t => (gc.availableExamTopics||[]).includes(t));
   if (st.examTopics.length===0) st.examTopics = (gc.availableExamTopics||['add']).slice(0,2);
-  if (changed) save();
 }
 
 async function selectGrade(grade) {
@@ -37,6 +33,7 @@ async function selectGrade(grade) {
 
 // ── Category ──
 function openCat(cat) {
+  if (cat === 'word') { showToast('🔒 מילוליות — בקרוב!'); return; }
   if (LOCKED_TOPICS[cat] && !st.learnedTopics.includes(LOCKED_TOPICS[cat])) { showToast('🔒 קודם למד את הנושא הזה!'); return; }
   const gc = window.GRADE_CONFIG;
   if (gc && !gc.availableCategories.includes(cat)) { showToast('🔒 נושא זה לא זמין בכיתה שלך'); return; }
@@ -91,6 +88,7 @@ function loadQ(q) {
   const sl=document.getElementById('streakLive');
   if (st.streak>=3) { sl.style.display='inline-flex'; const spu=SPECIAL_USERS[(window._username||'').toLowerCase()]; if(spu?.streakDisplay)sl.innerHTML=spu.streakDisplay(st.streak); else sl.innerHTML=`🔥 <span id="streakLiveCnt">${st.streak}</span>`; } else sl.style.display='none';
   startHintTimer(q);
+  startSkipTimer();
   const inp=document.getElementById('ansInp'); if(inp)inp.disabled=false;
   const sb=document.querySelector('.bsubmit'); if(sb)sb.disabled=false;
   setTimeout(()=>document.getElementById('ansInp').focus(),200);
@@ -158,7 +156,8 @@ function submitAns() {
 
     } else if (eqResult === 'right-answer-wrong-equation') {
       // ❌ Right number but wrong equation → counts as wrong attempt, no points
-      qs.attempts++;
+      qs.attempts++; updateSkipBtn();
+    updateSkipBtn();
       inp.classList.add('bad');
       document.getElementById('ad'+(qs.attempts-1)).classList.add('used');
       inp.value=''; setTimeout(()=>inp.classList.remove('bad'), 400);
@@ -185,7 +184,8 @@ function submitAns() {
 
     } else {
       // ❌ Fully wrong
-      qs.attempts++;
+      qs.attempts++; updateSkipBtn();
+    updateSkipBtn();
       inp.classList.add('bad');
       document.getElementById('ad'+(qs.attempts-1)).classList.add('used');
       addPts(-cfg.ptsWrong);
@@ -219,7 +219,8 @@ function submitAns() {
     spawnConf();
     endQ();
   } else {
-    qs.attempts++;
+    qs.attempts++; updateSkipBtn();
+    updateSkipBtn();
     inp.classList.add('bad');
     document.getElementById('ad'+(qs.attempts-1)).classList.add('used');
     addPts(-cfg.ptsWrong);
@@ -305,12 +306,64 @@ function buildExpl(q){if(q.cat==='word'){let s=`התשובה: <strong>${q.answer
 
 function showFb(type,title,txt){const b=document.getElementById('fbBox');b.className='fb-box on fb-'+type;document.getElementById('fbTitle').textContent=title;document.getElementById('fbText').innerHTML=(txt||'').replace(/\n/g,'<br>');}
 
-function endQ(){qs.done=true;const inp=document.getElementById('ansInp');if(inp){inp.disabled=true;inp.blur();}const sb=document.querySelector('.bsubmit');if(sb)sb.disabled=true;document.getElementById('qBtns').style.display='none';document.getElementById('nextBtns').style.display='flex';if(qs.hintInterval){clearInterval(qs.hintInterval);qs.hintInterval=null;}document.getElementById('moreBtn').style.display=qs.idx>=qs.pool.length-1?'inline-flex':'none';}
+function endQ(){qs.done=true;const inp=document.getElementById('ansInp');if(inp){inp.disabled=true;inp.blur();}const sb=document.querySelector('.bsubmit');if(sb)sb.disabled=true;document.getElementById('qBtns').style.display='none';document.getElementById('nextBtns').style.display='flex';if(qs.hintInterval){clearInterval(qs.hintInterval);qs.hintInterval=null;}if(qs.skipInterval){clearInterval(qs.skipInterval);qs.skipInterval=null;}document.getElementById('moreBtn').style.display=qs.idx>=qs.pool.length-1?'inline-flex':'none';}
 
 function nextQ(){if(qs.isDaily){qs.isDailyIdx++;if(qs.isDailyIdx>=2){finishDaily();return;}qs.idx++;if(qs.idx<qs.pool.length)loadQ(qs.pool[qs.idx]);return;}qs.idx++;if(qs.idx>=qs.pool.length){genMore();return;}loadQ(qs.pool[qs.idx]);}
-function skipQ(){addPts(-1);nextQ();}
+
+// ── Skip button — unlocks after 2 wrong attempts AND 2 minutes ──
+const SKIP_MIN_ATTEMPTS = 2;
+const SKIP_MIN_SECS     = 120;
+
+function startSkipTimer() {
+  qs.skipSecs = SKIP_MIN_SECS;
+  if (qs.skipInterval) clearInterval(qs.skipInterval);
+  updateSkipBtn();
+  qs.skipInterval = setInterval(() => {
+    qs.skipSecs--;
+    updateSkipBtn();
+    if (qs.skipSecs <= 0) { clearInterval(qs.skipInterval); qs.skipInterval = null; updateSkipBtn(); }
+  }, 1000);
+}
+
+function updateSkipBtn() {
+  const btn = document.getElementById('skipBtn');
+  if (!btn || qs.done) return;
+  const timeOk     = qs.skipSecs <= 0;
+  const attemptsOk = qs.attempts >= SKIP_MIN_ATTEMPTS;
+  const canSkip    = timeOk && attemptsOk;
+  if (canSkip) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor  = 'pointer';
+    btn.innerHTML = '⏭️ דלג';
+  } else {
+    btn.disabled = true;
+    btn.style.opacity = '.4';
+    btn.style.cursor  = 'not-allowed';
+    const parts = [];
+    if (!attemptsOk) parts.push((SKIP_MIN_ATTEMPTS - qs.attempts) + ' נסיונות');
+    if (!timeOk) { const m=Math.floor(qs.skipSecs/60),s=qs.skipSecs%60; parts.push(m>0?m+':'+s.toString().padStart(2,'0'):s+'ש׳'); }
+    btn.innerHTML = `⏭️ דלג <span style="font-size:.7rem;opacity:.7">(${parts.join(' + ')})</span>`;
+  }
+}
+
+function skipQ() {
+  const timeOk     = qs.skipSecs <= 0;
+  const attemptsOk = qs.attempts >= SKIP_MIN_ATTEMPTS;
+  if (!timeOk || !attemptsOk) {
+    const parts = [];
+    if (!attemptsOk) parts.push((SKIP_MIN_ATTEMPTS - qs.attempts) + ' ניסיון נוסף');
+    if (!timeOk) { const m=Math.floor(qs.skipSecs/60),s=qs.skipSecs%60; parts.push('עוד '+(m>0?m+':'+s.toString().padStart(2,'0'):s+' שניות')); }
+    showToast('⏳ דלג יהיה זמין: ' + parts.join(' + '));
+    return;
+  }
+  if (qs.skipInterval) { clearInterval(qs.skipInterval); qs.skipInterval = null; }
+  addPts(-1);
+  nextQ();
+}
+
 function genMore(){qs.pool=[...qs.pool,...genPool(qs.cat,qs.diff,10)];nextQ();}
-function exitToHome(){if(qs.hintInterval)clearInterval(qs.hintInterval);show('home');}
+function exitToHome(){if(qs.hintInterval)clearInterval(qs.hintInterval);if(qs.skipInterval)clearInterval(qs.skipInterval);show('home');}
 
 // ── Streak ──
 function handleStreak(correct){if(correct){st.streak++;if(st.streak>st.maxStreak)st.maxStreak=st.streak;let bonus=0,msg='';if(st.streak===3){bonus=cfg.streakBonus3;msg=`🔥 רצף 3! +${bonus}`;}else if(st.streak===5){bonus=cfg.streakBonus5;msg=`⚡ רצף 5! +${bonus}`;}else if(st.streak===10||st.streak%10===0){bonus=cfg.streakBonus10;msg=`💥 רצף ${st.streak}!! +${bonus}`;}if(bonus>0){addPts(bonus);const sf=document.getElementById('strkFire');document.getElementById('sfVal').textContent=`🔥 ${st.streak}`;document.getElementById('sfLbl').textContent=msg;sf.classList.add('show');setTimeout(()=>sf.classList.remove('show'),2000);}const slEl=document.getElementById('streakLive');if(slEl)slEl.style.display='inline-flex';const spu=SPECIAL_USERS[(window._username||'').toLowerCase()];if(spu?.streakDisplay){if(slEl)slEl.innerHTML=spu.streakDisplay(st.streak);}else{const sc=document.getElementById('streakLiveCnt');if(sc)sc.textContent=st.streak;}}else{st.streak=0;document.getElementById('streakLive').style.display='none';}save();}
@@ -342,21 +395,7 @@ function startDaily(){if(st.dailyDone){showToast('✅ כבר השלמת את ה�
 function finishDaily(){st.dailyDone=true;save();addPts(20);showPtsPop(20);spawnConf(25);showToast('🎉 משימה יומית הושלמה! +20 בונוס!');setTimeout(()=>show('home'),2000);}
 
 // ── Exam ──
-const EXAM_CATS=[
-  {id:'add',n:'➕ חיבור'},
-  {id:'sub',n:'➖ חיסור'},
-  {id:'mul',n:'✖️ כפל'},
-  {id:'div',n:'➗ חילוק',needs:'division'},
-  {id:'word',n:'📖 מילוליות'},
-  {id:'shapes',n:'📐 גיאומטריה',needs:'shapes'},
-  {id:'fractions',n:'½ שברים',needs:'fractions'},
-  {id:'measurement',n:'📏 מידות',needs:'measurement'},
-  {id:'data',n:'📊 נתונים',needs:'data'},
-  {id:'decimals',n:'0.5 עשרוניים',needs:'decimals'},
-  {id:'percent',n:'% אחוזים',needs:'percent'},
-  {id:'negatives',n:'− שליליים',needs:'negatives'},
-  {id:'ratio',n:'⚖️ יחס ופרופורציה',needs:'ratio'},
-];
+const EXAM_CATS=[{id:'add',n:'➕ חיבור'},{id:'sub',n:'➖ חיסור'},{id:'mul',n:'✖️ כפל'},{id:'div',n:'➗ חילוק',needs:'division'},{id:'word',n:'📖 מילוליות'},{id:'shapes',n:'📐 גיאומטריה',needs:'shapes'},{id:'fractions',n:'½ שברים',needs:'fractions'}];
 
 function openExamPre(){const gc=window.GRADE_CONFIG;const available=gc?.availableExamTopics||['add','sub','mul','word'];const g=document.getElementById('examTopicsGrid');g.innerHTML='';EXAM_CATS.forEach(cat=>{if(!available.includes(cat.id))return;const locked=cat.needs&&!st.learnedTopics.includes(cat.needs);const sel=st.examTopics.includes(cat.id);const b=document.createElement('button');b.className='etopic-btn'+(sel&&!locked?' sel':'')+(locked?' locked':'');b.textContent=cat.n+(locked?' 🔒':'');b.disabled=locked;b.onclick=()=>{if(locked)return;const i=st.examTopics.indexOf(cat.id);if(i>=0)st.examTopics.splice(i,1);else st.examTopics.push(cat.id);save();openExamPre();};g.appendChild(b);});['easy','medium','hard','mix'].forEach(d=>{const btn=document.getElementById('exD'+{easy:'e',medium:'m',hard:'h',mix:'x'}[d]);if(btn)btn.style.opacity=st.examDiff===d?1:.4;});document.getElementById('examPreInfo').textContent=`נושאים: ${st.examTopics.length} | 10 שאלות`;show('exam-pre-scr');}
 function setExamDiff(d){st.examDiff=d;save();openExamPre();}
