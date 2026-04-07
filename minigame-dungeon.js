@@ -1,13 +1,10 @@
 // ══════════════════════════════════════════════════════════════
 // minigame-dungeon.js  —  ⚔️ Math Dungeon
-// Walk through rooms, fight monsters by solving math fast.
-// Harder monsters = harder questions. Collect gold & level up.
 // ══════════════════════════════════════════════════════════════
 
 window.DungeonGame = (function () {
   'use strict';
 
-  // ── Persistent state (saved via main st.minigames) ──────────
   function mgSave(data) {
     if (!window.st) return;
     if (!window.st.minigames) window.st.minigames = {};
@@ -19,77 +16,60 @@ window.DungeonGame = (function () {
     return (window.st && window.st.minigames && window.st.minigames['dungeon']) || null;
   }
 
-
   const _rnd  = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
   const _pick = arr  => arr[Math.floor(Math.random()*arr.length)];
 
-
-  // ── Grade-aware question generator ───────────────────────
   function _gradePool(diff) {
     const gc = window.GRADE_CONFIG;
     const avail = (gc && gc.availableCategories) || ['add','sub'];
     const math = ['add','sub','mul','div'].filter(c => avail.includes(c));
     let pool;
-    if (diff === 'easy')   pool = math.filter(c => c === 'add' || c === 'sub');
+    if (diff === 'easy')        pool = math.filter(c => c === 'add' || c === 'sub');
     else if (diff === 'medium') pool = math.filter(c => c !== 'div');
-    else pool = math;
-    return (pool.length ? pool : math.length ? math : ['add']);
+    else                        pool = math;
+    return pool.length ? pool : math.length ? math : ['add'];
   }
   function makeQ(diff) {
     const pool = _gradePool(diff);
-    const cat  = pool[Math.floor(Math.random() * pool.length)];
+    const cat  = pool[Math.floor(Math.random()*pool.length)];
     if (window.genQ) { try { return window.genQ(cat, diff); } catch(e) {} }
-    const r = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
-    const gr = window._grade || '\u05d1';
-    const sm = (gr==='\u05d0'||gr==='\u05d1');
-    const md = (gr==='\u05d2'||gr==='\u05d3');
-    if (cat==='add') { const m=sm?15:md?60:250; const a=r(1,m),b=r(1,m); return {text:`${a} + ${b} = ?`, answer:a+b}; }
-    if (cat==='sub') { const m=sm?15:md?60:250; const a=r(3,m),b=r(1,a); return {text:`${a} - ${b} = ?`, answer:a-b}; }
-    if (cat==='mul') { const m=sm?5:md?9:12;    const a=r(2,m),b=r(2,m); return {text:`${a} \u00d7 ${b} = ?`, answer:a*b}; }
-    const m=md?9:12; const b=r(2,m),q=r(1,m);  return {text:`${b*q} \u00f7 ${b} = ?`, answer:q};
+    const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+    const gr=window._grade||'\u05d1', sm=(gr==='\u05d0'||gr==='\u05d1'), md=(gr==='\u05d2'||gr==='\u05d3');
+    if(cat==='add'){const m=sm?15:md?60:250;const a=r(1,m),b=r(1,m);return{text:`${a} + ${b} = ?`,answer:a+b,diff};}
+    if(cat==='sub'){const m=sm?15:md?60:250;const a=r(3,m),b=r(1,a);return{text:`${a} - ${b} = ?`,answer:a-b,diff};}
+    if(cat==='mul'){const m=sm?5:md?9:12;const a=r(2,m),b=r(2,m);return{text:`${a} × ${b} = ?`,answer:a*b,diff};}
+    const m=md?9:12;const b=r(2,m),q=r(1,m);return{text:`${b*q} ÷ ${b} = ?`,answer:q,diff};
   }
 
-  function helpBtn(msg) {
-    const safe = msg.replace(/'/g,"&#39;").replace(/"/g,"&quot;");
-    return `<div style="text-align:center;margin-bottom:10px">
-      <button onclick="window._showHelp('${safe}')" style="padding:6px 18px;background:rgba(255,211,42,.15);border:1px solid #ffd43b88;color:#ffd43b;border-radius:20px;font-family:'Rubik',sans-serif;font-size:.8rem;cursor:pointer;font-weight:700">
-        \u{1F4A1} \u05d0\u05d9\u05da \u05de\u05e9\u05d7\u05e7\u05d9\u05dd?
-      </button>
-    </div>`;
+  function helpBtn(msg){
+    const safe=msg.replace(/'/g,"&#39;").replace(/"/g,"&quot;");
+    return `<div style="text-align:center;margin-bottom:10px"><button onclick="window._showHelp('${safe}')" style="padding:6px 18px;background:rgba(255,211,42,.15);border:1px solid #ffd43b88;color:#ffd43b;border-radius:20px;font-family:'Rubik',sans-serif;font-size:.8rem;cursor:pointer;font-weight:700">💡 איך משחקים?</button></div>`;
   }
 
-  // ── Monsters ──────────────────────────────────────────────
   const MONSTERS = [
-    { id:'slime',   name:'סלייים',    emoji:'🟢', hp:2, gold:5,  xp:3,  diff:'easy',   color:'#69db7c' },
-    { id:'bat',     name:'עטלף',      emoji:'🦇', hp:2, gold:6,  xp:4,  diff:'easy',   color:'#a9b8c3' },
-    { id:'rat',     name:'עכברוש',    emoji:'🐀', hp:3, gold:8,  xp:5,  diff:'easy',   color:'#adb5bd' },
-    { id:'goblin',  name:'גובלין',    emoji:'👺', hp:3, gold:12, xp:8,  diff:'medium', color:'#69db7c' },
-    { id:'zombie',  name:'זומבי',     emoji:'🧟', hp:4, gold:14, xp:10, diff:'medium', color:'#8eb994' },
-    { id:'witch',   name:'מכשפה',     emoji:'🧙', hp:4, gold:16, xp:12, diff:'medium', color:'#cc5de8' },
-    { id:'knight',  name:'אביר רע',   emoji:'🗡️', hp:5, gold:22, xp:18, diff:'hard',   color:'#74c0fc' },
-    { id:'dragon',  name:'דרקון',     emoji:'🐲', hp:6, gold:35, xp:28, diff:'hard',   color:'#ff8c42' },
-    { id:'boss',    name:'הבוס הגדול',emoji:'👹', hp:8, gold:60, xp:50, diff:'hard',   color:'#ff6b6b' },
+    {id:'slime', name:'סלייים',    emoji:'🟢',hp:2,gold:5, xp:3, diff:'easy',  color:'#69db7c'},
+    {id:'bat',   name:'עטלף',      emoji:'🦇',hp:2,gold:6, xp:4, diff:'easy',  color:'#a9b8c3'},
+    {id:'rat',   name:'עכברוש',    emoji:'🐀',hp:3,gold:8, xp:5, diff:'easy',  color:'#adb5bd'},
+    {id:'goblin',name:'גובלין',    emoji:'👺',hp:3,gold:12,xp:8, diff:'medium',color:'#69db7c'},
+    {id:'zombie',name:'זומבי',     emoji:'🧟',hp:4,gold:14,xp:10,diff:'medium',color:'#8eb994'},
+    {id:'witch', name:'מכשפה',     emoji:'🧙',hp:4,gold:16,xp:12,diff:'medium',color:'#cc5de8'},
+    {id:'knight',name:'אביר רע',   emoji:'🗡️',hp:5,gold:22,xp:18,diff:'hard',  color:'#74c0fc'},
+    {id:'dragon',name:'דרקון',     emoji:'🐲',hp:6,gold:35,xp:28,diff:'hard',  color:'#ff8c42'},
+    {id:'boss',  name:'הבוס הגדול',emoji:'👹',hp:8,gold:60,xp:50,diff:'hard',  color:'#ff6b6b'},
   ];
 
-  const ROOMS = ['חדר הכניסה','המסדרון האפל','קרן האחים','חדר הכבוד','מגדל המכשף','כלא הדרקון','האולם הסודי','חדר האוצר'];
-  const ROOM_BG = ['#1a1a2e','#16213e','#0f3460','#1a1a2e','#2d1b69','#1a0a0a','#0a1a0a','#1a1500'];
-  const HERO_MAX_HP = 5;
+  const ROOMS=['חדר הכניסה','המסדרון האפל','קרן האחים','חדר הכבוד','מגדל המכשף','כלא הדרקון','האולם הסודי','חדר האוצר'];
+  const ROOM_BG=['#1a1a2e','#16213e','#0f3460','#1a1a2e','#2d1b69','#1a0a0a','#0a1a0a','#1a1500'];
+  const HERO_MAX_HP=5;
 
-  let st = {
-    phase: 'map', room: 0, heroHp: HERO_MAX_HP,
-    gold: 0, xp: 0, heroLv: 1,
-    monster: null, monsterHp: 0, activeQ: null,
-    qTimer: null, qTimeLeft: 0, streak: 0,
-    inventory: [], log: [],
-  };
+  let st={phase:'map',room:0,heroHp:HERO_MAX_HP,gold:0,xp:0,heroLv:1,monster:null,monsterHp:0,activeQ:null,qTimer:null,qTimeLeft:0,streak:0,inventory:[],log:[]};
 
   function hpBar(cur,max,col){const p=Math.max(0,Math.min(100,(cur/max)*100));return `<div style="background:rgba(255,255,255,.1);border-radius:6px;height:10px;overflow:hidden"><div style="width:${p}%;height:100%;background:${col};border-radius:6px;transition:width .3s"></div></div>`;}
-
   function heroStatus(){return `<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 12px;margin-bottom:8px"><div style="font-size:1.8rem">🧙‍♂️</div><div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:#fff;font-family:'Fredoka',sans-serif;font-size:.95rem">גיבור Lv.${st.heroLv}</span><span style="color:#ffd43b;font-size:.8rem">🪙 ${st.gold} זהב | ✨ ${st.xp} ניסיון</span></div>${hpBar(st.heroHp,HERO_MAX_HP,'#ff6b6b')}<div style="font-size:.7rem;color:#adb5bd;margin-top:2px">❤️ ${st.heroHp}/${HERO_MAX_HP}</div></div></div>`;}
 
   function render(){
     const el=document.getElementById('dungeonWrap');if(!el)return;
-    if(st.phase==='map')      renderMap(el);
+    if(st.phase==='map')         renderMap(el);
     else if(st.phase==='fight')   renderFight(el);
     else if(st.phase==='treasure')renderTreasure(el);
     else if(st.phase==='gameover')renderGameOver(el);
@@ -100,7 +80,7 @@ window.DungeonGame = (function () {
     const bgColor=ROOM_BG[st.room%ROOM_BG.length],roomName=ROOMS[st.room%ROOMS.length],isLast=st.room>=7;
     el.innerHTML=`
       <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:#ffd43b;text-align:center;margin-bottom:6px">⚔️ מבוך המתמטיקה</div>
-      ${helpBtn("⚔️ מבוך המתמטיקה\\n\\n• בחר: קרב מפלצת או חיפוש אוצר\\n• קרב: פתור תרגיל לפני שהזמן נגמר\\n• נכון → פוגע במפלצת | שגוי → אתה נפגע\\n• נגמר הזמן → אתה נפגע אוטומטית\\n• אוצר: פתור תרגיל להשיג זהב\\n• 8 חדרים להשלים — בהצלחה!")}
+      ${helpBtn("⚔️ מבוך המתמטיקה\n\n• בחר: קרב מפלצת או חיפוש אוצר\n• קרב: פתור תרגיל לפני שהזמן נגמר\n• נכון → פוגע במפלצת | שגוי → אתה נפגע\n• נגמר הזמן → אתה נפגע אוטומטית\n• אוצר: פתור תרגיל להשיג זהב\n• 8 חדרים להשלים — בהצלחה!")}
       ${heroStatus()}
       <div style="background:${bgColor};border-radius:16px;padding:16px;text-align:center;margin-bottom:10px;border:1px solid rgba(255,255,255,.1)">
         <div style="font-size:3rem;margin-bottom:4px">${isLast?'🏆':'🚪'}</div>
@@ -121,8 +101,9 @@ window.DungeonGame = (function () {
   }
 
   function renderFight(el){
-    const m=st.monster,q=st.activeQ;
-    const timeColor=st.qTimeLeft>5?'#69db7c':st.qTimeLeft>2?'#ffd43b':'#ff6b6b';
+    const m=st.monster, q=st.activeQ;
+    const totalSecs=_diffSecs(m.diff), pct=Math.max(0,st.qTimeLeft/totalSecs*100);
+    const timeColor=st.qTimeLeft<=10?'#ff6b6b':st.qTimeLeft<=20?'#ffd43b':'#69db7c';
     el.innerHTML=`
       <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:#ff6b6b;text-align:center;margin-bottom:6px">⚔️ קרב!</div>
       ${heroStatus()}
@@ -133,9 +114,12 @@ window.DungeonGame = (function () {
         <div style="font-size:.7rem;color:#adb5bd;margin-top:2px">❤️ ${st.monsterHp}/${m.hp}</div>
       </div>
       <div style="background:rgba(255,255,255,.06);border-radius:14px;padding:12px;margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <span style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.05rem;font-weight:700;direction:ltr">${q.text}</span>
-          <span style="color:${timeColor};font-family:'Fredoka',sans-serif;font-size:1.2rem;font-weight:900" id="qTimer">⏱️${st.qTimeLeft}</span>
+          <span id="qTimer" style="color:${timeColor};font-family:'Fredoka',sans-serif;font-size:1.2rem;font-weight:900;min-width:52px;text-align:center">⏱ ${_fmtTime(st.qTimeLeft)}</span>
+        </div>
+        <div style="background:rgba(255,255,255,.1);border-radius:4px;height:5px;margin-bottom:10px;overflow:hidden">
+          <div id="qTimerBar" style="width:${pct}%;height:100%;background:${timeColor};border-radius:4px;transition:width 1s linear"></div>
         </div>
         <div style="display:flex;gap:8px">
           <input id="dungAns" type="number" placeholder="?" onkeydown="if(event.key==='Enter')window.DungeonGame.submitAns()" autofocus
@@ -167,16 +151,31 @@ window.DungeonGame = (function () {
   }
 
   function renderGameOver(el){el.innerHTML=`<div style="text-align:center;padding:20px"><div style="font-size:4rem;margin-bottom:12px">💀</div><div style="font-family:'Fredoka',sans-serif;font-size:1.8rem;color:#ff6b6b;margin-bottom:8px">נפלת בקרב!</div><div style="color:#adb5bd;font-family:Rubik,sans-serif;font-size:.9rem;margin-bottom:20px">הגעת עד חדר ${st.room+1} עם ${st.gold} 🪙</div><button onclick="window.DungeonGame.restart()" style="width:100%;padding:14px;background:linear-gradient(135deg,#991b1b,#7f1d1d);border:2px solid #ef4444;color:#fff;border-radius:14px;font-family:'Fredoka',sans-serif;font-size:1.1rem;cursor:pointer;margin-bottom:8px">🔄 נסה שוב</button><button onclick="window.DungeonGame.exit()" style="width:100%;padding:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#6b7280;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.85rem;cursor:pointer">← עזוב</button></div>`;}
-
   function renderVictory(el){el.innerHTML=`<div style="text-align:center;padding:20px"><div style="font-size:4rem;margin-bottom:12px">🏆</div><div style="font-family:'Fredoka',sans-serif;font-size:1.8rem;color:#ffd43b;margin-bottom:8px">ניצחת את המבוך!</div><div style="color:#adb5bd;font-family:Rubik,sans-serif;font-size:.9rem;margin-bottom:4px">זהב: 🪙 ${st.gold} | XP: ✨ ${st.xp}</div><div style="color:#69db7c;font-family:Rubik,sans-serif;font-size:.9rem;margin-bottom:20px">כל הכבוד!</div><button onclick="window.DungeonGame.restart()" style="width:100%;padding:14px;background:linear-gradient(135deg,#713f12,#92400e);border:2px solid #fbbf24;color:#fff;border-radius:14px;font-family:'Fredoka',sans-serif;font-size:1.1rem;cursor:pointer;margin-bottom:8px">🔄 שחק שוב</button><button onclick="window.DungeonGame.exit()" style="width:100%;padding:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#6b7280;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.85rem;cursor:pointer">← חזרה לבית</button></div>`;if(window.spawnConf)window.spawnConf(50);if(window.addPts)window.addPts(st.gold);if(window.showPtsPop)window.showPtsPop(st.gold);}
 
-  function startTimer(){clearTimer();const diff=st.monster?.diff||'medium';st.qTimeLeft=diff==='easy'?12:diff==='medium'?8:5;st.qTimer=setInterval(()=>{st.qTimeLeft--;const el=document.getElementById('qTimer');if(el)el.textContent='⏱️'+st.qTimeLeft;if(st.qTimeLeft<=0){clearTimer();heroHit();}},1000);}
+  // ── Timer — easy=40s, medium=60s, hard=90s ──
+  function _diffSecs(d){return d==='hard'?90:d==='medium'?60:40;}
+  function _fmtTime(s){const m=Math.floor(s/60),sec=s%60;return s>=60?m+':'+(sec<10?'0':'')+sec:s+'ש';}
+
+  function startTimer(){
+    clearTimer();
+    const diff=st.monster?st.monster.diff:'medium';
+    st.qTimeLeft=_diffSecs(diff);
+    const total=st.qTimeLeft;
+    st.qTimer=setInterval(()=>{
+      st.qTimeLeft--;
+      const timerEl=document.getElementById('qTimer');
+      const barEl=document.getElementById('qTimerBar');
+      const color=st.qTimeLeft<=10?'#ff6b6b':st.qTimeLeft<=20?'#ffd43b':'#69db7c';
+      if(timerEl){timerEl.textContent='⏱ '+_fmtTime(st.qTimeLeft);timerEl.style.color=color;}
+      if(barEl){barEl.style.width=Math.max(0,st.qTimeLeft/total*100)+'%';barEl.style.background=color;}
+      if(st.qTimeLeft<=0){clearTimer();heroHit();}
+    },1000);
+  }
   function clearTimer(){if(st.qTimer){clearInterval(st.qTimer);st.qTimer=null;}}
 
   function heroHit(){st.heroHp--;log('💥 המפלצת פגעה! HP:'+st.heroHp);if(st.heroHp<=0){st.phase='gameover';render();return;}st.activeQ=makeQ(st.monster.diff);render();}
-
   function monsterHit(){st.monsterHp--;st.streak++;log('⚔️ פגעת ב'+st.monster.name+'! HP:'+st.monsterHp);if(st.monsterHp<=0){clearTimer();const gold=st.monster.gold+(st.streak>=3?5:0);st.gold+=gold;st.xp+=st.monster.xp;if(window.addPts)window.addPts(gold);if(Math.random()<.25){st.inventory.push('potion');window.showToast&&window.showToast('🧪 מצאת כוס מרפא! (+❤️)');}window.showToast&&window.showToast('🎉 ניצחת! +'+gold+'🪙');st.room++;mgSave({room:st.room,gold:st.gold,xp:st.xp,heroHp:st.heroHp,inventory:st.inventory});if(st.room>=8)st.phase='victory';else st.phase='map';st.streak=0;render();}else{st.activeQ=makeQ(st.monster.diff);render();}}
-
   function log(msg){st.log.push(msg);if(st.log.length>10)st.log.shift();}
 
   function enterRoom(type){
@@ -186,14 +185,10 @@ window.DungeonGame = (function () {
   }
 
   function submitAns(){clearTimer();const inp=document.getElementById('dungAns');if(!inp)return;const ua=parseInt(inp.value);if(isNaN(ua)){startTimer();return;}if(ua===st.activeQ.answer)monsterHit();else heroHit();}
-
   function submitTreasure(){const inp=document.getElementById('treasAns');if(!inp)return;const ua=parseInt(inp.value);if(isNaN(ua))return;if(ua===st.activeQ.answer){const gold=_rnd(5,20+st.room*4);st.gold+=gold;if(Math.random()<.3)st.inventory.push('potion');window.addPts&&window.addPts(gold);window.showToast&&window.showToast('🎁 מצאת '+gold+'🪙!');st.room++;if(st.room>=8)st.phase='victory';else st.phase='map';}else{window.showToast&&window.showToast('🔒 שגוי — הארגז נשאר נעול!');st.phase='map';}render();}
-
   function usePotion(){const idx=st.inventory.indexOf('potion');if(idx<0)return;st.inventory.splice(idx,1);st.heroHp=Math.min(HERO_MAX_HP,st.heroHp+1);window.showToast&&window.showToast('🧪 +1 ❤️');render();}
-
   function restart(){clearTimer();st={phase:'map',room:0,heroHp:HERO_MAX_HP,gold:0,xp:0,heroLv:1,monster:null,monsterHp:0,activeQ:null,qTimer:null,qTimeLeft:0,streak:0,inventory:[],log:[]};render();}
   function exit(){clearTimer();if(window.show)window.show('home');}
-
   function open(){const wrap=document.getElementById('minigameScreen');if(!wrap)return;wrap.innerHTML=`<div id="dungeonWrap" style="max-width:420px;margin:0 auto;padding:12px"></div>`;document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));wrap.classList.add('on');const saved=mgLoad();if(saved&&saved.room>0){st.room=saved.room||0;st.gold=saved.gold||0;st.xp=saved.xp||0;st.heroHp=saved.heroHp||5;st.inventory=saved.inventory||[];}else{restart();return;}render();}
 
   return {open,enterRoom,submitAns,submitTreasure,usePotion,restart,exit};
