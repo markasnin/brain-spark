@@ -149,7 +149,7 @@
 
 <!-- ══ HOME ══ -->
 <div class="scr" id="home">
-  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:var(--w,840px);margin-bottom:4px">
+  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:4px">
     <div class="logo" style="font-size:2.4rem;animation:none">⚡ Brain Spark</div>
     <button class="logout-btn" onclick="fbLogout()">התנתק</button>
   </div>
@@ -561,32 +561,98 @@
   <script src="minigames.js"></script>
 
 <script>
-// ── PATCH: fix minigames tile onclick and export helpers to window ──
+// ══ GROUPED CATEGORY GRID ══
+// Overrides buildGrid from ui.js with grouped sections + pill subcategories
+
+var CAT_GROUPS_DEF = [
+  { id:'ops',       label:'פעולות חשבון',  emoji:'🔢', color:'#2ed573', rgb:'46,213,115',  cats:['add','sub','mul','div','word'] },
+  { id:'fractions', label:'שברים ומספרים', emoji:'½',  color:'#54a0ff', rgb:'84,160,255',  cats:['fractions','decimals','percent','negatives','ratio'] },
+  { id:'geometry',  label:'הנדסה ומדידה',  emoji:'📐', color:'#c77dff', rgb:'199,125,255', cats:['shapes','measurement'] },
+  { id:'data',      label:'נתונים',         emoji:'📊', color:'#ffd32a', rgb:'255,211,42',  cats:['data'] },
+  { id:'tools',     label:'כלים ועוד',      emoji:'🎮', color:'#ff6348', rgb:'255,99,72',   cats:['minigames','learn','exam','history','mistakes','friends','settings'] }
+];
+
+function _cgOnclick(cat) {
+  var m = {minigames:'openMinigames()',learn:'openLearn()',exam:'openExamPre()',
+           history:'openHistory()',mistakes:'openMistakes()',friends:'openFriends()',settings:'openSettings()'};
+  if (cat.special && m[cat.special]) return m[cat.special];
+  return "openCat('" + cat.id + "')";
+}
+
+function buildGroupedGrid() {
+  var gc        = window.GRADE_CONFIG;
+  var available = gc ? gc.availableCategories : ['add','sub','mul','word'];
+  var grid      = document.getElementById('mainGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  var catMap = {};
+  if (typeof ALL_CATS !== 'undefined') ALL_CATS.forEach(function(c){ catMap[c.id]=c; });
+
+  CAT_GROUPS_DEF.forEach(function(group) {
+    var cats = group.cats.map(function(id){ return catMap[id]; }).filter(function(c) {
+      if (!c) return false;
+      if (c.special) return true;
+      return available.indexOf(c.id) >= 0;
+    });
+    if (!cats.length) return;
+
+    var section = document.createElement('div');
+    section.className = 'cg-section';
+    section.style.cssText = '--gc:'+group.color+';--gcr:'+group.rgb+';';
+
+    var head = document.createElement('div');
+    head.className = 'cg-head';
+    head.innerHTML =
+      '<span class="cg-emoji">'+group.emoji+'</span>'+
+      '<span class="cg-label">'+group.label+'</span>'+
+      '<span class="cg-count">'+cats.length+'</span>';
+    section.appendChild(head);
+
+    var row = document.createElement('div');
+    row.className = 'cg-row';
+
+    cats.forEach(function(cat) {
+      var isLocked = !cat.special &&
+        typeof LOCKED_TOPICS!=='undefined' && LOCKED_TOPICS[cat.id] &&
+        typeof st!=='undefined' && st.learnedTopics &&
+        st.learnedTopics.indexOf(LOCKED_TOPICS[cat.id]) < 0;
+
+      var pill = document.createElement('button');
+      pill.className = 'cg-pill' + (isLocked ? ' cg-locked' : '');
+      pill.id = cat.id + 'Btn';
+      pill.setAttribute('onclick', _cgOnclick(cat));
+      pill.innerHTML =
+        '<span class="cg-picon">'+cat.icon+'</span>'+
+        '<span class="cg-pname">'+cat.name+'</span>'+
+        (isLocked ? '<span class="cg-plock">🔒</span>' : '');
+      row.appendChild(pill);
+    });
+
+    section.appendChild(row);
+    grid.appendChild(section);
+  });
+}
+
+// Override show() and patch updateHome to call our grouped builder
 window.show = function(id) {
-  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on'); });
   var el = document.getElementById(id);
   if (el) el.classList.add('on');
   if (id === 'home' && window.updateHome) window.updateHome();
 };
-// Patch minigames button after DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-  // nothing needed here - grid is built dynamically by updateHome
-});
-// Override buildGrid to always include openMinigames
-var _origUpdateHome;
-function _patchUpdateHome() {
-  if (!window.updateHome) { setTimeout(_patchUpdateHome, 100); return; }
-  var orig = window.updateHome;
+
+function _patchForGroupedGrid() {
+  if (!window.updateHome) { setTimeout(_patchForGroupedGrid, 80); return; }
+  var _orig = window.updateHome;
   window.updateHome = function() {
-    orig.apply(this, arguments);
-    // Fix minigames button if it ended up with empty onclick
-    var btn = document.getElementById('minigamesBtn');
-    if (btn && !btn.getAttribute('onclick')) {
-      btn.setAttribute('onclick', 'openMinigames()');
-    }
+    _orig.apply(this, arguments);
+    buildGroupedGrid();
   };
+  // Also override buildGrid directly so it always uses grouped version
+  window.buildGrid = buildGroupedGrid;
 }
-_patchUpdateHome();
+_patchForGroupedGrid();
 </script>
 </body>
 </html>
