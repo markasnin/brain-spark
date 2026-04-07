@@ -321,24 +321,46 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
 ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:rgba(255,255,255,.04);}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:99px;}
 @media(max-width:420px){.logo{font-size:2.4rem;}.qtxt{font-size:1.05rem;}.ans-inp{width:72px;height:50px;font-size:1.5rem;}}
 
-/* ── Desktop only: personal card + friends table side by side ── */
+/* ── Desktop: pcard (right) + lb-card (left) side by side, centered ── */
 @media(min-width:820px){
-  #home-top-row {
-    display:flex;
-    flex-direction:row;
-    gap:18px;
-    width:100%;
-    max-width:420px;
-    align-items:stretch;
+  #home {
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    grid-template-rows:auto !important;
+    column-gap:18px !important;
+    row-gap:0 !important;
+    max-width:860px !important;
+    align-items:start !important;
   }
-  #home-top-row .pcard {
-    flex:1;
-    margin-bottom:0;
-    max-width:none;
+  /* Logo row: spans both columns */
+  #home > div:first-child {
+    grid-column:1 / -1 !important;
+    max-width:100% !important;
+    justify-content:space-between !important;
   }
-  #home-top-row .lb-card {
-    flex:1;
-    margin-bottom:0;
-    max-width:none;
+  /* pcard: right column */
+  #home > .pcard {
+    grid-column:2 !important;
+    grid-row:2 !important;
+    max-width:100% !important;
+    margin-bottom:18px !important;
+  }
+  /* lb-card: left column */
+  #home > .lb-card {
+    grid-column:1 !important;
+    grid-row:2 !important;
+    max-width:100% !important;
+    margin-bottom:18px !important;
+  }
+  /* Everything else: spans both columns, centered */
+  #home > .recommend,
+  #home > .daily-banner,
+  #home > .sec-label,
+  #home > .grid {
+    grid-column:1 / -1 !important;
+    max-width:420px !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+    width:100% !important;
   }
 }
