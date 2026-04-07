@@ -259,12 +259,16 @@ window.RocketGame = (function () {
   // ── Timer ──
   function startTimer(){
     clearTimer();
-    const ctx=st.questionCtx;
-    st.qTimeLeft = ctx==='fuel'?15 : ctx==='planet'?10 : ctx==='asteroid'?6 : 7;
+    // Time based on question difficulty: easy=40s, medium=60s, hard=90s
+    const diff = st.activeQ ? st.activeQ.diff : 'easy';
+    st.qTimeLeft = diff==='hard' ? 90 : diff==='medium' ? 60 : 40;
     st.qTimer=setInterval(()=>{
       st.qTimeLeft--;
       const el=document.getElementById('rqTimer');
-      if(el) el.textContent='⏱ '+st.qTimeLeft;
+      if(el){
+        const m=Math.floor(st.qTimeLeft/60), s=st.qTimeLeft%60;
+        el.textContent='⏱ '+(m>0?m+':'+String(s).padStart(2,'0'):s+'ש');
+      }
       if(st.qTimeLeft<=0){clearTimer();timeOut();}
     },1000);
   }
