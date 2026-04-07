@@ -296,315 +296,714 @@ function genShapes(diff, th) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// genFrac — rich visual fraction questions with SVG shapes
-// Types: pizza, bar, circle, grid, compare, word problems, 
-//        add/subtract, equivalent, missing numerator, mixed
+// genFrac — SPECTACULAR interactive fraction questions
+// Handwritten-style fractions, animated SVG shapes, tap-to-answer
 // ══════════════════════════════════════════════════════════════
 function genFrac(diff, th) {
 
-  // Pool of question types per difficulty
-  const easyTypes   = ['pizza','bar','identify','of_total','circle_shade','shape_grid'];
-  const medTypes    = ['compare','bar_shade','of_total','pizza_word','missing_num','shape_grid','add_frac'];
-  const hardTypes   = ['mixed_num','add_frac','of_total_hard','subtract_frac','word_frac','equivalent','compare'];
-  const pool = diff==='easy' ? easyTypes : diff==='medium' ? medTypes : hardTypes;
-  const type = pick(pool);
+  var pts = ptsForQ('fractions', diff);
 
-  // ── Fraction rendered as a proper stacked fraction (numerator/line/denominator) ──
-  function fracHtml(n, d, color) {
-    color = color || '#fff';
-    return '<span style="display:inline-flex;flex-direction:column;align-items:center;line-height:1.1;margin:0 5px;vertical-align:middle">'
-      + '<span style="font-size:1.25em;font-weight:900;color:' + color + '">' + n + '</span>'
-      + '<span style="border-top:3px solid ' + color + ';width:100%;min-width:20px;display:block;margin:2px 0"></span>'
-      + '<span style="font-size:1.25em;font-weight:900;color:' + color + '">' + d + '</span>'
-      + '</span>';
+  // ── Handwritten-style fraction using SVG path curves ──────
+  // Mimics pencil-drawn numerator/vinculum/denominator
+  function fracSvg(num, den, opts) {
+    opts = opts || {};
+    var color   = opts.color   || '#fff';
+    var size    = opts.size    || 1;
+    var shake   = opts.shake   || false; // wobble animation
+    var W = Math.round(54*size), H = Math.round(70*size);
+    var fs = Math.round(26*size); // font size for digits
+    var lineY = Math.round(35*size);
+    // Slightly wobbly line — hand-drawn feel
+    var x1 = Math.round(6*size), x2 = Math.round(48*size);
+    var c1y = lineY + Math.round(rnd(-2,2)*size);
+    var c2y = lineY + Math.round(rnd(-2,2)*size);
+    var pathD = 'M '+x1+','+lineY+' C '+(x1+8*size)+','+c1y+' '+(x2-8*size)+','+c2y+' '+x2+','+lineY;
+    var animStyle = shake ? 'animation:fracWiggle 0.4s ease-in-out;' : '';
+    return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:inline-block;vertical-align:middle;'+animStyle+'">'
+      + '<style>@keyframes fracWiggle{0%{transform:rotate(0deg)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}100%{transform:rotate(0deg)}}</style>'
+      + '<text x="'+(W/2)+'" y="'+(lineY-4)+'" text-anchor="middle" dominant-baseline="auto"'
+        + ' font-family="Caveat,Patrick Hand,cursive" font-size="'+fs+'" font-weight="700" fill="'+color+'">'+num+'</text>'
+      + '<path d="'+pathD+'" stroke="'+color+'" stroke-width="'+(2.8*size)+'" stroke-linecap="round" fill="none"/>'
+      + '<text x="'+(W/2)+'" y="'+(lineY+6)+'" text-anchor="middle" dominant-baseline="hanging"'
+        + ' font-family="Caveat,Patrick Hand,cursive" font-size="'+fs+'" font-weight="700" fill="'+color+'">'+den+'</text>'
+      + '</svg>';
   }
 
-  // ── Pizza / Circle SVG (d slices, n shaded) ──
-  function pizzaSvg(n, d, color, size) {
+  // ── Interactive pizza with tappable slices ────────────────
+  // Clicking a slice toggles it; answer updates live
+  function interactivePizza(totalSlices, preShaded, color, size) {
     color = color || '#ff6348';
-    size  = size  || 120;
-    var cx = size/2, cy = size/2, r = size/2 - 5;
-    var slices = '';
-    for (var i = 0; i < d; i++) {
-      var a1 = (i/d)*2*Math.PI - Math.PI/2;
-      var a2 = ((i+1)/d)*2*Math.PI - Math.PI/2;
+    size  = size  || 140;
+    var cx = size/2, cy = size/2, r = size/2 - 6;
+    var crust = '#b85c1a';
+    var id = 'pizza_' + Math.floor(Math.random()*99999);
+
+    // Pre-compute slice paths
+    var slicePaths = [];
+    for (var i = 0; i < totalSlices; i++) {
+      var a1 = (i/totalSlices)*2*Math.PI - Math.PI/2;
+      var a2 = ((i+1)/totalSlices)*2*Math.PI - Math.PI/2;
       var x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
       var x2 = cx + r*Math.cos(a2), y2 = cy + r*Math.sin(a2);
-      var large = (1/d) > 0.5 ? 1 : 0;
-      var fill = i < n ? color : '#2d2d2d';
-      slices += '<path d="M' + cx + ',' + cy + ' L' + x1.toFixed(2) + ',' + y1.toFixed(2)
-        + ' A' + r + ',' + r + ' 0 ' + large + ',1 ' + x2.toFixed(2) + ',' + y2.toFixed(2) + ' Z"'
-        + ' fill="' + fill + '" stroke="#fff" stroke-width="2.5"/>';
+      var large = (1/totalSlices) > 0.5 ? 1 : 0;
+      slicePaths.push({x1:x1.toFixed(1),y1:y1.toFixed(1),x2:x2.toFixed(1),y2:y2.toFixed(1),large:large});
     }
-    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto">'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#c97c22" stroke="#fff" stroke-width="2"/>'
-      + slices + '</svg>';
+
+    var sliceSvg = '';
+    for (var i = 0; i < totalSlices; i++) {
+      var sp = slicePaths[i];
+      var isShaded = i < preShaded;
+      sliceSvg += '<path id="'+id+'_s'+i+'" '
+        + 'd="M'+cx+','+cy+' L'+sp.x1+','+sp.y1+' A'+r+','+r+' 0 '+sp.large+',1 '+sp.x2+','+sp.y2+' Z" '
+        + 'fill="'+(isShaded?color:'#1e1e2e')+'" stroke="#fff" stroke-width="2.5" '
+        + 'style="cursor:pointer;transition:fill .18s,transform .18s;transform-origin:'+cx+'px '+cy+'px" '
+        + 'onclick="window._fracPizzaClick(\''+id+'\','+i+','+totalSlices+')" '
+        + 'onmouseover="this.style.transform=\'scale(1.06)\';this.style.filter=\'brightness(1.3)\'" '
+        + 'onmouseout="this.style.transform=\'scale(1)\';this.style.filter=\'none\'"/>';
+    }
+    // Topping dots on shaded slices
+    var toppings = '';
+    for (var i = 0; i < Math.min(preShaded, totalSlices); i++) {
+      var midA = ((i+0.5)/totalSlices)*2*Math.PI - Math.PI/2;
+      var tr = r*0.55;
+      var tx = cx + tr*Math.cos(midA), ty = cy + tr*Math.sin(midA);
+      toppings += '<circle cx="'+tx.toFixed(1)+'" cy="'+ty.toFixed(1)+'" r="4" fill="#8b0000" opacity="0.7"/>';
+    }
+
+    var svg = '<svg id="'+id+'" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'" style="display:block;margin:0 auto;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5))">'
+      + '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+crust+'" stroke="#fff" stroke-width="2"/>'
+      + sliceSvg + toppings
+      + '<text id="'+id+'_lbl" x="'+cx+'" y="'+(size+20)+'" text-anchor="middle" font-family="Caveat,cursive" font-size="16" fill="#adb5bd">'+preShaded+' / '+totalSlices+'</text>'
+      + '</svg>';
+
+    var script = '<script>window._fracPizzaState=window._fracPizzaState||{};'
+      + 'window._fracPizzaState["'+id+'"]={count:'+preShaded+',total:'+totalSlices+',color:"'+color+'"};'
+      + 'window._fracPizzaClick=function(id,idx,total){'
+      + 'var st=window._fracPizzaState[id];if(!st)return;'
+      + 'var el=document.getElementById(id+"_s"+idx);'
+      + 'var on=el.getAttribute("fill")!=="'+color.replace('#','\\x23')+'";'  // toggled
+      // Simpler: count shaded
+      + 'var shaded=0;for(var i=0;i<total;i++){var s=document.getElementById(id+"_s"+i);if(s&&s.getAttribute("fill")!=="#1e1e2e")shaded++;}'
+      + 'el.setAttribute("fill",on?"'+color+'"+"":"#1e1e2e");'
+      + 'shaded=0;for(var i=0;i<total;i++){var s=document.getElementById(id+"_s"+i);if(s&&s.getAttribute("fill")!=="#1e1e2e")shaded++;}'
+      + 'st.count=shaded;'
+      + 'var lbl=document.getElementById(id+"_lbl");if(lbl)lbl.textContent=shaded+" / "+total;'
+      + 'window._shapeAnswer(shaded);'
+      + '};'
+      + '<\/script>';
+
+    return svg + script;
   }
 
-  // ── Bar SVG (d segments, n filled) ──
-  function barSvg(n, d, color, w, h) {
+  // Simpler non-interactive pizza (for display)
+  function staticPizza(n, d, color, size) {
+    color = color || '#ff6348';
+    size  = size  || 130;
+    var cx=size/2, cy=size/2, r=size/2-6;
+    var slices='';
+    for(var i=0;i<d;i++){
+      var a1=(i/d)*2*Math.PI-Math.PI/2, a2=((i+1)/d)*2*Math.PI-Math.PI/2;
+      var x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1),x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
+      var lg=(1/d)>.5?1:0;
+      var fill=i<n?color:'#1e1e2e';
+      // Topping on shaded slice
+      var topping='';
+      if(i<n){var ma=((i+.5)/d)*2*Math.PI-Math.PI/2,tr=r*.55;topping='<circle cx="'+(cx+tr*Math.cos(ma)).toFixed(1)+'" cy="'+(cy+tr*Math.sin(ma)).toFixed(1)+'" r="3.5" fill="#8b0000" opacity=".7"/>';}
+      slices+='<path d="M'+cx+','+cy+' L'+x1.toFixed(1)+','+y1.toFixed(1)+' A'+r+','+r+' 0 '+lg+',1 '+x2.toFixed(1)+','+y2.toFixed(1)+' Z" fill="'+fill+'" stroke="#fff" stroke-width="2.5"/>'+topping;
+    }
+    return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'" style="display:block;margin:0 auto;filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))">'
+      +'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#b85c1a" stroke="#fff" stroke-width="2"/>'+slices+'</svg>';
+  }
+
+  // ── Interactive bar — tap segments to shade ───────────────
+  function interactiveBar(d, preShaded, color, w, h) {
     color = color || '#54a0ff';
-    w = w || 240; h = h || 42;
+    w = w || 260; h = h || 48;
+    var id = 'bar_' + Math.floor(Math.random()*99999);
     var cw = w/d;
     var cells = '';
-    for (var i = 0; i < d; i++) {
-      cells += '<rect x="' + (i*cw+1).toFixed(1) + '" y="1" width="' + (cw-2).toFixed(1) + '" height="' + (h-2) + '"'
-        + ' fill="' + (i < n ? color : '#2d2d2d') + '" stroke="#fff" stroke-width="2" rx="5"/>';
+    for(var i=0;i<d;i++){
+      var filled=i<preShaded;
+      cells+='<rect id="'+id+'_c'+i+'" x="'+(i*cw+2).toFixed(1)+'" y="2" width="'+(cw-4).toFixed(1)+'" height="'+(h-4)+'"'
+        +' fill="'+(filled?color:'#1e1e2e')+'" stroke="'+color+'" stroke-width="2" rx="6"'
+        +' style="cursor:pointer;transition:fill .15s,filter .15s"'
+        +' onclick="window._fracBarClick(\''+id+'\','+i+','+d+',\''+color+'\')"'
+        +' onmouseover="this.style.filter=\'brightness(1.4)\'" onmouseout="this.style.filter=\'none\'"/>';
     }
-    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto">'
-      + cells + '</svg>';
+    var svg='<svg id="'+id+'" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="display:block;margin:0 auto">'
+      +cells+'</svg>';
+    var script='<script>window._fracBarClick=function(id,idx,total,color){'
+      +'var el=document.getElementById(id+"_c"+idx);if(!el)return;'
+      +'var on=el.getAttribute("fill")!==color;'
+      +'el.setAttribute("fill",on?color:"#1e1e2e");'
+      +'var count=0;for(var i=0;i<total;i++){var c=document.getElementById(id+"_c"+i);if(c&&c.getAttribute("fill")===color)count++;}'
+      +'window._shapeAnswer(count);'
+      +'};'
+      +'<\/script>';
+    return svg+script;
   }
 
-  // ── Grid of squares (total squares, n shaded) ──
-  function gridSvg(n, total, color) {
-    color = color || '#2ed573';
-    var cols = Math.min(total, 6);
-    var rows = Math.ceil(total/cols);
-    var cw = 36, ch = 36, gap = 5;
-    var W = cols*(cw+gap), H = rows*(ch+gap);
-    var cells = '';
-    for (var i = 0; i < total; i++) {
-      var col = i%cols, row = Math.floor(i/cols);
-      cells += '<rect x="' + (col*(cw+gap)) + '" y="' + (row*(ch+gap)) + '" width="' + cw + '" height="' + ch + '"'
-        + ' fill="' + (i < n ? color : '#2d2d2d') + '" stroke="#fff" stroke-width="2" rx="7"/>';
+  // Static bar (display only)
+  function staticBar(n, d, color, w, h) {
+    color=color||'#54a0ff'; w=w||240; h=h||42;
+    var cw=w/d, cells='';
+    for(var i=0;i<d;i++){
+      cells+='<rect x="'+(i*cw+2).toFixed(1)+'" y="2" width="'+(cw-4).toFixed(1)+'" height="'+(h-4)+'"'
+        +' fill="'+(i<n?color:'#1e1e2e')+'" stroke="'+color+'" stroke-width="2" rx="5"/>';
     }
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto">'
-      + cells + '</svg>';
+    return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="display:block;margin:0 auto">'+cells+'</svg>';
   }
 
-  var pts = ptsForQ('fractions', diff);
-  var colors = ['#ff6348','#54a0ff','#2ed573','#ffd32a','#c77dff','#ff9f43'];
+  // ── Interactive grid — tap to shade squares ───────────────
+  function interactiveGrid(total, preShaded, color) {
+    color=color||'#2ed573';
+    var cols=Math.min(total,6), rows=Math.ceil(total/cols);
+    var cw=40,ch=40,gap=6;
+    var W=cols*(cw+gap)-gap, H=rows*(ch+gap)-gap;
+    var id='grid_'+Math.floor(Math.random()*99999);
+    var cells='';
+    for(var i=0;i<total;i++){
+      var col=i%cols,row=Math.floor(i/cols);
+      var x=col*(cw+gap),y=row*(ch+gap);
+      var filled=i<preShaded;
+      cells+='<rect id="'+id+'_g'+i+'" x="'+x+'" y="'+y+'" width="'+cw+'" height="'+ch+'"'
+        +' fill="'+(filled?color:'#1e1e2e')+'" stroke="'+color+'" stroke-width="2" rx="8"'
+        +' style="cursor:pointer;transition:fill .15s,transform .15s;transform-origin:'+(x+cw/2)+'px '+(y+ch/2)+'px"'
+        +' onclick="window._fracGridClick(\''+id+'\','+i+','+total+',\''+color+'\')"'
+        +' onmouseover="this.style.transform=\'scale(1.12)\'" onmouseout="this.style.transform=\'scale(1)\'"/>';
+    }
+    var svg='<svg id="'+id+'" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:block;margin:0 auto">'+cells+'</svg>';
+    var script='<script>window._fracGridClick=function(id,idx,total,color){'
+      +'var el=document.getElementById(id+"_g"+idx);if(!el)return;'
+      +'var on=el.getAttribute("fill")!==color;'
+      +'el.setAttribute("fill",on?color:"#1e1e2e");'
+      +'var count=0;for(var i=0;i<total;i++){var c=document.getElementById(id+"_g"+i);if(c&&c.getAttribute("fill")===color)count++;}'
+      +'window._shapeAnswer(count);'
+      +'};'
+      +'<\/script>';
+    return svg+script;
+  }
+
+  // Static grid
+  function staticGrid(n, total, color) {
+    color=color||'#2ed573';
+    var cols=Math.min(total,6), rows=Math.ceil(total/cols);
+    var cw=36,ch=36,gap=5;
+    var W=cols*(cw+gap)-gap, H=rows*(ch+gap)-gap;
+    var cells='';
+    for(var i=0;i<total;i++){
+      var col=i%cols,row=Math.floor(i/cols);
+      cells+='<rect x="'+(col*(cw+gap))+'" y="'+(row*(ch+gap))+'" width="'+cw+'" height="'+ch+'"'
+        +' fill="'+(i<n?color:'#1e1e2e')+'" stroke="'+color+'" stroke-width="2" rx="7"/>';
+    }
+    return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:block;margin:0 auto">'+cells+'</svg>';
+  }
+
+  // ── Interactive chocolate bar ─────────────────────────────
+  function chocoBar(rows, cols, preShaded, color) {
+    color=color||'#8b4513';
+    var cw=36,ch=28,gap=4;
+    var W=cols*(cw+gap)-gap, H=rows*(ch+gap)-gap;
+    var total=rows*cols;
+    var id='choco_'+Math.floor(Math.random()*99999);
+    var cells='';
+    for(var i=0;i<total;i++){
+      var col=i%cols, row=Math.floor(i/cols);
+      var x=col*(cw+gap), y=row*(ch+gap);
+      var filled=i<preShaded;
+      cells+='<rect id="'+id+'_ch'+i+'" x="'+x+'" y="'+y+'" width="'+cw+'" height="'+ch+'"'
+        +' fill="'+(filled?color:'#2d1b0a')+'" stroke="#5c2d0a" stroke-width="2.5" rx="5"'
+        +' style="cursor:pointer;transition:fill .15s"'
+        +' onclick="window._fracGridClick(\''+id+'_ch\','+i+','+total+',\''+color+'\')"'
+        +' onmouseover="this.style.filter=\'brightness(1.3)\'" onmouseout="this.style.filter=\'none\'"/>';
+      // Shine detail on filled squares
+      if(filled)cells+='<rect x="'+(x+4)+'" y="'+(y+3)+'" width="'+(cw-8)+'" height="4" fill="rgba(255,255,255,.12)" rx="2"/>';
+    }
+    var svg='<svg id="'+id+'" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:block;margin:0 auto;filter:drop-shadow(0 3px 8px rgba(0,0,0,.5))">'+cells+'</svg>';
+    var script='<script>window._fracGridClick=window._fracGridClick||function(id,idx,total,color){'
+      +'var el=document.getElementById(id+idx);if(!el)return;'
+      +'var on=el.getAttribute("fill")!==color;el.setAttribute("fill",on?color:"#2d1b0a");'
+      +'var count=0;for(var i=0;i<total;i++){var c=document.getElementById(id+i);if(c&&c.getAttribute("fill")===color)count++;}'
+      +'window._shapeAnswer(count);'
+      +'};'
+      +'<\/script>';
+    return svg+script;
+  }
+
+  // ── Animated number line ──────────────────────────────────
+  function numberLine(n, d, w) {
+    w=w||280;
+    var h=60, pad=20;
+    var iw=w-pad*2;
+    var tickY=30, labelY=50;
+    var segments='';
+    // Shaded region
+    var shadeW=iw*(n/d);
+    segments+='<rect x="'+pad+'" y="'+(tickY-8)+'" width="'+shadeW.toFixed(1)+'" height="16" fill="rgba(84,160,255,.3)" rx="4"/>';
+    // Line
+    segments+='<line x1="'+pad+'" y1="'+tickY+'" x2="'+(pad+iw)+'" y2="'+tickY+'" stroke="#fff" stroke-width="2.5"/>';
+    // Arrow
+    segments+='<polygon points="'+(pad+iw)+','+(tickY-5)+' '+(pad+iw+10)+','+tickY+' '+(pad+iw)+','+(tickY+5)+'" fill="#fff"/>';
+    // Ticks + labels
+    for(var i=0;i<=d;i++){
+      var x=pad+iw*(i/d);
+      segments+='<line x1="'+x.toFixed(1)+'" y1="'+(tickY-7)+'" x2="'+x.toFixed(1)+'" y2="'+(tickY+7)+'" stroke="#fff" stroke-width="2"/>';
+      segments+='<text x="'+x.toFixed(1)+'" y="'+labelY+'" text-anchor="middle" font-family="Caveat,cursive" font-size="14" fill="#adb5bd">'+i+'/'+d+'</text>';
+    }
+    // Marker
+    var markerX=pad+iw*(n/d);
+    segments+='<circle cx="'+markerX.toFixed(1)+'" cy="'+tickY+'" r="8" fill="#ffd32a" stroke="#fff" stroke-width="2"/>';
+    segments+='<text x="'+markerX.toFixed(1)+'" y="'+(tickY-14)+'" text-anchor="middle" font-family="Caveat,cursive" font-size="13" font-weight="700" fill="#ffd32a">'+n+'/'+d+'</text>';
+    return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="display:block;margin:0 auto">'+segments+'</svg>';
+  }
+
+  // ── Card wrapper with decorative border ──────────────────
+  function card(inner, accent) {
+    accent=accent||'#54a0ff';
+    return '<div style="background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.02));'
+      +'border:2px solid '+accent+'44;border-radius:18px;padding:14px 10px 10px;margin:6px 0;'
+      +'box-shadow:0 4px 24px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.06)">'
+      +inner+'</div>';
+  }
+
+  // ── Instruction chip ─────────────────────────────────────
+  function chip(text, color) {
+    color=color||'#ffd32a';
+    return '<div style="display:inline-block;background:'+color+'22;border:1.5px solid '+color+'66;'
+      +'border-radius:99px;padding:4px 14px;font-family:Caveat,cursive;font-size:.95rem;color:'+color+';margin-bottom:10px">'
+      +text+'</div>';
+  }
+
+  // ── Handwriting-style hint arrow ─────────────────────────
+  function arrowHint(text, color) {
+    color=color||'#adb5bd';
+    return '<div style="color:'+color+';font-family:Caveat,cursive;font-size:.9rem;margin-top:8px;opacity:.85">'
+      +'&#x2197; '+text+'</div>';
+  }
+
+  // Load Caveat font (handwriting) once
+  var fontLink='<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">';
+
+  // Determine question type pool
+  var easyTypes   = ['pizza_tap','bar_tap','grid_tap','pizza_identify','pizza_word_simple'];
+  var medTypes    = ['compare_bar','missing_eq','bar_add','pizza_word_hard','chocolate_tap','numline'];
+  var hardTypes   = ['equivalent_drag','add_visual','subtract_visual','mixed_bars','word_story_grid','compare_pizza'];
+  var pool = diff==='easy' ? easyTypes : diff==='medium' ? medTypes : hardTypes;
+  var qtype = pick(pool);
+
+  var colors6 = ['#ff6348','#54a0ff','#2ed573','#ffd32a','#c77dff','#ff9f43'];
 
   // ════════════════════════════════════════════════════════════
-  // 1. PIZZA — identify shaded slices
-  if (type === 'pizza' || type === 'identify') {
-    var pairs = [[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6],[1,8],[3,8],[5,8],[2,4]];
-    var frac = pick(pairs); var n = frac[0], d = frac[1];
-    var color = pick(['#ff6348','#ee5a24','#ff9f43','#e55039']);
-    var things = ['\u05e4\u05d9\u05e6\u05d4','  \u05e2\u05d5\u05d2\u05d4','\u05d8\u05d0\u05e8\u05d8'];
-    var thing = pick(things);
-    return {type:'num', cat:'fractions', diff, label:th.label, gameLabel:'', text:'', shapeHtml:
-      '<div style="text-align:center;padding:8px 0">'
-      + '<div style="font-size:.82rem;color:#adb5bd;margin-bottom:6px">&#x1F355; ' + thing + ' \u05d7\u05ea\u05d5\u05db\u05d4 \u05dc-' + d + ' \u05d7\u05dc\u05e7\u05d9\u05dd \u05e9\u05d5\u05d5\u05d9\u05dd</div>'
-      + pizzaSvg(n, d, color)
-      + '<div style="margin-top:10px;font-size:.9rem;color:#fff">\u05db\u05de\u05d4 \u05d7\u05dc\u05e7\u05d9\u05dd <strong style="color:' + color + '">\u05e6\u05d1\u05d5\u05e2\u05d9\u05dd</strong>? (\u05d4\u05e0\u05d5\u05de\u05e8\u05d8\u05d5\u05e8)</div>'
-      + '</div>',
-      answer: n, pts, hint:{type:'text',msg:'&#x1F4A1; \u05e1\u05e4\u05d5\u05e8 \u05d0\u05ea \u05d4\u05d7\u05dc\u05e7\u05d9\u05dd \u05d4\u05e6\u05d1\u05d5\u05e2\u05d9\u05dd: ' + n + ' \u05d7\u05dc\u05e7\u05d9\u05dd \u05de\u05ea\u05d5\u05da ' + d}, showMul:false, dir:'rtl'};
+  // TYPE 1: TAP PIZZA SLICES — interactive, tap to select answer
+  if (qtype === 'pizza_tap') {
+    var pairs=[[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6],[2,4]];
+    var fr=pick(pairs); var n=fr[0],d=fr[1];
+    var color=pick(['#ff6348','#ee5a24','#ff9f43']);
+    var things=['\u05e4\u05d9\u05e6\u05d4','\u05e2\u05d5\u05d2\u05d4','\u05d8\u05d0\u05e8\u05d8'];
+    var thing=pick(things);
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            chip('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05d4\u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05e9\u05e8\u05d5\u05e6\u05d4 \u05dc\u05e6\u05d1\u05d5\u05e2!','#ffd32a')
+          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.15rem;color:#fff;margin-bottom:12px">'
+          + 'Shade <span style="color:#ffd32a;font-size:1.3em;font-weight:700">' + fracSvg(n,d,{color:'#ffd32a',size:1.1}) + '</span> of the '+thing
+          + '</div>'
+          + interactivePizza(d, 0, color, 140)
+          + arrowHint('\u05db\u05de\u05d4 \u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05e6\u05d1\u05e2\u05ea?')
+          ,'#ff6348')
+        + '<div style="font-size:.75rem;color:#636e72;text-align:center;margin-top:4px;font-family:Caveat,cursive">\u05d4\u05ea\u05e9\u05d5\u05d1\u05d4 \u05de\u05ea\u05e2\u05d3\u05db\u05e0\u05ea \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea \u05d1\u05dc\u05d7\u05d9\u05e6\u05d4</div>',
+      answer:n, hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05de\u05ea\u05d5\u05da '+d}, showMul:false, dir:'rtl'};
   }
 
-  // 2. BAR — identify shaded segments
-  if (type === 'bar' || type === 'bar_shade') {
-    var pairs = [[1,2],[1,4],[3,4],[2,3],[1,3],[1,5],[2,5],[3,5],[4,5],[1,6],[5,6],[1,8],[3,8]];
-    var frac = pick(pairs); var n = frac[0], d = frac[1];
-    var color = pick(colors);
-    return {type:'num', cat:'fractions', diff, label:th.label, gameLabel:'', text:'', shapeHtml:
-      '<div style="text-align:center;padding:8px 0">'
-      + '<div style="font-size:.82rem;color:#adb5bd;margin-bottom:8px">\u05de\u05d4 \u05d4\u05e9\u05d1\u05e8 \u05e9\u05de\u05d9\u05d5\u05e6\u05d2 \u05d1\u05e4\u05e1?</div>'
-      + barSvg(n, d, color)
-      + '<div style="margin-top:10px;font-size:.9rem;color:#fff">\u05d4\u05db\u05e0\u05e1 \u05d0\u05ea \u05d4\u05e0\u05d5\u05de\u05e8\u05d8\u05d5\u05e8 (\u05d4\u05de\u05e1\u05e4\u05e8 \u05d4\u05e2\u05dc\u05d9\u05d5\u05df):</div>'
-      + '</div>',
-      answer: n, pts, hint:{type:'text',msg:'&#x1F4A1; ' + n + ' \u05e4\u05e1\u05d9\u05dd \u05e6\u05d1\u05d5\u05e2\u05d9\u05dd \u05de\u05ea\u05d5\u05da ' + d}, showMul:false, dir:'rtl'};
+  // TYPE 2: TAP BAR SEGMENTS
+  if (qtype === 'bar_tap') {
+    var pairs=[[1,2],[1,4],[3,4],[1,3],[2,3],[1,5],[2,5],[3,5],[4,5],[1,6],[5,6]];
+    var fr=pick(pairs); var n=fr[0],d=fr[1];
+    var color=pick(colors6);
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            chip('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05ea\u05d0\u05d9\u05dd \u05dc\u05e6\u05d1\u05d9\u05e2\u05d4!','#ffd32a')
+          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#fff;margin-bottom:12px">'
+          + 'Color ' + fracSvg(n,d,{color:'#ffd32a',size:1.1}) + ' of the bar'
+          + '</div>'
+          + interactiveBar(d, 0, color, 260, 50)
+          + arrowHint('\u05db\u05de\u05d4 \u05ea\u05d0\u05d9\u05dd \u05e6\u05d1\u05e2\u05ea?')
+          , color)
+        + '<div style="font-size:.75rem;color:#636e72;text-align:center;margin-top:4px;font-family:Caveat,cursive">\u05d4\u05ea\u05e9\u05d5\u05d1\u05d4 \u05de\u05ea\u05e2\u05d3\u05db\u05e0\u05ea \u05d0\u05d5\u05d2\u05de\u05d8\u05d9\u05ea</div>',
+      answer:n, hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05ea\u05d0\u05d9\u05dd \u05de\u05ea\u05d5\u05da '+d}, showMul:false, dir:'rtl'};
   }
 
-  // 3. OF_TOTAL — fraction of a number, shown with grid
-  if (type === 'of_total' || type === 'of_total_hard' || type === 'circle_shade') {
-    var pairs = diff==='hard'
-      ? [[2,3],[3,4],[2,5],[3,5],[4,5],[5,6],[3,8],[5,8]]
-      : [[1,2],[1,4],[3,4],[1,3],[2,3],[1,5],[1,6]];
-    var frac = pick(pairs); var n = frac[0], d = frac[1];
-    var total = rnd(2,6)*d;
-    var part = total*n/d;
-    var things = ['\u05ea\u05e4\u05d5\u05d7\u05d9\u05dd','\u05db\u05d5\u05db\u05d1\u05d9\u05dd','\u05e2\u05d5\u05d2\u05d9\u05d5\u05ea','\u05de\u05d8\u05d1\u05e2\u05d5\u05ea','\u05d1\u05dc\u05d5\u05e0\u05d9\u05dd','\u05e4\u05e8\u05d7\u05d9\u05dd'];
-    var thing = pick(things);
-    var color = pick(colors);
-    return {type:'num', cat:'fractions', diff, label:th.label, gameLabel:'', text:'', shapeHtml:
-      '<div style="text-align:center;padding:8px 0">'
-      + gridSvg(part, total, color)
-      + '<div style="margin-top:10px;font-size:1rem;color:#fff;direction:rtl">'
-      + fracHtml(n, d, '#ffd32a') + ' \u05de\u05ea\u05d5\u05da ' + total + ' ' + thing + '. \u05db\u05de\u05d4 ' + thing + ' \u05e6\u05d1\u05d5\u05e2\u05d9\u05dd?'
-      + '</div></div>',
-      answer: part, pts, hint:{type:'text',msg:'&#x1F4A1; ' + total + ' ÷ ' + d + ' = ' + (total/d) + '. × ' + n + ' = ' + part}, showMul:false, dir:'rtl'};
+  // TYPE 3: TAP GRID SQUARES
+  if (qtype === 'grid_tap') {
+    var totals=[4,6,8,9,10,12];
+    var total=pick(totals);
+    var n=rnd(1,total-1);
+    var color=pick(colors6);
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            chip('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05e8\u05d9\u05d1\u05d5\u05e2\u05d9\u05dd \u05dc\u05e6\u05d1\u05d9\u05e2\u05d4!','#ffd32a')
+          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#fff;margin-bottom:12px">'
+          + 'Color ' + fracSvg(n,total,{color:'#ffd32a',size:1.05}) + ' of the squares'
+          + '</div>'
+          + interactiveGrid(total, 0, color)
+          + arrowHint('\u05db\u05de\u05d4 \u05e8\u05d9\u05d1\u05d5\u05e2\u05d9\u05dd \u05e6\u05d1\u05e2\u05ea?')
+          , color)
+        + '<div style="font-size:.75rem;color:#636e72;text-align:center;margin-top:4px;font-family:Caveat,cursive">\u05d4\u05ea\u05e9\u05d5\u05d1\u05d4 \u05de\u05ea\u05e2\u05d3\u05db\u05e0\u05ea \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea</div>',
+      answer:n, hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05de\u05ea\u05d5\u05da '+total+' \u05e8\u05d9\u05d1\u05d5\u05e2\u05d9\u05dd'}, showMul:false, dir:'rtl'};
   }
 
-  // 4. PIZZA WORD — slices eaten, slices left
-  if (type === 'pizza_word') {
-    var denoms = [4, 6, 8];
-    var d = pick(denoms);
-    var ate = rnd(1, d-1);
-    var left = d - ate;
-    var color = pick(['#ff6348','#ee5a24']);
-    return {type:'num', cat:'fractions', diff, label:th.label, gameLabel:'', text:'', shapeHtml:
-      '<div style="text-align:center;padding:8px 0">'
-      + pizzaSvg(left, d, color)
-      + '<div style="margin-top:10px;font-size:1rem;color:#fff;direction:rtl">'
-      + '\u05de\u05e4\u05d9\u05e6\u05d4 \u05e9\u05dc ' + d + ' \u05d7\u05ea\u05d9\u05db\u05d5\u05ea, \u05d0\u05db\u05dc\u05d5 ' + ate + ' \u05d7\u05ea\u05d9\u05db\u05d5\u05ea.<br>'
-      + '\u05db\u05de\u05d4 \u05d7\u05ea\u05d9\u05db\u05d5\u05ea <strong style="color:#2ed573">\u05e0\u05e9\u05d0\u05e8\u05d5</strong>?'
-      + '</div></div>',
-      answer: left, pts, hint:{type:'text',msg:'&#x1F4A1; ' + d + ' - ' + ate + ' = ' + left + ' \u05d7\u05ea\u05d9\u05db\u05d5\u05ea'}, showMul:false, dir:'rtl'};
+  // TYPE 4: IDENTIFY — what fraction is the shaded pizza?
+  if (qtype === 'pizza_identify') {
+    var pairs=[[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6],[1,8],[3,8]];
+    var fr=pick(pairs); var n=fr[0],d=fr[1];
+    var color=pick(['#ff6348','#ee5a24']);
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            chip('\u05de\u05d4 \u05d4\u05e9\u05d1\u05e8? \u05db\u05ea\u05d5\u05d1 \u05d0\u05ea \u05d4\u05e0\u05d5\u05de\u05e8\u05d8\u05d5\u05e8 (\u05d4\u05de\u05e1\u05e4\u05e8 \u05d4\u05e2\u05dc\u05d9\u05d5\u05df)!','#2ed573')
+          + staticPizza(n,d,color,135)
+          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#adb5bd;margin-top:10px">'
+          + 'The pizza is cut into <span style="color:#ffd32a;font-size:1.2em;font-weight:700">'+d+'</span> equal slices.'
+          + '</div>'
+          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.05rem;color:#fff;margin-top:6px">'
+          + fracSvg('?',d,{color:'#2ed573',size:1.1}) + ' <span style="color:#adb5bd">of the pizza is shaded</span>'
+          + '</div>'
+          , '#2ed573')
+        + arrowHint('\u05db\u05ea\u05d5\u05d1 \u05d0\u05ea \u05d4\u05e0\u05d5\u05de\u05e8\u05d8\u05d5\u05e8'),
+      answer:n, hint:{type:'text',msg:'&#x1F4A1; \u05e1\u05e4\u05d5\u05e8 \u05d0\u05ea \u05d4\u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05d4\u05e6\u05d1\u05d5\u05e2\u05d5\u05ea: '+n}, showMul:false, dir:'rtl'};
   }
 
-  // 5. COMPARE — which fraction is larger?
-  if (type === 'compare') {
-    var allPairs = [[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6],[2,5],[3,5],[1,8],[5,8]];
-    var frac1 = pick(allPairs); var n1 = frac1[0], d1 = frac1[1];
-    var frac2 = pick(allPairs.filter(function(p){ return !(p[0]===n1 && p[1]===d1); }));
-    var n2 = frac2[0], d2 = frac2[1];
-    if (n1/d1 === n2/d2) { n2 = n1+1; d2 = d1*2; } // ensure different
-    var bigger = (n1/d1 >= n2/d2) ? 1 : 2;
-    var pct1 = Math.round(n1/d1*100), pct2 = Math.round(n2/d2*100);
-    return {type:'num', cat:'fractions', diff, label:th.label, gameLabel:'', text:'', shapeHtml:
-      '<div style="text-align:center;padding:8px 0">'
-      + '<div style="font-size:.82rem;color:#adb5bd;margin-bottom:10px">\u05d0\u05d9\u05d6\u05d4 \u05e9\u05d1\u05e8 <strong>\u05d2\u05d3\u05d5\u05dc \u05d9\u05d5\u05ea\u05e8</strong>?</div>'
-      + '<div style="display:flex;justify-content:center;gap:18px;align-items:center;flex-wrap:wrap">'
-      + '<div>' + barSvg(n1,d1,'#54a0ff',130,36) + '<div style="margin-top:5px">' + fracHtml(n1,d1,'#54a0ff') + '</div></div>'
-      + '<div style="color:#fff;font-size:1.4rem;font-family:Fredoka,sans-serif;font-weight:700">VS</div>'
-      + '<div>' + barSvg(n2,d2,'#ff6348',130,36) + '<div style="margin-top:5px">' + fracHtml(n2,d2,'#ff6348') + '</div></div>'
-      + '</div>'
-      + '<div style="margin-top:12px;color:#adb5bd;font-size:.82rem">\u05d4\u05db\u05e0\u05e1 1 \u05d0\u05dd \u05d4\u05e8\u05d0\u05e9\u05d5\u05df \u05d2\u05d3\u05d5\u05dc, 2 \u05d0\u05dd \u05d4\u05e9\u05e0\u05d9</div>'
-      + '</div>',
-      answer: bigger, pts, hint:{type:'text',msg:'&#x1F4A1; ' + n1 + '/' + d1 + ' = ' + pct1 + '% | ' + n2 + '/' + d2 + ' = ' + pct2 + '%'}, showMul:false, dir:'rtl'};
+  // TYPE 5: SIMPLE PIZZA WORD
+  if (qtype === 'pizza_word_simple') {
+    var d=pick([4,6,8]);
+    var ate=rnd(1,d-1);
+    var left=d-ate;
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            staticPizza(left,d,'#ff6348',130)
+          + '<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:1.05rem;color:#fff;margin-top:10px;line-height:1.8">'
+          + '\u05e4\u05d9\u05e6\u05d4 \u05e9\u05dc <span style="color:#ffd32a;font-size:1.2em">'+d+'</span> \u05d7\u05ea\u05d9\u05db\u05d5\u05ea. \u05d0\u05db\u05dc\u05d5 <span style="color:#ff6348;font-size:1.2em">'+ate+'</span> \u05d7\u05ea\u05d9\u05db\u05d5\u05ea.'
+          + '<br>\u05db\u05de\u05d4 \u05d7\u05ea\u05d9\u05db\u05d5\u05ea <span style="color:#2ed573;font-size:1.3em">\u05e0\u05e9\u05d0\u05e8\u05d5</span>?'
+          + '</div>'
+          , '#ff6348'),
+      answer:left, hint:{type:'text',msg:'&#x1F4A1; '+d+' - '+ate+' = '+left}, showMul:false, dir:'rtl'};
   }
 
-  // 6. MISSING NUMERATOR — find the equivalent fraction
-  if (type === 'missing_num') {
-    var bases = [[1,2],[1,4],[1,3],[2,3],[3,4]];
-    var frac = pick(bases); var n = frac[0], d = frac[1];
-    var mult = rnd(2,4);
-    var n2 = n*mult, d2 = d*mult;
-    var askNum = Math.random() < 0.5;
-    return {type:'num', cat:'fractions', diff, label:th.label, gameLabel:'', text:'', shapeHtml:
-      '<div style="text-align:center;padding:8px 0">'
-      + '<div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap">'
-      + '<div>' + barSvg(n,d,'#54a0ff',120,34) + '<div style="margin-top:5px">' + fracHtml(n,d,'#54a0ff') + '</div></div>'
-      + '<span style="color:#fff;font-size:1.4rem">=</span>'
-      + '<div>' + barSvg(n2,d2,'#ffd32a',120,34) + '<div style="margin-top:5px">' + fracHtml(askNum?'?':n2, askNum?d2:'?', '#ffd32a') + '</div></div>'
-      + '</div>'
-      + '<div style="margin-top:12px;color:#adb5bd;font-size:.82rem">\u05e9\u05e0\u05d9 \u05d4\u05e9\u05d1\u05e8\u05d9\u05dd \u05e9\u05d5\u05d5\u05d9\u05dd \u2014 \u05de\u05e6\u05d0 \u05d0\u05ea ?</div>'
-      + '</div>',
-      answer: askNum ? n2 : d2, pts, hint:{type:'text',msg:'&#x1F4A1; \u05db\u05e4\u05d5\u05dc ' + mult + ': ' + n + '×' + mult + '=' + n2 + ', ' + d + '×' + mult + '=' + d2}, showMul:false, dir:'rtl'};
+  // TYPE 6: COMPARE TWO BARS — which is bigger?
+  if (qtype === 'compare_bar') {
+    var allP=[[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6],[2,5],[3,5]];
+    var fr1=pick(allP); var n1=fr1[0],d1=fr1[1];
+    var fr2=pick(allP.filter(function(p){return !(p[0]===n1&&p[1]===d1);}));
+    var n2=fr2[0],d2=fr2[1];
+    if(Math.abs(n1/d1-n2/d2)<0.05){n2=n1+1;d2=d1*2;}
+    var bigger=(n1/d1>=n2/d2)?1:2;
+    var pct1=Math.round(n1/d1*100),pct2=Math.round(n2/d2*100);
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            chip('\u05d0\u05d9\u05d6\u05d4 \u05e9\u05d1\u05e8 \u05d2\u05d3\u05d5\u05dc \u05d9\u05d5\u05ea\u05e8? \u05db\u05ea\u05d5\u05d1 1 \u05d0\u05d5 2','#c77dff')
+          + '<div style="display:flex;gap:14px;align-items:flex-end;justify-content:center;margin-bottom:8px">'
+          + '<div style="text-align:center">'
+            + '<div style="font-family:Caveat,cursive;font-size:1rem;color:#adb5bd;margin-bottom:4px">1</div>'
+            + staticBar(n1,d1,'#54a0ff',120,38)
+            + '<div style="margin-top:6px">' + fracSvg(n1,d1,{color:'#54a0ff',size:1}) + '</div>'
+          + '</div>'
+          + '<div style="font-family:Caveat,cursive;font-size:1.8rem;color:#fff;font-weight:700;padding-bottom:16px">VS</div>'
+          + '<div style="text-align:center">'
+            + '<div style="font-family:Caveat,cursive;font-size:1rem;color:#adb5bd;margin-bottom:4px">2</div>'
+            + staticBar(n2,d2,'#ff6348',120,38)
+            + '<div style="margin-top:6px">' + fracSvg(n2,d2,{color:'#ff6348',size:1}) + '</div>'
+          + '</div>'
+          + '</div>'
+          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:.85rem;color:#636e72">'
+          + '(1)='+pct1+'%  (2)='+pct2+'%</div>'
+          , '#c77dff'),
+      answer:bigger, hint:{type:'text',msg:'&#x1F4A1; '+n1+'/'+d1+' = '+pct1+'%  |  '+n2+'/'+d2+' = '+pct2+'%'}, showMul:false, dir:'rtl'};
   }
 
-  // 7. SHAPE GRID — count shaded squares, write as fraction
-  if (type === 'shape_grid') {
-    var totals = [4,6,8,9,12];
-    var total = pick(totals);
-    var n = rnd(1, total-1);
-    var color = pick(colors);
-    return {type:'num', cat:'fractions', diff, label:th.label, gameLabel:'', text:'', shapeHtml:
-      '<div style="text-align:center;padding:8px 0">'
-      + gridSvg(n, total, color)
-      + '<div style="margin-top:10px;color:#fff;font-size:.95rem;direction:rtl">'
-      + '\u05db\u05de\u05d4 \u05e8\u05d9\u05d1\u05d5\u05e2\u05d9\u05dd <strong style="color:' + color + '">\u05e6\u05d1\u05d5\u05e2\u05d9\u05dd</strong> \u05de\u05ea\u05d5\u05da ' + total + '?<br>'
-      + '<span style="font-size:.8rem;color:#adb5bd">(\u05d4\u05db\u05e0\u05e1 \u05d0\u05ea \u05d4\u05e0\u05d5\u05de\u05e8\u05d8\u05d5\u05e8)</span>'
-      + '</div></div>',
-      answer: n, pts, hint:{type:'text',msg:'&#x1F4A1; \u05e1\u05e4\u05d5\u05e8 \u05d0\u05ea \u05d4\u05e6\u05d1\u05d5\u05e2\u05d9\u05dd: ' + n + ' \u05de\u05ea\u05d5\u05da ' + total}, showMul:false, dir:'rtl'};
+  // TYPE 7: MISSING NUMERATOR (equivalent fraction shown visually)
+  if (qtype === 'missing_eq') {
+    var bases=[[1,2],[1,4],[1,3],[2,3],[3,4]];
+    var fr=pick(bases); var n=fr[0],d=fr[1];
+    var mult=rnd(2,4);
+    var n2=n*mult,d2=d*mult;
+    var askNum=Math.random()<.5;
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            chip('\u05e9\u05e0\u05d9 \u05d4\u05e9\u05d1\u05e8\u05d9\u05dd \u05e9\u05d5\u05d5\u05d9\u05dd! \u05de\u05e6\u05d0 \u05d0\u05ea ?','#ffd32a')
+          + '<div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">'
+          + '<div style="text-align:center">'
+            + staticBar(n,d,'#54a0ff',120,36)
+            + '<div style="margin-top:5px">' + fracSvg(n,d,{color:'#54a0ff',size:1}) + '</div>'
+          + '</div>'
+          + '<div style="font-family:Caveat,cursive;font-size:2rem;color:#fff">=</div>'
+          + '<div style="text-align:center">'
+            + staticBar(n2,d2,'#ffd32a',120,36)
+            + '<div style="margin-top:5px">' + fracSvg(askNum?'?':n2, askNum?d2:'?', {color:'#ffd32a',size:1}) + '</div>'
+          + '</div>'
+          + '</div>'
+          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:.88rem;color:#636e72;margin-top:4px">× '+mult+' / × '+mult+'</div>'
+          , '#ffd32a'),
+      answer:askNum?n2:d2, hint:{type:'text',msg:'&#x1F4A1; \u05db\u05e4\u05d5\u05dc '+mult+': '+n+'×'+mult+'='+n2+', '+d+'×'+mult+'='+d2}, showMul:false, dir:'rtl'};
   }
 
-  // 8. MIXED NUMBER — count total unit-fractions
-  if (type === 'mixed_num') {
-    var d = pick([2,3,4]);
-    var whole = rnd(1,3);
-    var num = rnd(1,d-1);
-    var total = whole*d + num;
-    var mixColors = ['#54a0ff','#2ed573','#ffd32a','#ff6348'];
-    var bars = '';
-    for (var i=0; i<whole; i++) bars += '<div style="margin:3px">' + barSvg(d,d,mixColors[i%mixColors.length],90,30) + '</div>';
-    bars += '<div style="margin:3px">' + barSvg(num,d,'#c77dff',90,30) + '</div>';
-    return {type:'num', cat:'fractions', diff, label:th.label, gameLabel:'', text:'', shapeHtml:
-      '<div style="text-align:center;padding:8px 0">'
-      + '<div style="display:flex;justify-content:center;flex-wrap:wrap;gap:4px">' + bars + '</div>'
-      + '<div style="color:#fff;font-size:.95rem;direction:rtl;margin-top:10px">'
-      + '\u05db\u05de\u05d4 \u05d7\u05dc\u05e7\u05d9\u05dd \u05e9\u05dc ' + fracHtml(1,d,'#adb5bd') + ' \u05d9\u05e9 \u05d1\u05e1\u05da \u05d4\u05db\u05dc?'
-      + '</div></div>',
-      answer: total, pts, hint:{type:'text',msg:'&#x1F4A1; ' + whole + ' \u05e9\u05dc\u05de\u05d9\u05dd × ' + d + ' = ' + (whole*d) + '. \u05d5\u05e2\u05d5\u05d3 ' + num + ' = ' + total}, showMul:false, dir:'rtl'};
+  // TYPE 8: ADD FRACTIONS with bar animation
+  if (qtype === 'bar_add') {
+    var d=pick([2,3,4,5,6,8]);
+    var n1=rnd(1,d-2);
+    var n2=rnd(1,d-n1);
+    var ans=n1+n2;
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            chip('\u05d7\u05d1\u05e8 \u05e9\u05d1\u05e8\u05d9\u05dd \u05e2\u05dd \u05d0\u05d5\u05ea\u05d5 \u05de\u05db\u05e0\u05d4!','#2ed573')
+          + '<div style="direction:ltr;font-family:Caveat,cursive;font-size:1.1rem;text-align:center;margin-bottom:10px;color:#fff">'
+          + fracSvg(n1,d,{color:'#54a0ff',size:1.05}) + ' + ' + fracSvg(n2,d,{color:'#ff6348',size:1.05}) + ' = ' + fracSvg('?',d,{color:'#2ed573',size:1.05})
+          + '</div>'
+          + '<div style="display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap">'
+          + staticBar(n1,d,'#54a0ff',120,36)
+          + '<span style="color:#fff;font-family:Caveat,cursive;font-size:1.4rem">+</span>'
+          + staticBar(n2,d,'#ff6348',120,36)
+          + '</div>'
+          + '<div style="font-family:Caveat,cursive;font-size:.85rem;color:#636e72;text-align:center;margin-top:6px">'
+          + n1+' + '+n2+' = ? (\u05d4\u05de\u05db\u05e0\u05d4 \u05e0\u05e9\u05d0\u05e8 '+d+')'
+          + '</div>'
+          , '#2ed573'),
+      answer:ans, hint:{type:'text',msg:'&#x1F4A1; '+n1+' + '+n2+' = '+ans}, showMul:false, dir:'rtl'};
   }
 
-  // 9. ADD FRACTIONS (same denominator)
-  if (type === 'add_frac') {
-    var d = pick([2,3,4,5,6,8]);
-    var n1 = rnd(1, d-2);
-    var n2 = rnd(1, d-n1);
-    var ans = n1 + n2;
-    return {type:'num', cat:'fractions', diff, label:th.label, gameLabel:'', text:'', shapeHtml:
-      '<div style="text-align:center;padding:8px 0">'
-      + '<div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap">'
-      + barSvg(n1,d,'#54a0ff',130,36)
-      + '<span style="color:#fff;font-size:1.3rem">+</span>'
-      + barSvg(n2,d,'#ff6348',130,36)
-      + '</div>'
-      + '<div style="margin-top:12px;font-size:1.05rem;color:#fff;direction:rtl">'
-      + fracHtml(n1,d,'#54a0ff') + ' + ' + fracHtml(n2,d,'#ff6348') + ' = ' + fracHtml('?',d,'#2ed573')
-      + '<br><span style="font-size:.8rem;color:#adb5bd">\u05de\u05d4 \u05d4\u05e0\u05d5\u05de\u05e8\u05d8\u05d5\u05e8?</span>'
-      + '</div></div>',
-      answer: ans, pts, hint:{type:'text',msg:'&#x1F4A1; ' + n1 + ' + ' + n2 + ' = ' + ans + ' (\u05d4\u05de\u05db\u05e0\u05d4 \u05e0\u05e9\u05d0\u05e8 ' + d + ')'}, showMul:false, dir:'rtl'};
+  // TYPE 9: PIZZA WORD HARD — fraction eaten, how many left
+  if (qtype === 'pizza_word_hard') {
+    var d=pick([6,8,12]);
+    var fr=pick([[1,3],[2,3],[1,4],[3,4],[1,2]]);
+    var n=fr[0],base=fr[1];
+    // Find total divisible by base
+    var total=d;
+    while(total%base!==0)total++;
+    var ate=total*n/base;
+    var left=total-ate;
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            staticPizza(left, total, '#ff6348', 130)
+          + '<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:1rem;color:#fff;line-height:1.9;margin-top:10px">'
+          + '\u05e4\u05d9\u05e6\u05d4 \u05e9\u05dc <span style="color:#ffd32a;font-weight:700">'+total+'</span> \u05d7\u05ea\u05d9\u05db\u05d5\u05ea.'
+          + '<br>\u05d0\u05db\u05dc\u05d5 ' + fracSvg(n,base,{color:'#ff6348',size:.95}) + ' \u05de\u05d4\u05e4\u05d9\u05e6\u05d4.'
+          + '<br>\u05db\u05de\u05d4 \u05d7\u05ea\u05d9\u05db\u05d5\u05ea <span style="color:#2ed573">\u05e0\u05e9\u05d0\u05e8\u05d5</span>?'
+          + '</div>'
+          , '#ff6348'),
+      answer:left, hint:{type:'text',msg:'&#x1F4A1; '+total+' × '+n+'/'+base+' = '+ate+' \u05e0\u05d0\u05db\u05dc. '+total+' - '+ate+' = '+left}, showMul:false, dir:'rtl'};
   }
 
-  // 10. SUBTRACT FRACTIONS
-  if (type === 'subtract_frac') {
-    var d = pick([2,3,4,5,6,8]);
-    var n1 = rnd(2, d);
-    var n2 = rnd(1, n1-1);
-    var ans = n1 - n2;
-    return {type:'num', cat:'fractions', diff, label:th.label, gameLabel:'', text:'', shapeHtml:
-      '<div style="text-align:center;padding:8px 0">'
-      + '<div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap">'
-      + barSvg(n1,d,'#2ed573',130,36)
-      + '<span style="color:#fff;font-size:1.3rem">&#x2212;</span>'
-      + barSvg(n2,d,'#ff6348',130,36)
-      + '</div>'
-      + '<div style="margin-top:12px;font-size:1.05rem;color:#fff;direction:rtl">'
-      + fracHtml(n1,d,'#2ed573') + ' &#x2212; ' + fracHtml(n2,d,'#ff6348') + ' = ' + fracHtml('?',d,'#c77dff')
-      + '</div></div>',
-      answer: ans, pts, hint:{type:'text',msg:'&#x1F4A1; ' + n1 + ' &#x2212; ' + n2 + ' = ' + ans}, showMul:false, dir:'rtl'};
+  // TYPE 10: CHOCOLATE BAR (interactive grid)
+  if (qtype === 'chocolate_tap') {
+    var configs=[[2,4],[3,4],[2,6],[3,6]];
+    var cfg=pick(configs); var rows=cfg[0],cols=cfg[1];
+    var total=rows*cols;
+    var n=rnd(1,total-1);
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            chip('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05e7\u05d5\u05d1\u05d9\u05d5\u05ea \u05e9\u05d5\u05e7\u05d5\u05dc\u05d3 \u05dc\u05e6\u05d1\u05d9\u05e2\u05d4!','#ff9f43')
+          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.05rem;color:#fff;margin-bottom:10px">'
+          + 'Color ' + fracSvg(n,total,{color:'#ff9f43',size:1.05}) + ' of the chocolate'
+          + '</div>'
+          + chocoBar(rows,cols,0,'#8b4513')
+          + arrowHint('\u05db\u05de\u05d4 \u05e7\u05d5\u05d1\u05d9\u05d5\u05ea \u05e6\u05d1\u05e2\u05ea?')
+          , '#ff9f43')
+        + '<div style="font-size:.75rem;color:#636e72;text-align:center;margin-top:4px;font-family:Caveat,cursive">\u05d4\u05ea\u05e9\u05d5\u05d1\u05d4 \u05de\u05ea\u05e2\u05d3\u05db\u05e0\u05ea \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea</div>',
+      answer:n, hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05e7\u05d5\u05d1\u05d9\u05d5\u05ea \u05de\u05ea\u05d5\u05da '+total}, showMul:false, dir:'rtl'};
   }
 
-  // 11. EQUIVALENT
-  if (type === 'equivalent') {
-    var bases = [[1,2],[1,3],[2,3],[1,4],[3,4]];
-    var frac = pick(bases); var n = frac[0], d = frac[1];
-    var mult = rnd(2,4);
-    var n2 = n*mult, d2 = d*mult;
-    var askN = Math.random() < 0.5;
-    return {type:'num', cat:'fractions', diff, label:th.label, gameLabel:'', text:'', shapeHtml:
-      '<div style="text-align:center;padding:8px 0">'
-      + '<div style="display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap">'
-      + '<div>' + barSvg(n,d,'#54a0ff',130,34) + '<div style="margin-top:5px">' + fracHtml(n,d,'#54a0ff') + '</div></div>'
-      + '<span style="color:#fff;font-size:1.4rem">=</span>'
-      + '<div>' + barSvg(n2,d2,'#ffd32a',130,34) + '<div style="margin-top:5px">' + fracHtml(askN?'?':n2, askN?d2:'?', '#ffd32a') + '</div></div>'
-      + '</div>'
-      + '<div style="color:#adb5bd;font-size:.82rem;margin-top:10px">\u05e9\u05d1\u05e8\u05d9\u05dd \u05e9\u05d5\u05d5\u05d9\u05dd \u2014 \u05de\u05e6\u05d0 \u05d0\u05ea ?</div>'
-      + '</div>',
-      answer: askN ? n2 : d2, pts, hint:{type:'text',msg:'&#x1F4A1; \u05db\u05e4\u05d5\u05dc ' + mult + ': ' + n + '×' + mult + '=' + n2 + ', ' + d + '×' + mult + '=' + d2}, showMul:false, dir:'rtl'};
+  // TYPE 11: NUMBER LINE
+  if (qtype === 'numline') {
+    var d=pick([2,3,4,5,6]);
+    var n=rnd(1,d-1);
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            chip('\u05d0\u05d9\u05e4\u05d4 \u05e2\u05dc \u05e6\u05d9\u05e8 \u05d4\u05de\u05e1\u05e4\u05e8\u05d9\u05dd \u05e0\u05de\u05e6\u05d0 \u05d4\u05e9\u05d1\u05e8?','#54a0ff')
+          + numberLine(n,d,270)
+          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.05rem;color:#fff;margin-top:10px">'
+          + 'The marker shows ' + fracSvg(n,d,{color:'#ffd32a',size:1.05})
+          + '</div>'
+          + '<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:.95rem;color:#adb5bd;margin-top:4px">'
+          + '\u05db\u05ea\u05d5\u05d1 \u05d0\u05ea \u05d4\u05e0\u05d5\u05de\u05e8\u05d8\u05d5\u05e8'
+          + '</div>'
+          , '#54a0ff'),
+      answer:n, hint:{type:'text',msg:'&#x1F4A1; \u05d4\u05e1\u05de\u05df \u05e0\u05de\u05e6\u05d0 \u05d1 '+n+'/'+d}, showMul:false, dir:'rtl'};
   }
 
-  // 12. WORD FRACTION STORY
-  if (type === 'word_frac') {
-    var pairs = [[1,2],[1,4],[3,4],[1,3],[2,3]];
-    var frac = pick(pairs); var n = frac[0], d = frac[1];
-    var mults = [12,16,20,24,30].filter(function(t){ return t%d===0; });
-    var total = pick(mults) || d*4;
-    var part = total*n/d;
-    var stories = [
-      '\u05d1\u05db\u05d9\u05ea\u05d4 \u05d9\u05e9 ' + total + ' \u05ea\u05dc\u05de\u05d9\u05d3\u05d9\u05dd. ' + fracHtml(n,d,'#ffd32a') + ' \u05de\u05d4\u05dd \u05de\u05d1\u05d9\u05d0\u05d9\u05dd \u05db\u05e8\u05d9\u05da. \u05db\u05de\u05d4 \u05ea\u05dc\u05de\u05d9\u05d3\u05d9\u05dd \u05de\u05d1\u05d9\u05d0\u05d9\u05dd \u05db\u05e8\u05d9\u05da?',
-      '\u05d1\u05e4\u05d0\u05e8\u05e7 \u05d4\u05d9\u05d5 ' + total + ' \u05e6\u05d9\u05e4\u05d5\u05e8\u05d9\u05dd. ' + fracHtml(n,d,'#54a0ff') + ' \u05de\u05d4\u05df \u05e2\u05e4\u05d5. \u05db\u05de\u05d4 \u05e6\u05d9\u05e4\u05d5\u05e8\u05d9\u05dd \u05e2\u05e4\u05d5?',
-      '\u05dc\u05d3\u05e0\u05d9 \u05d9\u05e9 ' + total + ' \u05de\u05d8\u05d1\u05e2\u05d5\u05ea. \u05d4\u05d5\u05d0 \u05e0\u05ea\u05df ' + fracHtml(n,d,'#ff6348') + ' \u05dc\u05d0\u05d7\u05d5\u05ea\u05d5. \u05db\u05de\u05d4 \u05de\u05d8\u05d1\u05e2\u05d5\u05ea \u05e0\u05ea\u05df?',
+  // TYPE 12: EQUIVALENT DRAG — show two bars, find missing value
+  if (qtype === 'equivalent_drag' || qtype === 'equivalent') {
+    var bases=[[1,2],[1,3],[2,3],[1,4],[3,4]];
+    var fr=pick(bases); var n=fr[0],d=fr[1];
+    var mult=rnd(2,5);
+    var n2=n*mult,d2=d*mult;
+    var askN=Math.random()<.5;
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            chip('\u05e9\u05d1\u05e8\u05d9\u05dd \u05e9\u05d5\u05d5\u05d9\u05dd — \u05de\u05e6\u05d0 ?','#c77dff')
+          + '<div style="display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0;flex-wrap:wrap">'
+          + '<div style="text-align:center">'
+            + staticBar(n,d,'#54a0ff',120,36)
+            + '<div style="margin-top:5px">' + fracSvg(n,d,{color:'#54a0ff',size:1}) + '</div>'
+          + '</div>'
+          + '<div style="font-family:Caveat,cursive;font-size:2rem;color:#fff;font-weight:700">=</div>'
+          + '<div style="text-align:center">'
+            + staticBar(n2,d2,'#c77dff',120,36)
+            + '<div style="margin-top:5px">' + fracSvg(askN?'?':n2, askN?d2:'?', {color:'#c77dff',size:1}) + '</div>'
+          + '</div>'
+          + '</div>'
+          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;color:#636e72;font-size:.85rem">multiply top and bottom by <span style="color:#ffd32a">'+mult+'</span></div>'
+          , '#c77dff'),
+      answer:askN?n2:d2, hint:{type:'text',msg:'&#x1F4A1; '+n+'×'+mult+'='+n2+', '+d+'×'+mult+'='+d2}, showMul:false, dir:'rtl'};
+  }
+
+  // TYPE 13: ADD VISUAL — animated bar fill
+  if (qtype === 'add_visual') {
+    var d=pick([2,3,4,5,6,8]);
+    var n1=rnd(1,d-2);
+    var n2=rnd(1,d-n1);
+    var ans=n1+n2;
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            chip('\u05d7\u05d1\u05e8 \u05e9\u05d1\u05e8\u05d9\u05dd!','#2ed573')
+          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#fff;margin-bottom:12px">'
+          + fracSvg(n1,d,{color:'#54a0ff',size:1.05})
+          + '<span style="font-size:1.4rem;vertical-align:middle"> + </span>'
+          + fracSvg(n2,d,{color:'#ff6348',size:1.05})
+          + '<span style="font-size:1.4rem;vertical-align:middle"> = </span>'
+          + fracSvg('?',d,{color:'#2ed573',size:1.05})
+          + '</div>'
+          + '<div style="display:flex;gap:4px;justify-content:center">'
+          + staticBar(n1,d,'#54a0ff',125,38)
+          + staticBar(n2,d,'#ff6348',125,38)
+          + '</div>'
+          + '<div style="margin-top:8px;text-align:center">' + staticBar(ans,d,'#2ed573',260,38) + '</div>'
+          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;color:#636e72;font-size:.85rem;margin-top:4px">'
+          + n1+' + '+n2+' = ? (denominator stays '+d+')'
+          + '</div>'
+          , '#2ed573'),
+      answer:ans, hint:{type:'text',msg:'&#x1F4A1; '+n1+' + '+n2+' = '+ans}, showMul:false, dir:'rtl'};
+  }
+
+  // TYPE 14: SUBTRACT VISUAL
+  if (qtype === 'subtract_visual') {
+    var d=pick([2,3,4,5,6,8]);
+    var n1=rnd(2,d);
+    var n2=rnd(1,n1-1);
+    var ans=n1-n2;
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            chip('\u05d7\u05e1\u05e8 \u05e9\u05d1\u05e8\u05d9\u05dd!','#ff6348')
+          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#fff;margin-bottom:12px">'
+          + fracSvg(n1,d,{color:'#2ed573',size:1.05})
+          + '<span style="font-size:1.4rem;vertical-align:middle"> &#x2212; </span>'
+          + fracSvg(n2,d,{color:'#ff6348',size:1.05})
+          + '<span style="font-size:1.4rem;vertical-align:middle"> = </span>'
+          + fracSvg('?',d,{color:'#ffd32a',size:1.05})
+          + '</div>'
+          + '<div style="text-align:center">' + staticBar(n1,d,'#2ed573',260,38) + '</div>'
+          + '<div style="display:flex;gap:4px;justify-content:center;margin-top:4px">'
+          + staticBar(ans,d,'#ffd32a',125,38)
+          + staticBar(n2,d,'#ff6348',125,38)
+          + '</div>'
+          , '#ff6348'),
+      answer:ans, hint:{type:'text',msg:'&#x1F4A1; '+n1+' &#x2212; '+n2+' = '+ans}, showMul:false, dir:'rtl'};
+  }
+
+  // TYPE 15: MIXED BARS — count total unit fractions
+  if (qtype === 'mixed_bars') {
+    var d=pick([2,3,4]);
+    var whole=rnd(1,3);
+    var num=rnd(1,d-1);
+    var total=whole*d+num;
+    var mixC=['#54a0ff','#2ed573','#ffd32a','#ff6348'];
+    var barsHtml='<div style="display:flex;flex-direction:column;gap:6px;align-items:center;margin-bottom:10px">';
+    for(var i=0;i<whole;i++) barsHtml+=staticBar(d,d,mixC[i%mixC.length],220,34);
+    barsHtml+=staticBar(num,d,'#c77dff',220,34)+'</div>';
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            chip('\u05db\u05de\u05d4 \u05d7\u05dc\u05e7\u05d9\u05dd \u05d1\u05e1\u05da \u05d4\u05db\u05dc?','#c77dff')
+          + barsHtml
+          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1rem;color:#fff">'
+          + whole+' whole bars + ' + fracSvg(num,d,{color:'#c77dff',size:.95}) + ' = how many ' + fracSvg(1,d,{color:'#adb5bd',size:.85}) + ' pieces?'
+          + '</div>'
+          , '#c77dff'),
+      answer:total, hint:{type:'text',msg:'&#x1F4A1; '+whole+'\u05e9\u05dc\u05de\u05d9\u05dd × '+d+' = '+(whole*d)+'. +'+num+' = '+total}, showMul:false, dir:'rtl'};
+  }
+
+  // TYPE 16: WORD STORY with grid
+  if (qtype === 'word_story_grid') {
+    var pairs=[[1,2],[1,4],[3,4],[1,3],[2,3]];
+    var fr=pick(pairs); var n=fr[0],d=fr[1];
+    var mults=[12,16,20,24].filter(function(t){return t%d===0;});
+    var total=pick(mults)||d*4;
+    var part=total*n/d;
+    var color=pick(colors6);
+    var stories=[
+      '\u05d1\u05db\u05d9\u05ea\u05d4 \u05d9\u05e9 '+total+' \u05ea\u05dc\u05de\u05d9\u05d3\u05d9\u05dd. '+fracSvg(n,d,{color:'#ffd32a',size:.95})+' \u05de\u05d4\u05dd \u05de\u05d1\u05d9\u05d0\u05d9\u05dd \u05db\u05e8\u05d9\u05da.',
+      '\u05d1\u05e4\u05d0\u05e8\u05e7 \u05d4\u05d9\u05d5 '+total+' \u05e6\u05d9\u05e4\u05d5\u05e8\u05d9\u05dd. '+fracSvg(n,d,{color:'#54a0ff',size:.95})+' \u05de\u05d4\u05df \u05e2\u05e4\u05d5.',
+      '\u05dc\u05d3\u05e0\u05d9 \u05d9\u05e9 '+total+' \u05de\u05d8\u05d1\u05e2\u05d5\u05ea. \u05d4\u05d5\u05d0 \u05e0\u05ea\u05df '+fracSvg(n,d,{color:'#ff6348',size:.95})+' \u05dc\u05d0\u05d7\u05d5\u05ea\u05d5.',
     ];
-    return {type:'num', cat:'fractions', diff, label:th.label, gameLabel:'', text:'', shapeHtml:
-      '<div style="text-align:center;padding:8px 0">'
-      + gridSvg(part, total, '#ffd32a')
-      + '<div style="margin-top:10px;font-size:.95rem;color:#fff;direction:rtl;line-height:1.8">' + pick(stories) + '</div>'
-      + '</div>',
-      answer: part, pts, hint:{type:'text',msg:'&#x1F4A1; ' + total + ' ÷ ' + d + ' = ' + (total/d) + '. × ' + n + ' = ' + part}, showMul:false, dir:'rtl'};
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            staticGrid(part,total,color)
+          + '<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:1rem;color:#fff;line-height:1.9;margin-top:10px">'
+          + pick(stories)
+          + '<br><span style="color:#2ed573">\u05db\u05de\u05d4?</span>'
+          + '</div>'
+          , color),
+      answer:part, hint:{type:'text',msg:'&#x1F4A1; '+total+' ÷ '+d+' = '+(total/d)+'. × '+n+' = '+part}, showMul:false, dir:'rtl'};
   }
 
-  // Fallback: simple pizza
-  var frac = pick([[1,2],[1,4],[3,4],[1,3],[2,3]]);
-  var n = frac[0], d = frac[1];
-  var total = rnd(4,20)*d, part = total*n/d;
-  return {type:'num', cat:'fractions', diff, label:th.label, gameLabel:'', text:'', shapeHtml:
-    '<div style="text-align:center;padding:8px 0">'
-    + pizzaSvg(n, d, '#ff6348')
-    + '<div style="margin-top:10px;color:#fff;font-size:1rem">\u05db\u05de\u05d4 \u05d6\u05d4 '
-    + fracHtml(n,d,'#ffd32a') + ' \u05de\u05ea\u05d5\u05da ' + total + '?</div></div>',
-    answer: part, pts, hint:{type:'text',msg:'&#x1F4A1; ' + total + '÷' + d + '=' + (total/d) + '. ×' + n + '=' + part}, showMul:false, dir:'rtl'};
+  // TYPE 17: COMPARE TWO PIZZAS
+  if (qtype === 'compare_pizza') {
+    var allP=[[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6]];
+    var fr1=pick(allP); var n1=fr1[0],d1=fr1[1];
+    var fr2=pick(allP.filter(function(p){return !(p[0]===n1&&p[1]===d1);}));
+    var n2=fr2[0],d2=fr2[1];
+    if(Math.abs(n1/d1-n2/d2)<0.05){n2=n1;d2=d1+2;}
+    var bigger=(n1/d1>=n2/d2)?1:2;
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: fontLink
+        + card(
+            chip('\u05d0\u05d9\u05d6\u05d4 \u05e4\u05d9\u05e6\u05d4 \u05d2\u05d3\u05d5\u05dc\u05d4 \u05d9\u05d5\u05ea\u05e8? \u05db\u05ea\u05d5\u05d1 1 \u05d0\u05d5 2','#ff6348')
+          + '<div style="display:flex;gap:16px;justify-content:center;align-items:flex-end">'
+          + '<div style="text-align:center">'
+            + '<div style="font-family:Caveat,cursive;color:#adb5bd;font-size:1rem;margin-bottom:4px">1</div>'
+            + staticPizza(n1,d1,'#ff6348',110)
+            + '<div style="margin-top:6px">' + fracSvg(n1,d1,{color:'#ff6348',size:.95}) + '</div>'
+          + '</div>'
+          + '<div style="font-family:Caveat,cursive;font-size:1.8rem;color:#fff;font-weight:700;padding-bottom:12px">VS</div>'
+          + '<div style="text-align:center">'
+            + '<div style="font-family:Caveat,cursive;color:#adb5bd;font-size:1rem;margin-bottom:4px">2</div>'
+            + staticPizza(n2,d2,'#54a0ff',110)
+            + '<div style="margin-top:6px">' + fracSvg(n2,d2,{color:'#54a0ff',size:.95}) + '</div>'
+          + '</div>'
+          + '</div>'
+          , '#ff6348'),
+      answer:bigger, hint:{type:'text',msg:'&#x1F4A1; '+n1+'/'+d1+' = '+Math.round(n1/d1*100)+'%  vs  '+n2+'/'+d2+' = '+Math.round(n2/d2*100)+'%'}, showMul:false, dir:'rtl'};
+  }
+
+  // Fallback — interactive pizza
+  var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3]]);
+  var n=fr[0],d=fr[1];
+  return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+    shapeHtml: fontLink
+      + card(
+          chip('\u05e6\u05d1\u05e2 '+n+' \u05d7\u05ea\u05d9\u05db\u05d5\u05ea!','#ffd32a')
+        + interactivePizza(d,0,'#ff6348',140)
+        , '#ff6348'),
+    answer:n, hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05d7\u05ea\u05d9\u05db\u05d5\u05ea'}, showMul:false, dir:'rtl'};
 }
