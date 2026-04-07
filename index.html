@@ -286,7 +286,7 @@
     <div class="qbtns" id="qBtns">
       <button class="qbtn bsubmit" onclick="submitAns()">✅ בדוק</button>
       <button class="qbtn bhint" id="hintBtn" onclick="useHint()" disabled>💡 רמז (<span id="hintTmr">3:00</span>)</button>
-      <button class="qbtn bskip" id="skipBtn" onclick="skipQ()" disabled style="opacity:.4;cursor:not-allowed">⏭️ דלג <span style="font-size:.7rem;opacity:.7">(2 נסיונות + 2:00)</span></button>
+      <button class="qbtn bskip" onclick="skipQ()">⏭️ דלג</button>
     </div>
     <div class="qbtns" id="nextBtns" style="display:none">
       <button class="qbtn bnext" onclick="nextQ()">➡️ הבא</button>
@@ -529,18 +529,44 @@
 
 <!-- ══ TERMS MODAL ══ -->
 <div id="termsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9000;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid rgba(255,255,255,.12);border-radius:20px;padding:28px;max-width:460px;width:100%;max-height:80vh;overflow-y:auto;">
-    <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:var(--a4);margin-bottom:16px;text-align:center;">📋 תנאי שימוש</div>
-    <div style="font-size:.88rem;color:var(--txt2);line-height:1.8;direction:rtl;">
-      <p style="margin-bottom:12px;color:var(--txt);font-weight:700;">ברוכים הבאים ל-Brain Spark ⚡</p>
-      <p style="margin-bottom:12px;">המשחק מיועד לילדים בכיתות א'-ו' לתרגול מתמטיקה בצורה כיפית ומעשירה.</p>
-      <p style="margin-bottom:8px;font-weight:700;color:var(--a2);">פרטיות ואבטחה:</p>
-      <p style="margin-bottom:12px;">• לא נאספים נתונים אישיים מעבר לנדרש להפעלת המשחק.<br>• המייל (אם סופק) ישמש רק לשחזור סיסמה.<br>• לא נשתף מידע עם גורמים חיצוניים.</p>
-      <p style="margin-bottom:8px;font-weight:700;color:var(--a2);">כללי שימוש:</p>
-      <p style="margin-bottom:12px;">• אין לשתף פרטים אישיים עם שחקנים אחרים.<br>• יש להשתמש בשפה מכבדת בפרופיל ובשם המשתמש.<br>• ניתן למחוק את החשבון בכל עת דרך הגדרות ההורים.</p>
-      <p style="font-size:.78rem;opacity:.65;">עדכון אחרון: 2025 • Brain Spark Math Arena</p>
+  <div style="background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid rgba(255,255,255,.12);border-radius:20px;padding:28px;max-width:480px;width:100%;max-height:85vh;overflow-y:auto;">
+    <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:var(--a4);margin-bottom:4px;text-align:center;">📋 תנאי שימוש</div>
+    <div style="font-size:.75rem;color:var(--txt2);text-align:center;margin-bottom:18px;opacity:.7;">Brain Spark ⚡ Math Arena</div>
+
+    <div style="font-size:.88rem;color:var(--txt2);line-height:1.85;direction:rtl;">
+
+      <!-- Welcome -->
+      <p style="margin-bottom:14px;color:var(--txt);font-weight:700;font-size:.95rem;">ברוכים הבאים ל-Brain Spark! 👋</p>
+      <p style="margin-bottom:18px;">Brain Spark הוא כלי לימודי כיפי שנועד לעזור לילדים בכיתות א'–ו' לתרגל מתמטיקה בצורה מהנה ומעוררת מוטיבציה. אנחנו שמחים שאתם כאן!</p>
+
+      <!-- Disclaimer -->
+      <div style="background:rgba(255,211,42,.07);border:1.5px solid rgba(255,211,42,.25);border-radius:14px;padding:14px 16px;margin-bottom:18px;">
+        <p style="margin-bottom:8px;font-weight:700;color:var(--a2);font-size:.88rem;">📌 חשוב לדעת — הורים ומחנכים</p>
+        <p style="margin-bottom:8px;">Brain Spark <strong style="color:var(--txt);">אינו כלי רשמי של משרד החינוך</strong> ואינו מחליף את הלמידה בבית הספר, שיעורי הבית, או עזרה מהמורה.</p>
+        <p style="margin-bottom:8px;">המשחק מיועד כ<strong style="color:var(--txt);">תוסף כיפי ומשמח בלבד</strong> — דרך נהדרת לתרגל ולחזק חומר, אבל לא כהכנה יחידה לבחינות.</p>
+        <p style="margin-bottom:0;">הציונים בבחינות אמת בבית הספר תלויים בגורמים רבים ומגוונים — ו-Brain Spark לא אחראי לתוצאות בחינות כלשהן.</p>
+      </div>
+
+      <!-- Privacy -->
+      <p style="margin-bottom:8px;font-weight:700;color:var(--a2);">🔒 פרטיות ואבטחה</p>
+      <p style="margin-bottom:18px;">• לא נאספים נתונים אישיים מעבר לנדרש להפעלת המשחק.<br>• המייל (אם סופק) ישמש רק לשחזור סיסמה — לא למשלוח ניוזלטרים.<br>• לא נמכור ולא נעביר מידע אישי לגורמים חיצוניים לצורכי שיווק.</p>
+
+      <!-- Monetization - soft & friendly -->
+      <div style="background:rgba(30,144,255,.07);border:1.5px solid rgba(30,144,255,.2);border-radius:14px;padding:14px 16px;margin-bottom:18px;">
+        <p style="margin-bottom:8px;font-weight:700;color:var(--a4);font-size:.88rem;">💙 איך Brain Spark נשאר בחינם?</p>
+        <p style="margin-bottom:8px;">אנחנו עובדים קשה כדי לשמור את המשחק נגיש וחינמי לכולם. כדי לאפשר זאת, ייתכן שבעתיד יופיע תוכן ממומן שנבחר בקפידה — כזה שמתאים לגיל ולערכים של הקהילה שלנו.</p>
+        <p style="margin-bottom:8px;">כל תוכן כזה יהיה <strong style="color:var(--txt);">מסומן בבירור</strong>, לא יפריע לחוויית המשחק, ויעמוד בסטנדרטים של תוכן מתאים לילדים.</p>
+        <p style="margin-bottom:0;">בהרשמה אתם מסכימים לאפשרות הופעת תוכן ממומן כאמור. אם בכל שלב תעדיפו אחרת — תמיד תוכלו לפנות אלינו.</p>
+      </div>
+
+      <!-- Usage rules -->
+      <p style="margin-bottom:8px;font-weight:700;color:var(--a2);">✅ כללי שימוש</p>
+      <p style="margin-bottom:18px;">• אין לשתף פרטים אישיים עם שחקנים אחרים.<br>• יש להשתמש בשפה מכבדת בפרופיל ובשם המשתמש.<br>• ניתן למחוק את החשבון בכל עת דרך הגדרות ההורים.</p>
+
+      <p style="font-size:.75rem;opacity:.55;text-align:center;">עדכון אחרון: 2025 • Brain Spark Math Arena<br>לפניות: אפשר לפנות דרך הגדרות המשחק</p>
     </div>
-    <button onclick="closeTermsModal()" style="width:100%;margin-top:18px;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--a4),var(--a5));color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;">✅ הבנתי, סגור</button>
+
+    <button onclick="closeTermsModal()" style="width:100%;margin-top:20px;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--a4),var(--a5));color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;">✅ הבנתי והסכמתי — בואו נשחק!</button>
   </div>
 </div>
 
