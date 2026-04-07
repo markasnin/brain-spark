@@ -296,714 +296,597 @@ function genShapes(diff, th) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// genFrac — SPECTACULAR interactive fraction questions
-// Handwritten-style fractions, animated SVG shapes, tap-to-answer
+// genFrac v3 — SPECTACULAR interactive fraction questions
+// Handwritten SVG fractions · Tap-to-answer shapes · 17 types
 // ══════════════════════════════════════════════════════════════
 function genFrac(diff, th) {
 
   var pts = ptsForQ('fractions', diff);
 
-  // ── Handwritten-style fraction using SVG path curves ──────
-  // Mimics pencil-drawn numerator/vinculum/denominator
-  function fracSvg(num, den, opts) {
-    opts = opts || {};
-    var color   = opts.color   || '#fff';
-    var size    = opts.size    || 1;
-    var shake   = opts.shake   || false; // wobble animation
-    var W = Math.round(54*size), H = Math.round(70*size);
-    var fs = Math.round(26*size); // font size for digits
-    var lineY = Math.round(35*size);
-    // Slightly wobbly line — hand-drawn feel
-    var x1 = Math.round(6*size), x2 = Math.round(48*size);
-    var c1y = lineY + Math.round(rnd(-2,2)*size);
-    var c2y = lineY + Math.round(rnd(-2,2)*size);
-    var pathD = 'M '+x1+','+lineY+' C '+(x1+8*size)+','+c1y+' '+(x2-8*size)+','+c2y+' '+x2+','+lineY;
-    var animStyle = shake ? 'animation:fracWiggle 0.4s ease-in-out;' : '';
-    return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:inline-block;vertical-align:middle;'+animStyle+'">'
-      + '<style>@keyframes fracWiggle{0%{transform:rotate(0deg)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}100%{transform:rotate(0deg)}}</style>'
-      + '<text x="'+(W/2)+'" y="'+(lineY-4)+'" text-anchor="middle" dominant-baseline="auto"'
-        + ' font-family="Caveat,Patrick Hand,cursive" font-size="'+fs+'" font-weight="700" fill="'+color+'">'+num+'</text>'
-      + '<path d="'+pathD+'" stroke="'+color+'" stroke-width="'+(2.8*size)+'" stroke-linecap="round" fill="none"/>'
-      + '<text x="'+(W/2)+'" y="'+(lineY+6)+'" text-anchor="middle" dominant-baseline="hanging"'
-        + ' font-family="Caveat,Patrick Hand,cursive" font-size="'+fs+'" font-weight="700" fill="'+color+'">'+den+'</text>'
-      + '</svg>';
+  // ── 1. HANDWRITTEN fraction (SVG with Caveat font + wobbly line) ─
+  function frac(n, d, color, sz) {
+    color = color || '#fff';
+    sz    = sz    || 1;
+    var W = Math.round(52*sz), H = Math.round(68*sz);
+    var fs = Math.round(24*sz);
+    var mid = Math.round(H/2);
+    var x1 = Math.round(5*sz), x2 = Math.round(47*sz);
+    // Wobbly hand-drawn line using cubic bezier
+    var cy1 = mid + (Math.random()<.5?-1:1)*Math.round(rnd(1,3)*sz);
+    var cy2 = mid + (Math.random()<.5?-1:1)*Math.round(rnd(1,3)*sz);
+    var d_attr = 'M'+x1+' '+mid+' C '+(x1+10*sz)+' '+cy1+' '+(x2-10*sz)+' '+cy2+' '+x2+' '+mid;
+    return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H
+      +'" style="display:inline-block;vertical-align:middle;overflow:visible">'
+      // Numerator
+      +'<text x="'+(W/2)+'" y="'+(mid-5)+'" text-anchor="middle" dominant-baseline="auto"'
+      +' font-family="Caveat,\'Patrick Hand\',cursive" font-size="'+fs+'" font-weight="700" fill="'+color+'">'+n+'</text>'
+      // Wobbly vinculum
+      +'<path d="'+d_attr+'" stroke="'+color+'" stroke-width="'+(2.5*sz)+'" stroke-linecap="round" fill="none"/>'
+      // Denominator
+      +'<text x="'+(W/2)+'" y="'+(mid+5)+'" text-anchor="middle" dominant-baseline="hanging"'
+      +' font-family="Caveat,\'Patrick Hand\',cursive" font-size="'+fs+'" font-weight="700" fill="'+color+'">'+d+'</text>'
+      +'</svg>';
   }
 
-  // ── Interactive pizza with tappable slices ────────────────
-  // Clicking a slice toggles it; answer updates live
-  function interactivePizza(totalSlices, preShaded, color, size) {
-    color = color || '#ff6348';
-    size  = size  || 140;
-    var cx = size/2, cy = size/2, r = size/2 - 6;
-    var crust = '#b85c1a';
-    var id = 'pizza_' + Math.floor(Math.random()*99999);
-
-    // Pre-compute slice paths
-    var slicePaths = [];
-    for (var i = 0; i < totalSlices; i++) {
-      var a1 = (i/totalSlices)*2*Math.PI - Math.PI/2;
-      var a2 = ((i+1)/totalSlices)*2*Math.PI - Math.PI/2;
-      var x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
-      var x2 = cx + r*Math.cos(a2), y2 = cy + r*Math.sin(a2);
-      var large = (1/totalSlices) > 0.5 ? 1 : 0;
-      slicePaths.push({x1:x1.toFixed(1),y1:y1.toFixed(1),x2:x2.toFixed(1),y2:y2.toFixed(1),large:large});
-    }
-
-    var sliceSvg = '';
-    for (var i = 0; i < totalSlices; i++) {
-      var sp = slicePaths[i];
-      var isShaded = i < preShaded;
-      sliceSvg += '<path id="'+id+'_s'+i+'" '
-        + 'd="M'+cx+','+cy+' L'+sp.x1+','+sp.y1+' A'+r+','+r+' 0 '+sp.large+',1 '+sp.x2+','+sp.y2+' Z" '
-        + 'fill="'+(isShaded?color:'#1e1e2e')+'" stroke="#fff" stroke-width="2.5" '
-        + 'style="cursor:pointer;transition:fill .18s,transform .18s;transform-origin:'+cx+'px '+cy+'px" '
-        + 'onclick="window._fracPizzaClick(\''+id+'\','+i+','+totalSlices+')" '
-        + 'onmouseover="this.style.transform=\'scale(1.06)\';this.style.filter=\'brightness(1.3)\'" '
-        + 'onmouseout="this.style.transform=\'scale(1)\';this.style.filter=\'none\'"/>';
-    }
-    // Topping dots on shaded slices
-    var toppings = '';
-    for (var i = 0; i < Math.min(preShaded, totalSlices); i++) {
-      var midA = ((i+0.5)/totalSlices)*2*Math.PI - Math.PI/2;
-      var tr = r*0.55;
-      var tx = cx + tr*Math.cos(midA), ty = cy + tr*Math.sin(midA);
-      toppings += '<circle cx="'+tx.toFixed(1)+'" cy="'+ty.toFixed(1)+'" r="4" fill="#8b0000" opacity="0.7"/>';
-    }
-
-    var svg = '<svg id="'+id+'" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'" style="display:block;margin:0 auto;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5))">'
-      + '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+crust+'" stroke="#fff" stroke-width="2"/>'
-      + sliceSvg + toppings
-      + '<text id="'+id+'_lbl" x="'+cx+'" y="'+(size+20)+'" text-anchor="middle" font-family="Caveat,cursive" font-size="16" fill="#adb5bd">'+preShaded+' / '+totalSlices+'</text>'
-      + '</svg>';
-
-    var script = '<script>window._fracPizzaState=window._fracPizzaState||{};'
-      + 'window._fracPizzaState["'+id+'"]={count:'+preShaded+',total:'+totalSlices+',color:"'+color+'"};'
-      + 'window._fracPizzaClick=function(id,idx,total){'
-      + 'var st=window._fracPizzaState[id];if(!st)return;'
-      + 'var el=document.getElementById(id+"_s"+idx);'
-      + 'var on=el.getAttribute("fill")!=="'+color.replace('#','\\x23')+'";'  // toggled
-      // Simpler: count shaded
-      + 'var shaded=0;for(var i=0;i<total;i++){var s=document.getElementById(id+"_s"+i);if(s&&s.getAttribute("fill")!=="#1e1e2e")shaded++;}'
-      + 'el.setAttribute("fill",on?"'+color+'"+"":"#1e1e2e");'
-      + 'shaded=0;for(var i=0;i<total;i++){var s=document.getElementById(id+"_s"+i);if(s&&s.getAttribute("fill")!=="#1e1e2e")shaded++;}'
-      + 'st.count=shaded;'
-      + 'var lbl=document.getElementById(id+"_lbl");if(lbl)lbl.textContent=shaded+" / "+total;'
-      + 'window._shapeAnswer(shaded);'
-      + '};'
-      + '<\/script>';
-
-    return svg + script;
-  }
-
-  // Simpler non-interactive pizza (for display)
-  function staticPizza(n, d, color, size) {
-    color = color || '#ff6348';
-    size  = size  || 130;
-    var cx=size/2, cy=size/2, r=size/2-6;
-    var slices='';
+  // ── 2. PIZZA SVG (static display) ───────────────────────────
+  function pizza(n, d, col, size) {
+    col  = col  || '#ff6348';
+    size = size || 130;
+    var cx=size/2, cy=size/2, r=size/2-5;
+    var s='';
     for(var i=0;i<d;i++){
       var a1=(i/d)*2*Math.PI-Math.PI/2, a2=((i+1)/d)*2*Math.PI-Math.PI/2;
-      var x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1),x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
+      var x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
+      var x2=cx+r*Math.cos(a2), y2=cy+r*Math.sin(a2);
       var lg=(1/d)>.5?1:0;
-      var fill=i<n?color:'#1e1e2e';
-      // Topping on shaded slice
-      var topping='';
-      if(i<n){var ma=((i+.5)/d)*2*Math.PI-Math.PI/2,tr=r*.55;topping='<circle cx="'+(cx+tr*Math.cos(ma)).toFixed(1)+'" cy="'+(cy+tr*Math.sin(ma)).toFixed(1)+'" r="3.5" fill="#8b0000" opacity=".7"/>';}
-      slices+='<path d="M'+cx+','+cy+' L'+x1.toFixed(1)+','+y1.toFixed(1)+' A'+r+','+r+' 0 '+lg+',1 '+x2.toFixed(1)+','+y2.toFixed(1)+' Z" fill="'+fill+'" stroke="#fff" stroke-width="2.5"/>'+topping;
+      var fill=i<n?col:'#16213e';
+      // pepperoni dot on filled slices
+      var dot='';
+      if(i<n){var ma=((i+.5)/d)*2*Math.PI-Math.PI/2;
+        dot='<circle cx="'+(cx+r*.55*Math.cos(ma)).toFixed(1)+'" cy="'+(cy+r*.55*Math.sin(ma)).toFixed(1)+'" r="4" fill="#8b0000" opacity=".75"/>';}
+      s+='<path d="M'+cx+','+cy+' L'+x1.toFixed(1)+','+y1.toFixed(1)
+        +' A'+r+','+r+' 0 '+lg+',1 '+x2.toFixed(1)+','+y2.toFixed(1)+' Z"'
+        +' fill="'+fill+'" stroke="#fff" stroke-width="2.5"/>'+dot;
     }
-    return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'" style="display:block;margin:0 auto;filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))">'
-      +'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#b85c1a" stroke="#fff" stroke-width="2"/>'+slices+'</svg>';
+    return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size
+      +'" style="display:block;margin:0 auto;filter:drop-shadow(0 5px 15px rgba(0,0,0,.55))">'
+      +'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#c97c1e" stroke="#fff" stroke-width="2"/>'+s+'</svg>';
   }
 
-  // ── Interactive bar — tap segments to shade ───────────────
-  function interactiveBar(d, preShaded, color, w, h) {
-    color = color || '#54a0ff';
-    w = w || 260; h = h || 48;
-    var id = 'bar_' + Math.floor(Math.random()*99999);
-    var cw = w/d;
-    var cells = '';
+  // ── 3. INTERACTIVE PIZZA (tap slices, auto-fills answer) ────
+  function pizzaTap(d, pre, col, size) {
+    col  = col  || '#ff6348';
+    size = size || 140;
+    var id='pz'+Math.floor(Math.random()*99999);
+    var cx=size/2, cy=size/2, r=size/2-5;
+    var paths='';
     for(var i=0;i<d;i++){
-      var filled=i<preShaded;
-      cells+='<rect id="'+id+'_c'+i+'" x="'+(i*cw+2).toFixed(1)+'" y="2" width="'+(cw-4).toFixed(1)+'" height="'+(h-4)+'"'
-        +' fill="'+(filled?color:'#1e1e2e')+'" stroke="'+color+'" stroke-width="2" rx="6"'
-        +' style="cursor:pointer;transition:fill .15s,filter .15s"'
-        +' onclick="window._fracBarClick(\''+id+'\','+i+','+d+',\''+color+'\')"'
-        +' onmouseover="this.style.filter=\'brightness(1.4)\'" onmouseout="this.style.filter=\'none\'"/>';
+      var a1=(i/d)*2*Math.PI-Math.PI/2, a2=((i+1)/d)*2*Math.PI-Math.PI/2;
+      var x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
+      var x2=cx+r*Math.cos(a2), y2=cy+r*Math.sin(a2);
+      var lg=(1/d)>.5?1:0;
+      var fill=i<pre?col:'#16213e';
+      paths+='<path id="'+id+'s'+i+'" d="M'+cx+','+cy
+        +' L'+x1.toFixed(1)+','+y1.toFixed(1)+' A'+r+','+r+' 0 '+lg+',1 '+x2.toFixed(1)+','+y2.toFixed(1)+' Z"'
+        +' fill="'+fill+'" stroke="#fff" stroke-width="2.5"'
+        +' style="cursor:pointer;transition:all .2s;transform-origin:'+cx+'px '+cy+'px"'
+        +' onclick="_pzClick(\''+id+'\','+i+','+d+',\''+col+'\')"'
+        +' onmouseover="this.style.filter=\'brightness(1.35)\';this.style.transform=\'scale(1.07)\'"'
+        +' onmouseout="this.style.filter=\'\';this.style.transform=\'\'"/>';
     }
-    var svg='<svg id="'+id+'" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="display:block;margin:0 auto">'
-      +cells+'</svg>';
-    var script='<script>window._fracBarClick=function(id,idx,total,color){'
-      +'var el=document.getElementById(id+"_c"+idx);if(!el)return;'
-      +'var on=el.getAttribute("fill")!==color;'
-      +'el.setAttribute("fill",on?color:"#1e1e2e");'
-      +'var count=0;for(var i=0;i<total;i++){var c=document.getElementById(id+"_c"+i);if(c&&c.getAttribute("fill")===color)count++;}'
-      +'window._shapeAnswer(count);'
-      +'};'
-      +'<\/script>';
-    return svg+script;
+    var svg='<svg id="'+id+'" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size
+      +'" style="display:block;margin:0 auto;filter:drop-shadow(0 5px 15px rgba(0,0,0,.5))">'
+      +'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#c97c1e" stroke="#fff" stroke-width="2"/>'+paths
+      +'<text id="'+id+'lb" x="'+cx+'" y="'+(size+18)+'" text-anchor="middle"'
+      +' font-family="Caveat,cursive" font-size="15" fill="#8892b0">'+pre+' / '+d+'</text>'
+      +'</svg>';
+    // Inline script — safe because shapeHtml is innerHTML'd into the DOM
+    var scr='<script>window._pzClick=function(id,i,d,col){'
+      +'var el=document.getElementById(id+"s"+i);if(!el)return;'
+      +'var on=el.getAttribute("fill")!==col;'
+      +'el.setAttribute("fill",on?col:"#16213e");'
+      +'var c=0;for(var j=0;j<d;j++){var s=document.getElementById(id+"s"+j);if(s&&s.getAttribute("fill")===col)c++;}'
+      +'var lb=document.getElementById(id+"lb");if(lb)lb.textContent=c+" / "+d;'
+      +'window._shapeAnswer&&window._shapeAnswer(c);'
+      +'};<\/script>';
+    return svg+scr;
   }
 
-  // Static bar (display only)
-  function staticBar(n, d, color, w, h) {
-    color=color||'#54a0ff'; w=w||240; h=h||42;
+  // ── 4. BAR (static) ─────────────────────────────────────────
+  function bar(n, d, col, w, h) {
+    col=col||'#54a0ff'; w=w||240; h=h||42;
     var cw=w/d, cells='';
-    for(var i=0;i<d;i++){
+    for(var i=0;i<d;i++)
       cells+='<rect x="'+(i*cw+2).toFixed(1)+'" y="2" width="'+(cw-4).toFixed(1)+'" height="'+(h-4)+'"'
-        +' fill="'+(i<n?color:'#1e1e2e')+'" stroke="'+color+'" stroke-width="2" rx="5"/>';
-    }
+        +' fill="'+(i<n?col:'#16213e')+'" stroke="'+col+'" stroke-width="2" rx="5"/>';
     return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="display:block;margin:0 auto">'+cells+'</svg>';
   }
 
-  // ── Interactive grid — tap to shade squares ───────────────
-  function interactiveGrid(total, preShaded, color) {
-    color=color||'#2ed573';
-    var cols=Math.min(total,6), rows=Math.ceil(total/cols);
-    var cw=40,ch=40,gap=6;
-    var W=cols*(cw+gap)-gap, H=rows*(ch+gap)-gap;
-    var id='grid_'+Math.floor(Math.random()*99999);
-    var cells='';
-    for(var i=0;i<total;i++){
-      var col=i%cols,row=Math.floor(i/cols);
-      var x=col*(cw+gap),y=row*(ch+gap);
-      var filled=i<preShaded;
-      cells+='<rect id="'+id+'_g'+i+'" x="'+x+'" y="'+y+'" width="'+cw+'" height="'+ch+'"'
-        +' fill="'+(filled?color:'#1e1e2e')+'" stroke="'+color+'" stroke-width="2" rx="8"'
-        +' style="cursor:pointer;transition:fill .15s,transform .15s;transform-origin:'+(x+cw/2)+'px '+(y+ch/2)+'px"'
-        +' onclick="window._fracGridClick(\''+id+'\','+i+','+total+',\''+color+'\')"'
-        +' onmouseover="this.style.transform=\'scale(1.12)\'" onmouseout="this.style.transform=\'scale(1)\'"/>';
-    }
-    var svg='<svg id="'+id+'" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:block;margin:0 auto">'+cells+'</svg>';
-    var script='<script>window._fracGridClick=function(id,idx,total,color){'
-      +'var el=document.getElementById(id+"_g"+idx);if(!el)return;'
-      +'var on=el.getAttribute("fill")!==color;'
-      +'el.setAttribute("fill",on?color:"#1e1e2e");'
-      +'var count=0;for(var i=0;i<total;i++){var c=document.getElementById(id+"_g"+i);if(c&&c.getAttribute("fill")===color)count++;}'
-      +'window._shapeAnswer(count);'
-      +'};'
-      +'<\/script>';
-    return svg+script;
+  // ── 5. BAR (interactive tap) ─────────────────────────────────
+  function barTap(d, pre, col, w, h) {
+    col=col||'#54a0ff'; w=w||260; h=h||48;
+    var id='br'+Math.floor(Math.random()*99999);
+    var cw=w/d, cells='';
+    for(var i=0;i<d;i++)
+      cells+='<rect id="'+id+'c'+i+'" x="'+(i*cw+2).toFixed(1)+'" y="2" width="'+(cw-4).toFixed(1)+'" height="'+(h-4)+'"'
+        +' fill="'+(i<pre?col:'#16213e')+'" stroke="'+col+'" stroke-width="2" rx="6"'
+        +' style="cursor:pointer;transition:fill .15s"'
+        +' onclick="_brClick(\''+id+'\','+i+','+d+',\''+col+'\')"'
+        +' onmouseover="this.style.filter=\'brightness(1.4)\'" onmouseout="this.style.filter=\'\'"/>';
+    var svg='<svg id="'+id+'" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="display:block;margin:0 auto">'+cells+'</svg>';
+    var scr='<script>window._brClick=function(id,i,d,col){'
+      +'var el=document.getElementById(id+"c"+i);if(!el)return;'
+      +'var on=el.getAttribute("fill")!==col;el.setAttribute("fill",on?col:"#16213e");'
+      +'var c=0;for(var j=0;j<d;j++){var b=document.getElementById(id+"c"+j);if(b&&b.getAttribute("fill")===col)c++;}'
+      +'window._shapeAnswer&&window._shapeAnswer(c);'
+      +'};<\/script>';
+    return svg+scr;
   }
 
-  // Static grid
-  function staticGrid(n, total, color) {
-    color=color||'#2ed573';
-    var cols=Math.min(total,6), rows=Math.ceil(total/cols);
+  // ── 6. GRID (static) ────────────────────────────────────────
+  function grid(n, tot, col) {
+    col=col||'#2ed573';
+    var cols=Math.min(tot,6), rows=Math.ceil(tot/cols);
     var cw=36,ch=36,gap=5;
-    var W=cols*(cw+gap)-gap, H=rows*(ch+gap)-gap;
-    var cells='';
-    for(var i=0;i<total;i++){
-      var col=i%cols,row=Math.floor(i/cols);
-      cells+='<rect x="'+(col*(cw+gap))+'" y="'+(row*(ch+gap))+'" width="'+cw+'" height="'+ch+'"'
-        +' fill="'+(i<n?color:'#1e1e2e')+'" stroke="'+color+'" stroke-width="2" rx="7"/>';
+    var W=cols*(cw+gap)-gap, H=rows*(ch+gap)-gap, cells='';
+    for(var i=0;i<tot;i++){
+      var c=i%cols, r=Math.floor(i/cols);
+      cells+='<rect x="'+(c*(cw+gap))+'" y="'+(r*(ch+gap))+'" width="'+cw+'" height="'+ch+'"'
+        +' fill="'+(i<n?col:'#16213e')+'" stroke="'+col+'" stroke-width="2" rx="7"/>';
     }
     return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:block;margin:0 auto">'+cells+'</svg>';
   }
 
-  // ── Interactive chocolate bar ─────────────────────────────
-  function chocoBar(rows, cols, preShaded, color) {
-    color=color||'#8b4513';
-    var cw=36,ch=28,gap=4;
+  // ── 7. GRID (interactive tap) ────────────────────────────────
+  function gridTap(tot, pre, col) {
+    col=col||'#2ed573';
+    var cols=Math.min(tot,6), rows=Math.ceil(tot/cols);
+    var cw=40,ch=40,gap=6;
     var W=cols*(cw+gap)-gap, H=rows*(ch+gap)-gap;
-    var total=rows*cols;
-    var id='choco_'+Math.floor(Math.random()*99999);
+    var id='gd'+Math.floor(Math.random()*99999);
     var cells='';
-    for(var i=0;i<total;i++){
-      var col=i%cols, row=Math.floor(i/cols);
-      var x=col*(cw+gap), y=row*(ch+gap);
-      var filled=i<preShaded;
-      cells+='<rect id="'+id+'_ch'+i+'" x="'+x+'" y="'+y+'" width="'+cw+'" height="'+ch+'"'
-        +' fill="'+(filled?color:'#2d1b0a')+'" stroke="#5c2d0a" stroke-width="2.5" rx="5"'
+    for(var i=0;i<tot;i++){
+      var c=i%cols, r=Math.floor(i/cols);
+      var x=c*(cw+gap), y=r*(ch+gap);
+      cells+='<rect id="'+id+'g'+i+'" x="'+x+'" y="'+y+'" width="'+cw+'" height="'+ch+'"'
+        +' fill="'+(i<pre?col:'#16213e')+'" stroke="'+col+'" stroke-width="2" rx="8"'
+        +' style="cursor:pointer;transition:all .15s;transform-origin:'+(x+cw/2)+'px '+(y+ch/2)+'px"'
+        +' onclick="_gdClick(\''+id+'\','+i+','+tot+',\''+col+'\')"'
+        +' onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'\'"/>';
+    }
+    var svg='<svg id="'+id+'" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:block;margin:0 auto">'+cells+'</svg>';
+    var scr='<script>window._gdClick=function(id,i,tot,col){'
+      +'var el=document.getElementById(id+"g"+i);if(!el)return;'
+      +'var on=el.getAttribute("fill")!==col;el.setAttribute("fill",on?col:"#16213e");'
+      +'var c=0;for(var j=0;j<tot;j++){var g=document.getElementById(id+"g"+j);if(g&&g.getAttribute("fill")===col)c++;}'
+      +'window._shapeAnswer&&window._shapeAnswer(c);'
+      +'};<\/script>';
+    return svg+scr;
+  }
+
+  // ── 8. CHOCOLATE BAR (interactive) ──────────────────────────
+  function choco(rows, cols, pre) {
+    var cw=36,ch=26,gap=4;
+    var W=cols*(cw+gap)-gap, H=rows*(ch+gap)-gap;
+    var tot=rows*cols;
+    var id='ch'+Math.floor(Math.random()*99999);
+    var col='#a0522d';
+    var cells='';
+    for(var i=0;i<tot;i++){
+      var c=i%cols, r=Math.floor(i/cols);
+      var x=c*(cw+gap), y=r*(ch+gap);
+      var fill=i<pre?col:'#1a0a00';
+      cells+='<rect id="'+id+'k'+i+'" x="'+x+'" y="'+y+'" width="'+cw+'" height="'+ch+'"'
+        +' fill="'+fill+'" stroke="#3d1800" stroke-width="2.5" rx="4"'
         +' style="cursor:pointer;transition:fill .15s"'
-        +' onclick="window._fracGridClick(\''+id+'_ch\','+i+','+total+',\''+color+'\')"'
-        +' onmouseover="this.style.filter=\'brightness(1.3)\'" onmouseout="this.style.filter=\'none\'"/>';
-      // Shine detail on filled squares
-      if(filled)cells+='<rect x="'+(x+4)+'" y="'+(y+3)+'" width="'+(cw-8)+'" height="4" fill="rgba(255,255,255,.12)" rx="2"/>';
+        +' onclick="_gdClick(\''+id+'k\','+i+','+tot+',\''+col+'\')"'
+        +' onmouseover="this.style.filter=\'brightness(1.3)\'" onmouseout="this.style.filter=\'\'"/>';
+      // shine
+      cells+='<rect x="'+(x+3)+'" y="'+(y+2)+'" width="'+(cw-6)+'" height="3" rx="1" fill="rgba(255,255,255,.1)"/>';
     }
-    var svg='<svg id="'+id+'" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:block;margin:0 auto;filter:drop-shadow(0 3px 8px rgba(0,0,0,.5))">'+cells+'</svg>';
-    var script='<script>window._fracGridClick=window._fracGridClick||function(id,idx,total,color){'
-      +'var el=document.getElementById(id+idx);if(!el)return;'
-      +'var on=el.getAttribute("fill")!==color;el.setAttribute("fill",on?color:"#2d1b0a");'
-      +'var count=0;for(var i=0;i<total;i++){var c=document.getElementById(id+i);if(c&&c.getAttribute("fill")===color)count++;}'
-      +'window._shapeAnswer(count);'
-      +'};'
-      +'<\/script>';
-    return svg+script;
+    var svg='<svg id="'+id+'" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H
+      +'" style="display:block;margin:0 auto;filter:drop-shadow(0 3px 8px rgba(0,0,0,.5))">'+cells+'</svg>';
+    var scr='<script>window._gdClick=window._gdClick||function(id,i,tot,col){'
+      +'var el=document.getElementById(id+i);if(!el)return;'
+      +'var on=el.getAttribute("fill")!==col;el.setAttribute("fill",on?col:"#1a0a00");'
+      +'var c=0;for(var j=0;j<tot;j++){var g=document.getElementById(id+j);if(g&&g.getAttribute("fill")===col)c++;}'
+      +'window._shapeAnswer&&window._shapeAnswer(c);'
+      +'};<\/script>';
+    return svg+scr;
   }
 
-  // ── Animated number line ──────────────────────────────────
-  function numberLine(n, d, w) {
-    w=w||280;
-    var h=60, pad=20;
-    var iw=w-pad*2;
-    var tickY=30, labelY=50;
-    var segments='';
-    // Shaded region
-    var shadeW=iw*(n/d);
-    segments+='<rect x="'+pad+'" y="'+(tickY-8)+'" width="'+shadeW.toFixed(1)+'" height="16" fill="rgba(84,160,255,.3)" rx="4"/>';
-    // Line
-    segments+='<line x1="'+pad+'" y1="'+tickY+'" x2="'+(pad+iw)+'" y2="'+tickY+'" stroke="#fff" stroke-width="2.5"/>';
-    // Arrow
-    segments+='<polygon points="'+(pad+iw)+','+(tickY-5)+' '+(pad+iw+10)+','+tickY+' '+(pad+iw)+','+(tickY+5)+'" fill="#fff"/>';
-    // Ticks + labels
+  // ── 9. NUMBER LINE ───────────────────────────────────────────
+  function numLine(n, d, w) {
+    w=w||270;
+    var h=58, pad=22, iw=w-pad*2, ty=28;
+    var out='';
+    out+='<rect x="'+pad+'" y="'+(ty-7)+'" width="'+(iw*(n/d)).toFixed(1)+'" height="14" fill="rgba(84,160,255,.25)" rx="3"/>';
+    out+='<line x1="'+pad+'" y1="'+ty+'" x2="'+(pad+iw)+'" y2="'+ty+'" stroke="#e2e8f0" stroke-width="2.5"/>';
+    out+='<polygon points="'+(pad+iw)+','+(ty-5)+' '+(pad+iw+10)+','+ty+' '+(pad+iw)+','+(ty+5)+'" fill="#e2e8f0"/>';
     for(var i=0;i<=d;i++){
-      var x=pad+iw*(i/d);
-      segments+='<line x1="'+x.toFixed(1)+'" y1="'+(tickY-7)+'" x2="'+x.toFixed(1)+'" y2="'+(tickY+7)+'" stroke="#fff" stroke-width="2"/>';
-      segments+='<text x="'+x.toFixed(1)+'" y="'+labelY+'" text-anchor="middle" font-family="Caveat,cursive" font-size="14" fill="#adb5bd">'+i+'/'+d+'</text>';
+      var x=(pad+iw*(i/d)).toFixed(1);
+      out+='<line x1="'+x+'" y1="'+(ty-7)+'" x2="'+x+'" y2="'+(ty+7)+'" stroke="#e2e8f0" stroke-width="2"/>';
+      out+='<text x="'+x+'" y="'+(ty+22)+'" text-anchor="middle" font-family="Caveat,cursive" font-size="13" fill="#8892b0">'+i+'/'+d+'</text>';
     }
-    // Marker
-    var markerX=pad+iw*(n/d);
-    segments+='<circle cx="'+markerX.toFixed(1)+'" cy="'+tickY+'" r="8" fill="#ffd32a" stroke="#fff" stroke-width="2"/>';
-    segments+='<text x="'+markerX.toFixed(1)+'" y="'+(tickY-14)+'" text-anchor="middle" font-family="Caveat,cursive" font-size="13" font-weight="700" fill="#ffd32a">'+n+'/'+d+'</text>';
-    return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="display:block;margin:0 auto">'+segments+'</svg>';
+    var mx=(pad+iw*(n/d)).toFixed(1);
+    out+='<circle cx="'+mx+'" cy="'+ty+'" r="8" fill="#ffd32a" stroke="#fff" stroke-width="2"/>';
+    out+='<text x="'+mx+'" y="'+(ty-14)+'" text-anchor="middle" font-family="Caveat,cursive" font-size="13" font-weight="700" fill="#ffd32a">'+n+'/'+d+'</text>';
+    return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="display:block;margin:0 auto">'+out+'</svg>';
   }
 
-  // ── Card wrapper with decorative border ──────────────────
-  function card(inner, accent) {
+  // ── UI helpers ───────────────────────────────────────────────
+  function wrap(inner, accent) {
     accent=accent||'#54a0ff';
-    return '<div style="background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.02));'
-      +'border:2px solid '+accent+'44;border-radius:18px;padding:14px 10px 10px;margin:6px 0;'
-      +'box-shadow:0 4px 24px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.06)">'
-      +inner+'</div>';
+    return '<div style="background:linear-gradient(160deg,rgba(255,255,255,.05) 0%,rgba(255,255,255,.02) 100%);'
+      +'border:2px solid '+accent+'55;border-radius:18px;padding:14px 12px 12px;'
+      +'box-shadow:0 6px 28px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)">'+inner+'</div>';
+  }
+  function pill(txt, col) {
+    col=col||'#ffd32a';
+    return '<div style="display:inline-flex;align-items:center;gap:5px;background:'+col+'1a;'
+      +'border:1.5px solid '+col+'55;border-radius:99px;padding:4px 14px;'
+      +'font-family:Caveat,cursive;font-size:.95rem;color:'+col+';margin-bottom:10px">'+txt+'</div>';
+  }
+  function row(els, gap) { // flex row
+    gap=gap||'10px';
+    return '<div style="display:flex;align-items:center;justify-content:center;gap:'+gap+';flex-wrap:wrap">'+els+'</div>';
+  }
+  function hbr(txt, col) { // Hebrew hint text below shape
+    col=col||'#8892b0';
+    return '<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:.92rem;color:'+col+';margin-top:8px;line-height:1.6">'+txt+'</div>';
+  }
+  function lbr(txt, col) { // LTR label
+    col=col||'#e2e8f0';
+    return '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1rem;color:'+col+';margin-bottom:10px;line-height:1.7">'+txt+'</div>';
+  }
+  function autotip() {
+    return '<div style="font-family:Caveat,cursive;font-size:.75rem;color:#4a5568;text-align:center;margin-top:5px">'
+      +'\u05d4\u05ea\u05e9\u05d5\u05d1\u05d4 \u05de\u05ea\u05e2\u05d3\u05db\u05e0\u05ea \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea &#x1F447;</div>';
   }
 
-  // ── Instruction chip ─────────────────────────────────────
-  function chip(text, color) {
-    color=color||'#ffd32a';
-    return '<div style="display:inline-block;background:'+color+'22;border:1.5px solid '+color+'66;'
-      +'border-radius:99px;padding:4px 14px;font-family:Caveat,cursive;font-size:.95rem;color:'+color+';margin-bottom:10px">'
-      +text+'</div>';
+  // Font loader (once)
+  var FL='<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">';
+
+  // Colour palette
+  var PAL=['#ff6348','#54a0ff','#2ed573','#ffd32a','#c77dff','#ff9f43','#00d2d3','#ff4dac'];
+
+  // Helper: pick fraction pairs per difficulty
+  function pairs(hard) {
+    if(!hard) return [[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6],[2,4]];
+    return [[2,3],[3,4],[2,5],[3,5],[4,5],[5,6],[3,8],[5,8],[7,8]];
   }
 
-  // ── Handwriting-style hint arrow ─────────────────────────
-  function arrowHint(text, color) {
-    color=color||'#adb5bd';
-    return '<div style="color:'+color+';font-family:Caveat,cursive;font-size:.9rem;margin-top:8px;opacity:.85">'
-      +'&#x2197; '+text+'</div>';
-  }
+  // ═══════════════════════════════════════════════════════════
+  // QUESTION TYPES
+  // ═══════════════════════════════════════════════════════════
 
-  // Load Caveat font (handwriting) once
-  var fontLink='<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">';
+  var easyPool  = ['pizza_tap','bar_tap','grid_tap','pizza_read','bar_read','pizza_word_simple','grid_count'];
+  var medPool   = ['bar_compare','missing_num','bar_add','choco_tap','numline_read','pizza_word_hard','grid_of_total'];
+  var hardPool  = ['add_visual','sub_visual','mixed_bars','equivalent','word_story','compare_pizza','bar_compare'];
+  var pool      = diff==='easy'?easyPool:diff==='medium'?medPool:hardPool;
+  var qt        = pick(pool);
 
-  // Determine question type pool
-  var easyTypes   = ['pizza_tap','bar_tap','grid_tap','pizza_identify','pizza_word_simple'];
-  var medTypes    = ['compare_bar','missing_eq','bar_add','pizza_word_hard','chocolate_tap','numline'];
-  var hardTypes   = ['equivalent_drag','add_visual','subtract_visual','mixed_bars','word_story_grid','compare_pizza'];
-  var pool = diff==='easy' ? easyTypes : diff==='medium' ? medTypes : hardTypes;
-  var qtype = pick(pool);
-
-  var colors6 = ['#ff6348','#54a0ff','#2ed573','#ffd32a','#c77dff','#ff9f43'];
-
-  // ════════════════════════════════════════════════════════════
-  // TYPE 1: TAP PIZZA SLICES — interactive, tap to select answer
-  if (qtype === 'pizza_tap') {
-    var pairs=[[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6],[2,4]];
-    var fr=pick(pairs); var n=fr[0],d=fr[1];
-    var color=pick(['#ff6348','#ee5a24','#ff9f43']);
+  // ── EASY 1: Tap pizza to shade ───────────────────────────────
+  if(qt==='pizza_tap'){
+    var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6]]);
+    var n=fr[0],d=fr[1]; var col=pick(['#ff6348','#ee5a24','#ff9f43']);
     var things=['\u05e4\u05d9\u05e6\u05d4','\u05e2\u05d5\u05d2\u05d4','\u05d8\u05d0\u05e8\u05d8'];
     var thing=pick(things);
     return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            chip('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05d4\u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05e9\u05e8\u05d5\u05e6\u05d4 \u05dc\u05e6\u05d1\u05d5\u05e2!','#ffd32a')
-          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.15rem;color:#fff;margin-bottom:12px">'
-          + 'Shade <span style="color:#ffd32a;font-size:1.3em;font-weight:700">' + fracSvg(n,d,{color:'#ffd32a',size:1.1}) + '</span> of the '+thing
-          + '</div>'
-          + interactivePizza(d, 0, color, 140)
-          + arrowHint('\u05db\u05de\u05d4 \u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05e6\u05d1\u05e2\u05ea?')
-          ,'#ff6348')
-        + '<div style="font-size:.75rem;color:#636e72;text-align:center;margin-top:4px;font-family:Caveat,cursive">\u05d4\u05ea\u05e9\u05d5\u05d1\u05d4 \u05de\u05ea\u05e2\u05d3\u05db\u05e0\u05ea \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea \u05d1\u05dc\u05d7\u05d9\u05e6\u05d4</div>',
-      answer:n, hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05de\u05ea\u05d5\u05da '+d}, showMul:false, dir:'rtl'};
+      shapeHtml: FL+wrap(
+        pill('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05db\u05d3\u05d9 \u05dc\u05e6\u05d1\u05d5\u05e2 \u05d0\u05d5\u05ea\u05df!','#ffd32a')
+        +lbr('Shade '+frac(n,d,'#ffd32a',1.1)+' of the '+thing)
+        +pizzaTap(d,0,col,148)
+        +autotip()
+      ,col),
+      answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05de\u05ea\u05d5\u05da '+d},showMul:false,dir:'rtl'};
   }
 
-  // TYPE 2: TAP BAR SEGMENTS
-  if (qtype === 'bar_tap') {
-    var pairs=[[1,2],[1,4],[3,4],[1,3],[2,3],[1,5],[2,5],[3,5],[4,5],[1,6],[5,6]];
-    var fr=pick(pairs); var n=fr[0],d=fr[1];
-    var color=pick(colors6);
+  // ── EASY 2: Tap bar segments ─────────────────────────────────
+  if(qt==='bar_tap'){
+    var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3],[1,5],[2,5],[3,5],[4,5],[1,6],[5,6]]);
+    var n=fr[0],d=fr[1]; var col=pick(PAL);
     return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            chip('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05ea\u05d0\u05d9\u05dd \u05dc\u05e6\u05d1\u05d9\u05e2\u05d4!','#ffd32a')
-          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#fff;margin-bottom:12px">'
-          + 'Color ' + fracSvg(n,d,{color:'#ffd32a',size:1.1}) + ' of the bar'
-          + '</div>'
-          + interactiveBar(d, 0, color, 260, 50)
-          + arrowHint('\u05db\u05de\u05d4 \u05ea\u05d0\u05d9\u05dd \u05e6\u05d1\u05e2\u05ea?')
-          , color)
-        + '<div style="font-size:.75rem;color:#636e72;text-align:center;margin-top:4px;font-family:Caveat,cursive">\u05d4\u05ea\u05e9\u05d5\u05d1\u05d4 \u05de\u05ea\u05e2\u05d3\u05db\u05e0\u05ea \u05d0\u05d5\u05d2\u05de\u05d8\u05d9\u05ea</div>',
-      answer:n, hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05ea\u05d0\u05d9\u05dd \u05de\u05ea\u05d5\u05da '+d}, showMul:false, dir:'rtl'};
+      shapeHtml: FL+wrap(
+        pill('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05ea\u05d0\u05d9\u05dd \u05dc\u05e6\u05d1\u05d9\u05e2\u05d4!','#ffd32a')
+        +lbr('Color '+frac(n,d,'#ffd32a',1.1)+' of the bar')
+        +barTap(d,0,col,264,50)
+        +autotip()
+      ,col),
+      answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05ea\u05d0\u05d9\u05dd \u05de\u05ea\u05d5\u05da '+d},showMul:false,dir:'rtl'};
   }
 
-  // TYPE 3: TAP GRID SQUARES
-  if (qtype === 'grid_tap') {
-    var totals=[4,6,8,9,10,12];
-    var total=pick(totals);
-    var n=rnd(1,total-1);
-    var color=pick(colors6);
+  // ── EASY 3: Tap grid squares ─────────────────────────────────
+  if(qt==='grid_tap'){
+    var tot=pick([4,6,8,9,10,12]);
+    var n=rnd(1,tot-1); var col=pick(PAL);
     return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            chip('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05e8\u05d9\u05d1\u05d5\u05e2\u05d9\u05dd \u05dc\u05e6\u05d1\u05d9\u05e2\u05d4!','#ffd32a')
-          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#fff;margin-bottom:12px">'
-          + 'Color ' + fracSvg(n,total,{color:'#ffd32a',size:1.05}) + ' of the squares'
-          + '</div>'
-          + interactiveGrid(total, 0, color)
-          + arrowHint('\u05db\u05de\u05d4 \u05e8\u05d9\u05d1\u05d5\u05e2\u05d9\u05dd \u05e6\u05d1\u05e2\u05ea?')
-          , color)
-        + '<div style="font-size:.75rem;color:#636e72;text-align:center;margin-top:4px;font-family:Caveat,cursive">\u05d4\u05ea\u05e9\u05d5\u05d1\u05d4 \u05de\u05ea\u05e2\u05d3\u05db\u05e0\u05ea \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea</div>',
-      answer:n, hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05de\u05ea\u05d5\u05da '+total+' \u05e8\u05d9\u05d1\u05d5\u05e2\u05d9\u05dd'}, showMul:false, dir:'rtl'};
+      shapeHtml: FL+wrap(
+        pill('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05e8\u05d9\u05d1\u05d5\u05e2\u05d9\u05dd \u05dc\u05e6\u05d1\u05d9\u05e2\u05d4!','#ffd32a')
+        +lbr('Color '+frac(n,tot,'#ffd32a',1.05)+' of the squares')
+        +gridTap(tot,0,col)
+        +autotip()
+      ,col),
+      answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05de\u05ea\u05d5\u05da '+tot+' \u05e8\u05d9\u05d1\u05d5\u05e2\u05d9\u05dd'},showMul:false,dir:'rtl'};
   }
 
-  // TYPE 4: IDENTIFY — what fraction is the shaded pizza?
-  if (qtype === 'pizza_identify') {
-    var pairs=[[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6],[1,8],[3,8]];
-    var fr=pick(pairs); var n=fr[0],d=fr[1];
-    var color=pick(['#ff6348','#ee5a24']);
+  // ── EASY 4: Read pizza — what fraction is shaded? ────────────
+  if(qt==='pizza_read'){
+    var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6],[1,8],[3,8]]);
+    var n=fr[0],d=fr[1]; var col=pick(['#ff6348','#ee5a24']);
     return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            chip('\u05de\u05d4 \u05d4\u05e9\u05d1\u05e8? \u05db\u05ea\u05d5\u05d1 \u05d0\u05ea \u05d4\u05e0\u05d5\u05de\u05e8\u05d8\u05d5\u05e8 (\u05d4\u05de\u05e1\u05e4\u05e8 \u05d4\u05e2\u05dc\u05d9\u05d5\u05df)!','#2ed573')
-          + staticPizza(n,d,color,135)
-          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#adb5bd;margin-top:10px">'
-          + 'The pizza is cut into <span style="color:#ffd32a;font-size:1.2em;font-weight:700">'+d+'</span> equal slices.'
-          + '</div>'
-          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.05rem;color:#fff;margin-top:6px">'
-          + fracSvg('?',d,{color:'#2ed573',size:1.1}) + ' <span style="color:#adb5bd">of the pizza is shaded</span>'
-          + '</div>'
-          , '#2ed573')
-        + arrowHint('\u05db\u05ea\u05d5\u05d1 \u05d0\u05ea \u05d4\u05e0\u05d5\u05de\u05e8\u05d8\u05d5\u05e8'),
-      answer:n, hint:{type:'text',msg:'&#x1F4A1; \u05e1\u05e4\u05d5\u05e8 \u05d0\u05ea \u05d4\u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05d4\u05e6\u05d1\u05d5\u05e2\u05d5\u05ea: '+n}, showMul:false, dir:'rtl'};
+      shapeHtml: FL+wrap(
+        pill('\u05db\u05ea\u05d5\u05d1 \u05d0\u05ea \u05d4\u05e0\u05d5\u05de\u05e8\u05d8\u05d5\u05e8 (\u05d4\u05de\u05e1\u05e4\u05e8 \u05dc\u05de\u05e2\u05dc\u05d4)','#2ed573')
+        +pizza(n,d,col,138)
+        +lbr('Pizza cut into <b style="color:#ffd32a">'+d+'</b> equal slices &nbsp;→&nbsp; '+frac('?',d,'#2ed573',1.05)+' are shaded')
+      ,'#2ed573'),
+      answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05e1\u05e4\u05d5\u05e8 \u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05e6\u05d1\u05d5\u05e2\u05d5\u05ea: '+n},showMul:false,dir:'rtl'};
   }
 
-  // TYPE 5: SIMPLE PIZZA WORD
-  if (qtype === 'pizza_word_simple') {
+  // ── EASY 5: Read bar — write numerator ───────────────────────
+  if(qt==='bar_read'){
+    var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3],[1,5],[2,5],[3,5],[4,5]]);
+    var n=fr[0],d=fr[1]; var col=pick(PAL);
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: FL+wrap(
+        pill('\u05db\u05ea\u05d5\u05d1 \u05d0\u05ea \u05d4\u05e0\u05d5\u05de\u05e8\u05d8\u05d5\u05e8','#2ed573')
+        +bar(n,d,col,256,46)
+        +lbr(frac('?',d,'#2ed573',1.05)+' of the bar is colored')
+      ,'#2ed573'),
+      answer:n,hint:{type:'text',msg:'&#x1F4A1; '+n+' \u05ea\u05d0\u05d9\u05dd \u05e6\u05d1\u05d5\u05e2\u05d9\u05dd \u05de\u05ea\u05d5\u05da '+d},showMul:false,dir:'rtl'};
+  }
+
+  // ── EASY 6: Pizza word simple ────────────────────────────────
+  if(qt==='pizza_word_simple'){
     var d=pick([4,6,8]);
-    var ate=rnd(1,d-1);
-    var left=d-ate;
+    var ate=rnd(1,d-1); var left=d-ate;
     return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            staticPizza(left,d,'#ff6348',130)
-          + '<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:1.05rem;color:#fff;margin-top:10px;line-height:1.8">'
-          + '\u05e4\u05d9\u05e6\u05d4 \u05e9\u05dc <span style="color:#ffd32a;font-size:1.2em">'+d+'</span> \u05d7\u05ea\u05d9\u05db\u05d5\u05ea. \u05d0\u05db\u05dc\u05d5 <span style="color:#ff6348;font-size:1.2em">'+ate+'</span> \u05d7\u05ea\u05d9\u05db\u05d5\u05ea.'
-          + '<br>\u05db\u05de\u05d4 \u05d7\u05ea\u05d9\u05db\u05d5\u05ea <span style="color:#2ed573;font-size:1.3em">\u05e0\u05e9\u05d0\u05e8\u05d5</span>?'
-          + '</div>'
-          , '#ff6348'),
-      answer:left, hint:{type:'text',msg:'&#x1F4A1; '+d+' - '+ate+' = '+left}, showMul:false, dir:'rtl'};
+      shapeHtml: FL+wrap(
+        pizza(left,d,'#ff6348',132)
+        +'<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:1.05rem;color:#e2e8f0;margin-top:10px;line-height:1.9">'
+        +'\u05e4\u05d9\u05e6\u05d4 \u05e9\u05dc <span style="color:#ffd32a;font-size:1.25em;font-weight:700">'+d+'</span> \u05d7\u05ea\u05d9\u05db\u05d5\u05ea.'
+        +' \u05d0\u05db\u05dc\u05d5 <span style="color:#ff6348;font-size:1.25em;font-weight:700">'+ate+'</span> \u05d7\u05ea\u05d9\u05db\u05d5\u05ea.'
+        +'<br>\u05db\u05de\u05d4 \u05d7\u05ea\u05d9\u05db\u05d5\u05ea <span style="color:#2ed573;font-weight:700">\u05e0\u05e9\u05d0\u05e8\u05d5</span>?'
+        +'</div>'
+      ,'#ff6348'),
+      answer:left,hint:{type:'text',msg:'&#x1F4A1; '+d+' - '+ate+' = '+left},showMul:false,dir:'rtl'};
   }
 
-  // TYPE 6: COMPARE TWO BARS — which is bigger?
-  if (qtype === 'compare_bar') {
+  // ── EASY 7: Count shaded grid squares ────────────────────────
+  if(qt==='grid_count'){
+    var tot=pick([4,6,8,9,12]); var n=rnd(1,tot-1); var col=pick(PAL);
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: FL+wrap(
+        pill('\u05db\u05de\u05d4 \u05e8\u05d9\u05d1\u05d5\u05e2\u05d9\u05dd \u05e6\u05d1\u05d5\u05e2\u05d9\u05dd?','#2ed573')
+        +grid(n,tot,col)
+        +lbr(frac('?',tot,'#2ed573',1.05)+' of the grid is shaded')
+      ,'#2ed573'),
+      answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05e1\u05e4\u05d5\u05e8: '+n+' \u05e6\u05d1\u05d5\u05e2\u05d9\u05dd \u05de\u05ea\u05d5\u05da '+tot},showMul:false,dir:'rtl'};
+  }
+
+  // ── MEDIUM 1: Compare two bars ───────────────────────────────
+  if(qt==='bar_compare'||qt==='compare_pizza'){
     var allP=[[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6],[2,5],[3,5]];
     var fr1=pick(allP); var n1=fr1[0],d1=fr1[1];
     var fr2=pick(allP.filter(function(p){return !(p[0]===n1&&p[1]===d1);}));
     var n2=fr2[0],d2=fr2[1];
-    if(Math.abs(n1/d1-n2/d2)<0.05){n2=n1+1;d2=d1*2;}
+    if(Math.abs(n1/d1-n2/d2)<0.05){n2++;d2+=2;}
     var bigger=(n1/d1>=n2/d2)?1:2;
-    var pct1=Math.round(n1/d1*100),pct2=Math.round(n2/d2*100);
+    var p1=Math.round(n1/d1*100), p2=Math.round(n2/d2*100);
+    var useP=(qt==='compare_pizza');
+    var shape1=useP?pizza(n1,d1,'#54a0ff',100):bar(n1,d1,'#54a0ff',118,36);
+    var shape2=useP?pizza(n2,d2,'#ff6348',100):bar(n2,d2,'#ff6348',118,36);
     return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            chip('\u05d0\u05d9\u05d6\u05d4 \u05e9\u05d1\u05e8 \u05d2\u05d3\u05d5\u05dc \u05d9\u05d5\u05ea\u05e8? \u05db\u05ea\u05d5\u05d1 1 \u05d0\u05d5 2','#c77dff')
-          + '<div style="display:flex;gap:14px;align-items:flex-end;justify-content:center;margin-bottom:8px">'
-          + '<div style="text-align:center">'
-            + '<div style="font-family:Caveat,cursive;font-size:1rem;color:#adb5bd;margin-bottom:4px">1</div>'
-            + staticBar(n1,d1,'#54a0ff',120,38)
-            + '<div style="margin-top:6px">' + fracSvg(n1,d1,{color:'#54a0ff',size:1}) + '</div>'
-          + '</div>'
-          + '<div style="font-family:Caveat,cursive;font-size:1.8rem;color:#fff;font-weight:700;padding-bottom:16px">VS</div>'
-          + '<div style="text-align:center">'
-            + '<div style="font-family:Caveat,cursive;font-size:1rem;color:#adb5bd;margin-bottom:4px">2</div>'
-            + staticBar(n2,d2,'#ff6348',120,38)
-            + '<div style="margin-top:6px">' + fracSvg(n2,d2,{color:'#ff6348',size:1}) + '</div>'
-          + '</div>'
-          + '</div>'
-          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:.85rem;color:#636e72">'
-          + '(1)='+pct1+'%  (2)='+pct2+'%</div>'
-          , '#c77dff'),
-      answer:bigger, hint:{type:'text',msg:'&#x1F4A1; '+n1+'/'+d1+' = '+pct1+'%  |  '+n2+'/'+d2+' = '+pct2+'%'}, showMul:false, dir:'rtl'};
+      shapeHtml: FL+wrap(
+        pill('\u05d0\u05d9\u05d6\u05d4 \u05e9\u05d1\u05e8 \u05d2\u05d3\u05d5\u05dc \u05d9\u05d5\u05ea\u05e8? \u05db\u05ea\u05d5\u05d1 1 \u05d0\u05d5 2','#c77dff')
+        +'<div style="display:flex;gap:16px;justify-content:center;align-items:flex-end;margin-bottom:6px">'
+        +'<div style="text-align:center"><div style="font-family:Caveat,cursive;color:#8892b0;font-size:1rem;margin-bottom:4px">1</div>'+shape1+'<div style="margin-top:5px">'+frac(n1,d1,'#54a0ff',1)+'</div></div>'
+        +'<div style="font-family:Caveat,cursive;font-size:1.8rem;color:#e2e8f0;font-weight:700;padding-bottom:14px">VS</div>'
+        +'<div style="text-align:center"><div style="font-family:Caveat,cursive;color:#8892b0;font-size:1rem;margin-bottom:4px">2</div>'+shape2+'<div style="margin-top:5px">'+frac(n2,d2,'#ff6348',1)+'</div></div>'
+        +'</div>'
+        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;color:#4a5568;font-size:.82rem">(1)='+p1+'%&nbsp;&nbsp;(2)='+p2+'%</div>'
+      ,'#c77dff'),
+      answer:bigger,hint:{type:'text',msg:'&#x1F4A1; '+n1+'/'+d1+'='+p1+'%  |  '+n2+'/'+d2+'='+p2+'%'},showMul:false,dir:'rtl'};
   }
 
-  // TYPE 7: MISSING NUMERATOR (equivalent fraction shown visually)
-  if (qtype === 'missing_eq') {
+  // ── MEDIUM 2: Missing numerator / denominator ────────────────
+  if(qt==='missing_num'){
     var bases=[[1,2],[1,4],[1,3],[2,3],[3,4]];
     var fr=pick(bases); var n=fr[0],d=fr[1];
-    var mult=rnd(2,4);
-    var n2=n*mult,d2=d*mult;
-    var askNum=Math.random()<.5;
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            chip('\u05e9\u05e0\u05d9 \u05d4\u05e9\u05d1\u05e8\u05d9\u05dd \u05e9\u05d5\u05d5\u05d9\u05dd! \u05de\u05e6\u05d0 \u05d0\u05ea ?','#ffd32a')
-          + '<div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">'
-          + '<div style="text-align:center">'
-            + staticBar(n,d,'#54a0ff',120,36)
-            + '<div style="margin-top:5px">' + fracSvg(n,d,{color:'#54a0ff',size:1}) + '</div>'
-          + '</div>'
-          + '<div style="font-family:Caveat,cursive;font-size:2rem;color:#fff">=</div>'
-          + '<div style="text-align:center">'
-            + staticBar(n2,d2,'#ffd32a',120,36)
-            + '<div style="margin-top:5px">' + fracSvg(askNum?'?':n2, askNum?d2:'?', {color:'#ffd32a',size:1}) + '</div>'
-          + '</div>'
-          + '</div>'
-          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:.88rem;color:#636e72;margin-top:4px">× '+mult+' / × '+mult+'</div>'
-          , '#ffd32a'),
-      answer:askNum?n2:d2, hint:{type:'text',msg:'&#x1F4A1; \u05db\u05e4\u05d5\u05dc '+mult+': '+n+'×'+mult+'='+n2+', '+d+'×'+mult+'='+d2}, showMul:false, dir:'rtl'};
-  }
-
-  // TYPE 8: ADD FRACTIONS with bar animation
-  if (qtype === 'bar_add') {
-    var d=pick([2,3,4,5,6,8]);
-    var n1=rnd(1,d-2);
-    var n2=rnd(1,d-n1);
-    var ans=n1+n2;
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            chip('\u05d7\u05d1\u05e8 \u05e9\u05d1\u05e8\u05d9\u05dd \u05e2\u05dd \u05d0\u05d5\u05ea\u05d5 \u05de\u05db\u05e0\u05d4!','#2ed573')
-          + '<div style="direction:ltr;font-family:Caveat,cursive;font-size:1.1rem;text-align:center;margin-bottom:10px;color:#fff">'
-          + fracSvg(n1,d,{color:'#54a0ff',size:1.05}) + ' + ' + fracSvg(n2,d,{color:'#ff6348',size:1.05}) + ' = ' + fracSvg('?',d,{color:'#2ed573',size:1.05})
-          + '</div>'
-          + '<div style="display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap">'
-          + staticBar(n1,d,'#54a0ff',120,36)
-          + '<span style="color:#fff;font-family:Caveat,cursive;font-size:1.4rem">+</span>'
-          + staticBar(n2,d,'#ff6348',120,36)
-          + '</div>'
-          + '<div style="font-family:Caveat,cursive;font-size:.85rem;color:#636e72;text-align:center;margin-top:6px">'
-          + n1+' + '+n2+' = ? (\u05d4\u05de\u05db\u05e0\u05d4 \u05e0\u05e9\u05d0\u05e8 '+d+')'
-          + '</div>'
-          , '#2ed573'),
-      answer:ans, hint:{type:'text',msg:'&#x1F4A1; '+n1+' + '+n2+' = '+ans}, showMul:false, dir:'rtl'};
-  }
-
-  // TYPE 9: PIZZA WORD HARD — fraction eaten, how many left
-  if (qtype === 'pizza_word_hard') {
-    var d=pick([6,8,12]);
-    var fr=pick([[1,3],[2,3],[1,4],[3,4],[1,2]]);
-    var n=fr[0],base=fr[1];
-    // Find total divisible by base
-    var total=d;
-    while(total%base!==0)total++;
-    var ate=total*n/base;
-    var left=total-ate;
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            staticPizza(left, total, '#ff6348', 130)
-          + '<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:1rem;color:#fff;line-height:1.9;margin-top:10px">'
-          + '\u05e4\u05d9\u05e6\u05d4 \u05e9\u05dc <span style="color:#ffd32a;font-weight:700">'+total+'</span> \u05d7\u05ea\u05d9\u05db\u05d5\u05ea.'
-          + '<br>\u05d0\u05db\u05dc\u05d5 ' + fracSvg(n,base,{color:'#ff6348',size:.95}) + ' \u05de\u05d4\u05e4\u05d9\u05e6\u05d4.'
-          + '<br>\u05db\u05de\u05d4 \u05d7\u05ea\u05d9\u05db\u05d5\u05ea <span style="color:#2ed573">\u05e0\u05e9\u05d0\u05e8\u05d5</span>?'
-          + '</div>'
-          , '#ff6348'),
-      answer:left, hint:{type:'text',msg:'&#x1F4A1; '+total+' × '+n+'/'+base+' = '+ate+' \u05e0\u05d0\u05db\u05dc. '+total+' - '+ate+' = '+left}, showMul:false, dir:'rtl'};
-  }
-
-  // TYPE 10: CHOCOLATE BAR (interactive grid)
-  if (qtype === 'chocolate_tap') {
-    var configs=[[2,4],[3,4],[2,6],[3,6]];
-    var cfg=pick(configs); var rows=cfg[0],cols=cfg[1];
-    var total=rows*cols;
-    var n=rnd(1,total-1);
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            chip('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05e7\u05d5\u05d1\u05d9\u05d5\u05ea \u05e9\u05d5\u05e7\u05d5\u05dc\u05d3 \u05dc\u05e6\u05d1\u05d9\u05e2\u05d4!','#ff9f43')
-          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.05rem;color:#fff;margin-bottom:10px">'
-          + 'Color ' + fracSvg(n,total,{color:'#ff9f43',size:1.05}) + ' of the chocolate'
-          + '</div>'
-          + chocoBar(rows,cols,0,'#8b4513')
-          + arrowHint('\u05db\u05de\u05d4 \u05e7\u05d5\u05d1\u05d9\u05d5\u05ea \u05e6\u05d1\u05e2\u05ea?')
-          , '#ff9f43')
-        + '<div style="font-size:.75rem;color:#636e72;text-align:center;margin-top:4px;font-family:Caveat,cursive">\u05d4\u05ea\u05e9\u05d5\u05d1\u05d4 \u05de\u05ea\u05e2\u05d3\u05db\u05e0\u05ea \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea</div>',
-      answer:n, hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05e7\u05d5\u05d1\u05d9\u05d5\u05ea \u05de\u05ea\u05d5\u05da '+total}, showMul:false, dir:'rtl'};
-  }
-
-  // TYPE 11: NUMBER LINE
-  if (qtype === 'numline') {
-    var d=pick([2,3,4,5,6]);
-    var n=rnd(1,d-1);
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            chip('\u05d0\u05d9\u05e4\u05d4 \u05e2\u05dc \u05e6\u05d9\u05e8 \u05d4\u05de\u05e1\u05e4\u05e8\u05d9\u05dd \u05e0\u05de\u05e6\u05d0 \u05d4\u05e9\u05d1\u05e8?','#54a0ff')
-          + numberLine(n,d,270)
-          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.05rem;color:#fff;margin-top:10px">'
-          + 'The marker shows ' + fracSvg(n,d,{color:'#ffd32a',size:1.05})
-          + '</div>'
-          + '<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:.95rem;color:#adb5bd;margin-top:4px">'
-          + '\u05db\u05ea\u05d5\u05d1 \u05d0\u05ea \u05d4\u05e0\u05d5\u05de\u05e8\u05d8\u05d5\u05e8'
-          + '</div>'
-          , '#54a0ff'),
-      answer:n, hint:{type:'text',msg:'&#x1F4A1; \u05d4\u05e1\u05de\u05df \u05e0\u05de\u05e6\u05d0 \u05d1 '+n+'/'+d}, showMul:false, dir:'rtl'};
-  }
-
-  // TYPE 12: EQUIVALENT DRAG — show two bars, find missing value
-  if (qtype === 'equivalent_drag' || qtype === 'equivalent') {
-    var bases=[[1,2],[1,3],[2,3],[1,4],[3,4]];
-    var fr=pick(bases); var n=fr[0],d=fr[1];
-    var mult=rnd(2,5);
-    var n2=n*mult,d2=d*mult;
+    var mult=rnd(2,4); var n2=n*mult,d2=d*mult;
     var askN=Math.random()<.5;
     return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            chip('\u05e9\u05d1\u05e8\u05d9\u05dd \u05e9\u05d5\u05d5\u05d9\u05dd — \u05de\u05e6\u05d0 ?','#c77dff')
-          + '<div style="display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0;flex-wrap:wrap">'
-          + '<div style="text-align:center">'
-            + staticBar(n,d,'#54a0ff',120,36)
-            + '<div style="margin-top:5px">' + fracSvg(n,d,{color:'#54a0ff',size:1}) + '</div>'
-          + '</div>'
-          + '<div style="font-family:Caveat,cursive;font-size:2rem;color:#fff;font-weight:700">=</div>'
-          + '<div style="text-align:center">'
-            + staticBar(n2,d2,'#c77dff',120,36)
-            + '<div style="margin-top:5px">' + fracSvg(askN?'?':n2, askN?d2:'?', {color:'#c77dff',size:1}) + '</div>'
-          + '</div>'
-          + '</div>'
-          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;color:#636e72;font-size:.85rem">multiply top and bottom by <span style="color:#ffd32a">'+mult+'</span></div>'
-          , '#c77dff'),
-      answer:askN?n2:d2, hint:{type:'text',msg:'&#x1F4A1; '+n+'×'+mult+'='+n2+', '+d+'×'+mult+'='+d2}, showMul:false, dir:'rtl'};
+      shapeHtml: FL+wrap(
+        pill('\u05e9\u05e0\u05d9 \u05e9\u05d1\u05e8\u05d9\u05dd \u05e9\u05d5\u05d5\u05d9\u05dd — \u05de\u05e6\u05d0 ?','#ffd32a')
+        +row(
+          '<div style="text-align:center">'+bar(n,d,'#54a0ff',118,34)+'<div style="margin-top:4px">'+frac(n,d,'#54a0ff',1)+'</div></div>'
+          +'<div style="font-family:Caveat,cursive;font-size:2rem;color:#e2e8f0;font-weight:700">=</div>'
+          +'<div style="text-align:center">'+bar(n2,d2,'#ffd32a',118,34)+'<div style="margin-top:4px">'+frac(askN?'?':n2,askN?d2:'?','#ffd32a',1)+'</div></div>'
+        )
+        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;color:#4a5568;font-size:.85rem;margin-top:4px">× '+mult+' on top and bottom</div>'
+      ,'#ffd32a'),
+      answer:askN?n2:d2,hint:{type:'text',msg:'&#x1F4A1; '+n+'×'+mult+'='+n2+', '+d+'×'+mult+'='+d2},showMul:false,dir:'rtl'};
   }
 
-  // TYPE 13: ADD VISUAL — animated bar fill
-  if (qtype === 'add_visual') {
+  // ── MEDIUM 3: Add fractions (same denominator) ───────────────
+  if(qt==='bar_add'){
     var d=pick([2,3,4,5,6,8]);
-    var n1=rnd(1,d-2);
-    var n2=rnd(1,d-n1);
-    var ans=n1+n2;
+    var n1=rnd(1,d-2); var n2=rnd(1,d-n1); var ans=n1+n2;
     return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            chip('\u05d7\u05d1\u05e8 \u05e9\u05d1\u05e8\u05d9\u05dd!','#2ed573')
-          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#fff;margin-bottom:12px">'
-          + fracSvg(n1,d,{color:'#54a0ff',size:1.05})
-          + '<span style="font-size:1.4rem;vertical-align:middle"> + </span>'
-          + fracSvg(n2,d,{color:'#ff6348',size:1.05})
-          + '<span style="font-size:1.4rem;vertical-align:middle"> = </span>'
-          + fracSvg('?',d,{color:'#2ed573',size:1.05})
-          + '</div>'
-          + '<div style="display:flex;gap:4px;justify-content:center">'
-          + staticBar(n1,d,'#54a0ff',125,38)
-          + staticBar(n2,d,'#ff6348',125,38)
-          + '</div>'
-          + '<div style="margin-top:8px;text-align:center">' + staticBar(ans,d,'#2ed573',260,38) + '</div>'
-          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;color:#636e72;font-size:.85rem;margin-top:4px">'
-          + n1+' + '+n2+' = ? (denominator stays '+d+')'
-          + '</div>'
-          , '#2ed573'),
-      answer:ans, hint:{type:'text',msg:'&#x1F4A1; '+n1+' + '+n2+' = '+ans}, showMul:false, dir:'rtl'};
+      shapeHtml: FL+wrap(
+        pill('\u05d7\u05d1\u05e8 \u05e9\u05d1\u05e8\u05d9\u05dd!','#2ed573')
+        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#e2e8f0;margin-bottom:10px">'
+        +frac(n1,d,'#54a0ff',1.05)
+        +'<span style="font-size:1.3rem;vertical-align:middle"> + </span>'
+        +frac(n2,d,'#ff6348',1.05)
+        +'<span style="font-size:1.3rem;vertical-align:middle"> = </span>'
+        +frac('?',d,'#2ed573',1.05)
+        +'</div>'
+        +row(bar(n1,d,'#54a0ff',122,36)+'<span style="font-family:Caveat,cursive;font-size:1.3rem;color:#e2e8f0">+</span>'+bar(n2,d,'#ff6348',122,36))
+        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;color:#4a5568;font-size:.85rem;margin-top:5px">'+n1+' + '+n2+' = ? (denominator stays '+d+')</div>'
+      ,'#2ed573'),
+      answer:ans,hint:{type:'text',msg:'&#x1F4A1; '+n1+' + '+n2+' = '+ans},showMul:false,dir:'rtl'};
   }
 
-  // TYPE 14: SUBTRACT VISUAL
-  if (qtype === 'subtract_visual') {
+  // ── MEDIUM 4: Chocolate bar tap ──────────────────────────────
+  if(qt==='choco_tap'){
+    var cfg=pick([[2,4],[3,4],[2,6],[3,6]]); var rows=cfg[0],cols=cfg[1];
+    var tot=rows*cols; var n=rnd(1,tot-1);
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: FL+wrap(
+        pill('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05e7\u05d5\u05d1\u05d9\u05d5\u05ea \u05e9\u05d5\u05e7\u05d5\u05dc\u05d3 \u05dc\u05e6\u05d1\u05d9\u05e2\u05d4!','#ff9f43')
+        +lbr('Color '+frac(n,tot,'#ff9f43',1.05)+' of the chocolate bar')
+        +choco(rows,cols,0)
+        +autotip()
+      ,'#ff9f43'),
+      answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05e7\u05d5\u05d1\u05d9\u05d5\u05ea \u05de\u05ea\u05d5\u05da '+tot},showMul:false,dir:'rtl'};
+  }
+
+  // ── MEDIUM 5: Number line ─────────────────────────────────────
+  if(qt==='numline_read'){
+    var d=pick([2,3,4,5,6]); var n=rnd(1,d-1);
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: FL+wrap(
+        pill('\u05d0\u05d9\u05e4\u05d4 \u05e2\u05dc \u05e6\u05d9\u05e8 \u05d4\u05de\u05e1\u05e4\u05e8\u05d9\u05dd?','#54a0ff')
+        +numLine(n,d,272)
+        +lbr('The marker shows '+frac(n,d,'#ffd32a',1.05)+'&nbsp;— write the numerator')
+      ,'#54a0ff'),
+      answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05d4\u05e1\u05de\u05df \u05e0\u05de\u05e6\u05d0 \u05d1 '+n+'/'+d},showMul:false,dir:'rtl'};
+  }
+
+  // ── MEDIUM 6: Pizza word hard ─────────────────────────────────
+  if(qt==='pizza_word_hard'){
+    var d=pick([6,8,12]);
+    var fr=pick([[1,3],[2,3],[1,4],[3,4],[1,2]]); var n=fr[0],base=fr[1];
+    var tot=d; while(tot%base!==0)tot++;
+    var ate=tot*n/base; var left=tot-ate;
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: FL+wrap(
+        pizza(left,tot,'#ff6348',130)
+        +'<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:1rem;color:#e2e8f0;line-height:1.9;margin-top:10px">'
+        +'\u05e4\u05d9\u05e6\u05d4 \u05e9\u05dc <span style="color:#ffd32a;font-weight:700">'+tot+'</span> \u05d7\u05ea\u05d9\u05db\u05d5\u05ea.'
+        +'<br>\u05d0\u05db\u05dc\u05d5 '+frac(n,base,'#ff6348',.9)+' \u05de\u05d4\u05e4\u05d9\u05e6\u05d4.'
+        +'<br>\u05db\u05de\u05d4 \u05d7\u05ea\u05d9\u05db\u05d5\u05ea <span style="color:#2ed573">\u05e0\u05e9\u05d0\u05e8\u05d5</span>?'
+        +'</div>'
+      ,'#ff6348'),
+      answer:left,hint:{type:'text',msg:'&#x1F4A1; '+tot+'×'+n+'/'+base+'='+ate+' \u05e0\u05d0\u05db\u05dc. '+tot+'-'+ate+'='+left},showMul:false,dir:'rtl'};
+  }
+
+  // ── MEDIUM 7: Grid of total ───────────────────────────────────
+  if(qt==='grid_of_total'){
+    var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3],[1,5],[1,6]]);
+    var n=fr[0],d=fr[1];
+    var tot=rnd(2,5)*d; var part=tot*n/d; var col=pick(PAL);
+    var things=['\u05ea\u05e4\u05d5\u05d7\u05d9\u05dd','\u05db\u05d5\u05db\u05d1\u05d9\u05dd','\u05e2\u05d5\u05d2\u05d9\u05d5\u05ea','\u05dc\u05d1\u05d1\u05d5\u05ea','\u05e4\u05e8\u05d7\u05d9\u05dd'];
+    var thing=pick(things);
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: FL+wrap(
+        grid(part,tot,col)
+        +'<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:1rem;color:#e2e8f0;margin-top:10px;line-height:1.8">'
+        +frac(n,d,'#ffd32a',.95)+' \u05de\u05ea\u05d5\u05da '+tot+' '+thing+'. \u05db\u05de\u05d4 '+thing+' \u05e6\u05d1\u05d5\u05e2\u05d9\u05dd?'
+        +'</div>'
+      ,col),
+      answer:part,hint:{type:'text',msg:'&#x1F4A1; '+tot+'÷'+d+'='+(tot/d)+'. ×'+n+'='+part},showMul:false,dir:'rtl'};
+  }
+
+  // ── HARD 1: Add fractions visual with result bar ─────────────
+  if(qt==='add_visual'){
     var d=pick([2,3,4,5,6,8]);
-    var n1=rnd(2,d);
-    var n2=rnd(1,n1-1);
-    var ans=n1-n2;
+    var n1=rnd(1,d-2); var n2=rnd(1,d-n1); var ans=n1+n2;
     return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            chip('\u05d7\u05e1\u05e8 \u05e9\u05d1\u05e8\u05d9\u05dd!','#ff6348')
-          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#fff;margin-bottom:12px">'
-          + fracSvg(n1,d,{color:'#2ed573',size:1.05})
-          + '<span style="font-size:1.4rem;vertical-align:middle"> &#x2212; </span>'
-          + fracSvg(n2,d,{color:'#ff6348',size:1.05})
-          + '<span style="font-size:1.4rem;vertical-align:middle"> = </span>'
-          + fracSvg('?',d,{color:'#ffd32a',size:1.05})
-          + '</div>'
-          + '<div style="text-align:center">' + staticBar(n1,d,'#2ed573',260,38) + '</div>'
-          + '<div style="display:flex;gap:4px;justify-content:center;margin-top:4px">'
-          + staticBar(ans,d,'#ffd32a',125,38)
-          + staticBar(n2,d,'#ff6348',125,38)
-          + '</div>'
-          , '#ff6348'),
-      answer:ans, hint:{type:'text',msg:'&#x1F4A1; '+n1+' &#x2212; '+n2+' = '+ans}, showMul:false, dir:'rtl'};
+      shapeHtml: FL+wrap(
+        pill('\u05d7\u05d1\u05e8 \u05e9\u05d1\u05e8\u05d9\u05dd!','#2ed573')
+        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#e2e8f0;margin-bottom:10px">'
+        +frac(n1,d,'#54a0ff',1.05)+'<span style="font-size:1.3rem;vertical-align:middle"> + </span>'
+        +frac(n2,d,'#ff6348',1.05)+'<span style="font-size:1.3rem;vertical-align:middle"> = </span>'
+        +frac('?',d,'#2ed573',1.05)+'</div>'
+        +row(bar(n1,d,'#54a0ff',124,36)+'<span style="font-family:Caveat,cursive;font-size:1.2rem;color:#e2e8f0">+</span>'+bar(n2,d,'#ff6348',124,36))
+        +'<div style="text-align:center;margin-top:6px">'+bar(ans,d,'#2ed573',258,38)+'</div>'
+        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;color:#4a5568;font-size:.83rem;margin-top:4px">'+n1+' + '+n2+' = ? (denominator '+d+')</div>'
+      ,'#2ed573'),
+      answer:ans,hint:{type:'text',msg:'&#x1F4A1; '+n1+' + '+n2+' = '+ans},showMul:false,dir:'rtl'};
   }
 
-  // TYPE 15: MIXED BARS — count total unit fractions
-  if (qtype === 'mixed_bars') {
-    var d=pick([2,3,4]);
-    var whole=rnd(1,3);
-    var num=rnd(1,d-1);
-    var total=whole*d+num;
-    var mixC=['#54a0ff','#2ed573','#ffd32a','#ff6348'];
-    var barsHtml='<div style="display:flex;flex-direction:column;gap:6px;align-items:center;margin-bottom:10px">';
-    for(var i=0;i<whole;i++) barsHtml+=staticBar(d,d,mixC[i%mixC.length],220,34);
-    barsHtml+=staticBar(num,d,'#c77dff',220,34)+'</div>';
+  // ── HARD 2: Subtract fractions visual ────────────────────────
+  if(qt==='sub_visual'){
+    var d=pick([2,3,4,5,6,8]);
+    var n1=rnd(2,d); var n2=rnd(1,n1-1); var ans=n1-n2;
     return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            chip('\u05db\u05de\u05d4 \u05d7\u05dc\u05e7\u05d9\u05dd \u05d1\u05e1\u05da \u05d4\u05db\u05dc?','#c77dff')
-          + barsHtml
-          + '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1rem;color:#fff">'
-          + whole+' whole bars + ' + fracSvg(num,d,{color:'#c77dff',size:.95}) + ' = how many ' + fracSvg(1,d,{color:'#adb5bd',size:.85}) + ' pieces?'
-          + '</div>'
-          , '#c77dff'),
-      answer:total, hint:{type:'text',msg:'&#x1F4A1; '+whole+'\u05e9\u05dc\u05de\u05d9\u05dd × '+d+' = '+(whole*d)+'. +'+num+' = '+total}, showMul:false, dir:'rtl'};
+      shapeHtml: FL+wrap(
+        pill('\u05d7\u05e1\u05e8 \u05e9\u05d1\u05e8\u05d9\u05dd!','#ff6348')
+        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#e2e8f0;margin-bottom:10px">'
+        +frac(n1,d,'#2ed573',1.05)+'<span style="font-size:1.3rem;vertical-align:middle"> − </span>'
+        +frac(n2,d,'#ff6348',1.05)+'<span style="font-size:1.3rem;vertical-align:middle"> = </span>'
+        +frac('?',d,'#ffd32a',1.05)+'</div>'
+        +'<div style="text-align:center;margin-bottom:5px">'+bar(n1,d,'#2ed573',258,36)+'</div>'
+        +row(bar(ans,d,'#ffd32a',124,36)+'<span style="font-family:Caveat,cursive;font-size:1.2rem;color:#e2e8f0">+</span>'+bar(n2,d,'#ff6348',124,36))
+      ,'#ff6348'),
+      answer:ans,hint:{type:'text',msg:'&#x1F4A1; '+n1+' − '+n2+' = '+ans},showMul:false,dir:'rtl'};
   }
 
-  // TYPE 16: WORD STORY with grid
-  if (qtype === 'word_story_grid') {
-    var pairs=[[1,2],[1,4],[3,4],[1,3],[2,3]];
-    var fr=pick(pairs); var n=fr[0],d=fr[1];
-    var mults=[12,16,20,24].filter(function(t){return t%d===0;});
-    var total=pick(mults)||d*4;
-    var part=total*n/d;
-    var color=pick(colors6);
+  // ── HARD 3: Mixed number — count unit fractions ───────────────
+  if(qt==='mixed_bars'){
+    var d=pick([2,3,4]); var whole=rnd(1,3); var num=rnd(1,d-1);
+    var tot=whole*d+num;
+    var mc=['#54a0ff','#2ed573','#ffd32a','#ff6348'];
+    var bs='<div style="display:flex;flex-direction:column;gap:5px;align-items:center;margin-bottom:10px">';
+    for(var i=0;i<whole;i++) bs+=bar(d,d,mc[i%mc.length],224,32);
+    bs+=bar(num,d,'#c77dff',224,32)+'</div>';
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: FL+wrap(
+        pill('\u05db\u05de\u05d4 \u05d7\u05dc\u05e7\u05d9\u05dd \u05d1\u05e1\u05da \u05d4\u05db\u05dc?','#c77dff')
+        +bs
+        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:.97rem;color:#e2e8f0">'
+        +whole+' whole bars + '+frac(num,d,'#c77dff',.93)+' = how many '+frac(1,d,'#8892b0',.82)+' pieces?'
+        +'</div>'
+      ,'#c77dff'),
+      answer:tot,hint:{type:'text',msg:'&#x1F4A1; '+whole+'×'+d+'='+(whole*d)+'. +'+num+'='+tot},showMul:false,dir:'rtl'};
+  }
+
+  // ── HARD 4: Equivalent fraction ──────────────────────────────
+  if(qt==='equivalent'){
+    var bases=[[1,2],[1,3],[2,3],[1,4],[3,4]];
+    var fr=pick(bases); var n=fr[0],d=fr[1];
+    var mult=rnd(2,5); var n2=n*mult,d2=d*mult;
+    var askN=Math.random()<.5;
+    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
+      shapeHtml: FL+wrap(
+        pill('\u05e9\u05d1\u05e8\u05d9\u05dd \u05e9\u05d5\u05d5\u05d9\u05dd — \u05de\u05e6\u05d0 ?','#c77dff')
+        +'<div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">'
+        +'<div style="text-align:center">'+bar(n,d,'#54a0ff',118,34)+'<div style="margin-top:4px">'+frac(n,d,'#54a0ff',1)+'</div></div>'
+        +'<div style="font-family:Caveat,cursive;font-size:2rem;color:#e2e8f0;font-weight:700">=</div>'
+        +'<div style="text-align:center">'+bar(n2,d2,'#c77dff',118,34)+'<div style="margin-top:4px">'+frac(askN?'?':n2,askN?d2:'?','#c77dff',1)+'</div></div>'
+        +'</div>'
+        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;color:#4a5568;font-size:.85rem">multiply by '+mult+'/'+mult+'</div>'
+      ,'#c77dff'),
+      answer:askN?n2:d2,hint:{type:'text',msg:'&#x1F4A1; '+n+'×'+mult+'='+n2+', '+d+'×'+mult+'='+d2},showMul:false,dir:'rtl'};
+  }
+
+  // ── HARD 5: Word story with grid ─────────────────────────────
+  if(qt==='word_story'){
+    var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3]]); var n=fr[0],d=fr[1];
+    var mults=[12,16,20,24].filter(function(t){return t%d===0;}); var tot=pick(mults)||d*4;
+    var part=tot*n/d; var col=pick(PAL);
     var stories=[
-      '\u05d1\u05db\u05d9\u05ea\u05d4 \u05d9\u05e9 '+total+' \u05ea\u05dc\u05de\u05d9\u05d3\u05d9\u05dd. '+fracSvg(n,d,{color:'#ffd32a',size:.95})+' \u05de\u05d4\u05dd \u05de\u05d1\u05d9\u05d0\u05d9\u05dd \u05db\u05e8\u05d9\u05da.',
-      '\u05d1\u05e4\u05d0\u05e8\u05e7 \u05d4\u05d9\u05d5 '+total+' \u05e6\u05d9\u05e4\u05d5\u05e8\u05d9\u05dd. '+fracSvg(n,d,{color:'#54a0ff',size:.95})+' \u05de\u05d4\u05df \u05e2\u05e4\u05d5.',
-      '\u05dc\u05d3\u05e0\u05d9 \u05d9\u05e9 '+total+' \u05de\u05d8\u05d1\u05e2\u05d5\u05ea. \u05d4\u05d5\u05d0 \u05e0\u05ea\u05df '+fracSvg(n,d,{color:'#ff6348',size:.95})+' \u05dc\u05d0\u05d7\u05d5\u05ea\u05d5.',
+      '\u05d1\u05db\u05d9\u05ea\u05d4 \u05d9\u05e9 '+tot+' \u05ea\u05dc\u05de\u05d9\u05d3\u05d9\u05dd. '+frac(n,d,'#ffd32a',.9)+' \u05de\u05d4\u05dd \u05de\u05d1\u05d9\u05d0\u05d9\u05dd \u05db\u05e8\u05d9\u05da. \u05db\u05de\u05d4?',
+      '\u05d1\u05e4\u05d0\u05e8\u05e7 \u05d4\u05d9\u05d5 '+tot+' \u05e6\u05d9\u05e4\u05d5\u05e8\u05d9\u05dd. '+frac(n,d,'#54a0ff',.9)+' \u05de\u05d4\u05df \u05e2\u05e4\u05d5. \u05db\u05de\u05d4?',
+      '\u05dc\u05d3\u05e0\u05d9 '+tot+' \u05de\u05d8\u05d1\u05e2\u05d5\u05ea. \u05e0\u05ea\u05df '+frac(n,d,'#ff6348',.9)+' \u05dc\u05d0\u05d7\u05d5\u05ea\u05d5. \u05db\u05de\u05d4?',
     ];
     return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            staticGrid(part,total,color)
-          + '<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:1rem;color:#fff;line-height:1.9;margin-top:10px">'
-          + pick(stories)
-          + '<br><span style="color:#2ed573">\u05db\u05de\u05d4?</span>'
-          + '</div>'
-          , color),
-      answer:part, hint:{type:'text',msg:'&#x1F4A1; '+total+' ÷ '+d+' = '+(total/d)+'. × '+n+' = '+part}, showMul:false, dir:'rtl'};
+      shapeHtml: FL+wrap(
+        grid(part,tot,col)
+        +'<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:1rem;color:#e2e8f0;margin-top:10px;line-height:1.9">'+pick(stories)+'</div>'
+      ,col),
+      answer:part,hint:{type:'text',msg:'&#x1F4A1; '+tot+'÷'+d+'='+(tot/d)+'. ×'+n+'='+part},showMul:false,dir:'rtl'};
   }
 
-  // TYPE 17: COMPARE TWO PIZZAS
-  if (qtype === 'compare_pizza') {
-    var allP=[[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6]];
-    var fr1=pick(allP); var n1=fr1[0],d1=fr1[1];
-    var fr2=pick(allP.filter(function(p){return !(p[0]===n1&&p[1]===d1);}));
-    var n2=fr2[0],d2=fr2[1];
-    if(Math.abs(n1/d1-n2/d2)<0.05){n2=n1;d2=d1+2;}
-    var bigger=(n1/d1>=n2/d2)?1:2;
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: fontLink
-        + card(
-            chip('\u05d0\u05d9\u05d6\u05d4 \u05e4\u05d9\u05e6\u05d4 \u05d2\u05d3\u05d5\u05dc\u05d4 \u05d9\u05d5\u05ea\u05e8? \u05db\u05ea\u05d5\u05d1 1 \u05d0\u05d5 2','#ff6348')
-          + '<div style="display:flex;gap:16px;justify-content:center;align-items:flex-end">'
-          + '<div style="text-align:center">'
-            + '<div style="font-family:Caveat,cursive;color:#adb5bd;font-size:1rem;margin-bottom:4px">1</div>'
-            + staticPizza(n1,d1,'#ff6348',110)
-            + '<div style="margin-top:6px">' + fracSvg(n1,d1,{color:'#ff6348',size:.95}) + '</div>'
-          + '</div>'
-          + '<div style="font-family:Caveat,cursive;font-size:1.8rem;color:#fff;font-weight:700;padding-bottom:12px">VS</div>'
-          + '<div style="text-align:center">'
-            + '<div style="font-family:Caveat,cursive;color:#adb5bd;font-size:1rem;margin-bottom:4px">2</div>'
-            + staticPizza(n2,d2,'#54a0ff',110)
-            + '<div style="margin-top:6px">' + fracSvg(n2,d2,{color:'#54a0ff',size:.95}) + '</div>'
-          + '</div>'
-          + '</div>'
-          , '#ff6348'),
-      answer:bigger, hint:{type:'text',msg:'&#x1F4A1; '+n1+'/'+d1+' = '+Math.round(n1/d1*100)+'%  vs  '+n2+'/'+d2+' = '+Math.round(n2/d2*100)+'%'}, showMul:false, dir:'rtl'};
-  }
-
-  // Fallback — interactive pizza
-  var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3]]);
-  var n=fr[0],d=fr[1];
+  // ── Fallback ─────────────────────────────────────────────────
+  var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3]]); var n=fr[0],d=fr[1];
   return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-    shapeHtml: fontLink
-      + card(
-          chip('\u05e6\u05d1\u05e2 '+n+' \u05d7\u05ea\u05d9\u05db\u05d5\u05ea!','#ffd32a')
-        + interactivePizza(d,0,'#ff6348',140)
-        , '#ff6348'),
-    answer:n, hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05d7\u05ea\u05d9\u05db\u05d5\u05ea'}, showMul:false, dir:'rtl'};
+    shapeHtml: FL+wrap(
+      pill('\u05e6\u05d1\u05e2 '+n+' \u05d7\u05ea\u05d9\u05db\u05d5\u05ea!','#ffd32a')
+      +pizzaTap(d,0,'#ff6348',142)
+      +autotip()
+    ,'#ff6348'),
+    answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05de\u05ea\u05d5\u05da '+d},showMul:false,dir:'rtl'};
 }
