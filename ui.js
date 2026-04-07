@@ -198,9 +198,15 @@ function buildRecommendation() {
     const ratio = v.bad/total; if (ratio>worstRatio) { worstRatio=ratio; worstCat=c; }
   }
   if (!worstCat || worstRatio<0.3) { box.style.display='none'; return; }
-  const catNames = {add:'חיבור',sub:'חיסור',mul:'כפל',div:'חילוק',word:'מילוליות'};
+  const catNames = {
+    add:'חיבור', sub:'חיסור', mul:'כפל', div:'חילוק', word:'מילוליות',
+    fractions:'שברים', decimals:'עשרוניים', percent:'אחוזים',
+    negatives:'שליליים', ratio:'יחס', measurement:'מדידה',
+    shapes:'גיאומטריה', data:'נתונים'
+  };
+  const hebrewName = catNames[worstCat] || worstCat;
   box.style.display='flex';
-  txt.innerHTML = `💡 ממליץ לתרגל: <strong>${catNames[worstCat]||worstCat}</strong> — טועה ${Math.round(worstRatio*100)}% מהפעמים!`;
+  txt.innerHTML = `ממליץ לתרגל: <strong>${hebrewName}</strong> — טועה ${Math.round(worstRatio*100)}% מהפעמים!`;
 }
 
 // ══ FRIENDS ══
