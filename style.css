@@ -321,46 +321,44 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
 ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:rgba(255,255,255,.04);}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:99px;}
 @media(max-width:420px){.logo{font-size:2.4rem;}.qtxt{font-size:1.05rem;}.ans-inp{width:72px;height:50px;font-size:1.5rem;}}
 
-/* ── Desktop: pcard (right) + lb-card (left) side by side, centered ── */
+/* ── Desktop: pcard + lb-card side by side, everything else full width ── */
 @media(min-width:820px){
-  #home {
-    display:grid !important;
-    grid-template-columns:1fr 1fr !important;
-    grid-template-rows:auto !important;
-    column-gap:18px !important;
-    row-gap:0 !important;
-    max-width:860px !important;
-    align-items:start !important;
+  #home.scr.on, .scr.on#home {
+    flex-direction:row;
+    flex-wrap:wrap;
+    justify-content:center;
+    align-items:flex-start;
+    max-width:860px;
+    margin-left:auto;
+    margin-right:auto;
   }
-  /* Logo row: spans both columns */
-  #home > div:first-child {
-    grid-column:1 / -1 !important;
-    max-width:100% !important;
-    justify-content:space-between !important;
+  /* First child = logo row: full width */
+  #home>div:first-child {
+    width:100%;
+    max-width:100%;
+    flex-shrink:0;
   }
-  /* pcard: right column */
-  #home > .pcard {
-    grid-column:2 !important;
-    grid-row:2 !important;
-    max-width:100% !important;
-    margin-bottom:18px !important;
+  /* pcard and lb-card: each half width */
+  #home>.pcard {
+    width:calc(50% - 9px);
+    max-width:calc(50% - 9px);
+    flex-shrink:0;
+    margin-right:9px;
   }
-  /* lb-card: left column */
-  #home > .lb-card {
-    grid-column:1 !important;
-    grid-row:2 !important;
-    max-width:100% !important;
-    margin-bottom:18px !important;
+  #home>.lb-card {
+    width:calc(50% - 9px);
+    max-width:calc(50% - 9px);
+    flex-shrink:0;
+    margin-left:9px;
+    margin-right:0;
   }
-  /* Everything else: spans both columns, centered */
-  #home > .recommend,
-  #home > .daily-banner,
-  #home > .sec-label,
-  #home > .grid {
-    grid-column:1 / -1 !important;
-    max-width:420px !important;
-    margin-left:auto !important;
-    margin-right:auto !important;
-    width:100% !important;
+  /* Everything else: full width, centered */
+  #home>.recommend,
+  #home>.daily-banner,
+  #home>.sec-label,
+  #home>.grid {
+    width:100%;
+    max-width:420px;
+    flex-shrink:0;
   }
 }
