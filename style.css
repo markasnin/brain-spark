@@ -321,44 +321,34 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
 ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:rgba(255,255,255,.04);}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:99px;}
 @media(max-width:420px){.logo{font-size:2.4rem;}.qtxt{font-size:1.05rem;}.ans-inp{width:72px;height:50px;font-size:1.5rem;}}
 
-/* ── Desktop: pcard + lb-card side by side, everything else full width ── */
+/* ── Desktop: fix category grid and cards ── */
 @media(min-width:820px){
-  #home.scr.on, .scr.on#home {
-    flex-direction:row;
-    flex-wrap:wrap;
-    justify-content:center;
-    align-items:flex-start;
-    max-width:860px;
-    margin-left:auto;
-    margin-right:auto;
+  .sec-label {
+    max-width: 860px !important;
   }
-  /* First child = logo row: full width */
-  #home>div:first-child {
-    width:100%;
-    max-width:100%;
-    flex-shrink:0;
+  .grid {
+    max-width: 860px !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 16px !important;
   }
-  /* pcard and lb-card: each half width */
-  #home>.pcard {
-    width:calc(50% - 9px);
-    max-width:calc(50% - 9px);
-    flex-shrink:0;
-    margin-right:9px;
+  .cbt {
+    padding: 20px 14px !important;
+    border-radius: 20px !important;
   }
-  #home>.lb-card {
-    width:calc(50% - 9px);
-    max-width:calc(50% - 9px);
-    flex-shrink:0;
-    margin-left:9px;
-    margin-right:0;
+  .cbt .ci {
+    font-size: 2.4rem !important;
   }
-  /* Everything else: full width, centered */
-  #home>.recommend,
-  #home>.daily-banner,
-  #home>.sec-label,
-  #home>.grid {
-    width:100%;
-    max-width:420px;
-    flex-shrink:0;
+  .cbt .cn {
+    font-size: 1rem !important;
+  }
+  .cbt .cs {
+    font-size: .75rem !important;
+    white-space: normal !important;
+  }
+  .daily-banner {
+    max-width: 860px !important;
+  }
+  .recommend {
+    max-width: 860px !important;
   }
 }
