@@ -9,14 +9,77 @@
 <title>Brain Spark ⚡</title>
 <link rel="stylesheet" href="style.css">
 <style>
+/* ── Desktop: cards side by side ── */
 @media(min-width:820px){
   #hcr{flex-direction:row!important;max-width:860px!important;gap:18px!important;align-items:stretch!important}
   #hcr .pcard{flex:1!important;margin-bottom:0!important}
   #hcr .lb-card{flex:1!important}
+  #home>div:first-child{max-width:860px!important}
   .sec-label,.daily-banner,.recommend{max-width:860px!important}
-  .grid{max-width:860px!important;grid-template-columns:repeat(4,1fr)!important;gap:16px!important}
+  .grid{max-width:860px!important}
 }
+
+/* ══ CATEGORY GROUP SYSTEM ══ */
+.grid{display:block!important;width:100%;max-width:420px;}
+@media(min-width:820px){.grid{max-width:860px!important;}}
+
+.cg-section{
+  margin-bottom:20px;
+  border-radius:20px;
+  overflow:hidden;
+  border:1.5px solid rgba(var(--gcr),.25);
+  background:linear-gradient(160deg,rgba(var(--gcr),.07) 0%,rgba(0,0,0,.15) 100%);
+}
+.cg-head{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px 8px;
+  border-bottom:1px solid rgba(var(--gcr),.18);
+  background:rgba(var(--gcr),.1);
+}
+.cg-emoji{font-size:1.2rem;filter:drop-shadow(0 1px 4px rgba(0,0,0,.4));}
+.cg-label{
+  font-family:'Fredoka',sans-serif;font-size:.95rem;font-weight:700;
+  color:var(--gc);letter-spacing:.5px;flex:1;
+}
+.cg-count{
+  font-size:.7rem;font-weight:700;
+  background:rgba(var(--gcr),.2);border:1px solid rgba(var(--gcr),.35);
+  color:var(--gc);border-radius:99px;padding:2px 8px;
+}
+.cg-row{
+  display:flex;flex-wrap:wrap;gap:8px;
+  padding:10px 12px 12px;
+}
+.cg-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 14px;border-radius:99px;
+  background:rgba(var(--gcr),.1);
+  border:1.5px solid rgba(var(--gcr),.3);
+  color:#fff;font-family:'Fredoka',sans-serif;font-size:.9rem;font-weight:600;
+  cursor:pointer;
+  transition:all .22s cubic-bezier(.34,1.56,.64,1);
+  position:relative;overflow:hidden;
+  white-space:nowrap;
+}
+.cg-pill::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.08),transparent);
+  pointer-events:none;
+}
+.cg-pill:hover:not(.cg-locked){
+  background:rgba(var(--gcr),.28);
+  border-color:var(--gc);
+  transform:translateY(-3px) scale(1.05);
+  box-shadow:0 6px 20px rgba(var(--gcr),.35);
+  color:#fff;
+}
+.cg-pill:active:not(.cg-locked){transform:scale(.97);}
+.cg-pill.cg-locked{opacity:.4;cursor:not-allowed;}
+.cg-picon{font-size:1.1rem;filter:drop-shadow(0 1px 3px rgba(0,0,0,.4));}
+.cg-pname{font-size:.88rem;letter-spacing:.01em;}
+.cg-plock{font-size:.75rem;opacity:.7;}
 </style>
+
 
 <!-- Grade config loader slot -->
 <script id="gradeScript"></script>
@@ -159,10 +222,10 @@
 <!-- ══ HOME ══ -->
 <div class="scr" id="home">
   <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:420px;margin-bottom:4px">
-    <div class="logo" style="font-size:2.4rem;animation:none">⚡ Brain Spark</div>
     <button class="logout-btn" onclick="fbLogout()">התנתק</button>
+    <div class="logo" style="font-size:2.4rem;animation:none">⚡ Brain Spark</div>
   </div>
-  <div id="hcr" style="display:flex;flex-direction:column;align-items:center;width:100%;max-width:420px;margin-top:10px">
+  <div id="hcr" style="display:flex;flex-direction:column;align-items:center;width:100%;max-width:420px;margin-top:10px;margin-bottom:24px">
     <div class="pcard" style="width:100%;box-sizing:border-box;margin-bottom:18px">
       <div class="pname" id="playerName">⭐ שחקן</div>
       <div class="plevel" id="levelDisplay">רמה 1</div>
