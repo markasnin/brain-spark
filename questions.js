@@ -285,9 +285,7 @@ function checkWordEquation(userA, userOp, userB, q) {
 // genShapes v4 — Real drawn shapes, dimension arrows, kid-friendly
 // ══════════════════════════════════════════════════════════════
 function genShapes(diff, th) {
-  if (window.genShapesInteractive) return window.genShapesInteractive(diff);
-
-  var grade = window._grade || 'ג';
+    var grade = window._grade || 'ג';
   var pts = ptsForQ('shapes', diff);
 
   // ── Core SVG builder ──
