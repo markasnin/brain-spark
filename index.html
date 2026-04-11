@@ -8,10 +8,77 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Brain Spark ⚡</title>
 <link rel="stylesheet" href="style.css">
-
+<style>
+/* ── Desktop: cards side by side ── */
+@media(min-width:820px){
+  #hcr{flex-direction:row!important;max-width:860px!important;gap:18px!important;align-items:stretch!important}
+  #hcr .pcard{flex:1!important;margin-bottom:0!important}
+  #hcr .lb-card{flex:1!important}
+  #home>div:first-child{max-width:860px!important}
+  .sec-label,.daily-banner,.recommend{max-width:860px!important}
+  .grid{max-width:860px!important}
+}
+/* ══ CATEGORY GROUP SYSTEM ══ */
+.grid{display:block!important;width:100%;max-width:420px;}
+@media(min-width:820px){.grid{max-width:860px!important;}}
+.cg-section{
+  margin-bottom:20px;
+  border-radius:20px;
+  overflow:hidden;
+  border:1.5px solid rgba(var(--gcr),.25);
+  background:linear-gradient(160deg,rgba(var(--gcr),.07) 0%,rgba(0,0,0,.15) 100%);
+}
+.cg-head{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px 8px;
+  border-bottom:1px solid rgba(var(--gcr),.18);
+  background:rgba(var(--gcr),.1);
+}
+.cg-emoji{font-size:1.2rem;filter:drop-shadow(0 1px 4px rgba(0,0,0,.4));}
+.cg-label{
+  font-family:'Fredoka',sans-serif;font-size:.95rem;font-weight:700;
+  color:var(--gc);letter-spacing:.5px;flex:1;
+}
+.cg-count{
+  font-size:.7rem;font-weight:700;
+  background:rgba(var(--gcr),.2);border:1px solid rgba(var(--gcr),.35);
+  color:var(--gc);border-radius:99px;padding:2px 8px;
+}
+.cg-row{
+  display:flex;flex-wrap:wrap;gap:8px;
+  padding:10px 12px 12px;
+}
+.cg-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 14px;border-radius:99px;
+  background:rgba(var(--gcr),.1);
+  border:1.5px solid rgba(var(--gcr),.3);
+  color:#fff;font-family:'Fredoka',sans-serif;font-size:.9rem;font-weight:600;
+  cursor:pointer;
+  transition:all .22s cubic-bezier(.34,1.56,.64,1);
+  position:relative;overflow:hidden;
+  white-space:nowrap;
+}
+.cg-pill::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.08),transparent);
+  pointer-events:none;
+}
+.cg-pill:hover:not(.cg-locked){
+  background:rgba(var(--gcr),.28);
+  border-color:var(--gc);
+  transform:translateY(-3px) scale(1.05);
+  box-shadow:0 6px 20px rgba(var(--gcr),.35);
+  color:#fff;
+}
+.cg-pill:active:not(.cg-locked){transform:scale(.97);}
+.cg-pill.cg-locked{opacity:.4;cursor:not-allowed;}
+.cg-picon{font-size:1.1rem;filter:drop-shadow(0 1px 3px rgba(0,0,0,.4));}
+.cg-pname{font-size:.88rem;letter-spacing:.01em;}
+.cg-plock{font-size:.75rem;opacity:.7;}
+</style>
 <!-- Grade config loader slot -->
 <script id="gradeScript"></script>
-
 <!-- ══ LOAD ORDER ══
   1. special-users.js  — SPECIAL_USERS object (edit to add/remove VIPs)
   2. config.js         — cfg, st, qs, LEVELS, GRADE_FILES, ALL_CATS, themes
@@ -28,11 +95,9 @@
 <script src="lessons.js"></script>
 <script src="ui.js"></script>
 <script type="module" src="firebase.js"></script>
-
 </head>
 <body>
 <div id="bg"></div>
-
 <!-- ══ AUTH ══ -->
 <div class="scr on" id="auth-scr">
   <div class="logo">⚡ Brain Spark</div>
@@ -116,7 +181,6 @@
     </div>
   </div>
 </div>
-
 <!-- ══ USERNAME SETUP ══ -->
 <div class="scr" id="username-setup-scr">
   <div class="logo" style="font-size:2.4rem;animation:none">⚡ Brain Spark</div>
@@ -130,7 +194,6 @@
     <button class="auth-btn" id="setupBtn" onclick="fbSaveUsername()">✅ שמור והמשך</button>
   </div>
 </div>
-
 <!-- ══ GRADE SELECT ══ -->
 <div class="scr" id="grade-select-scr">
   <div class="logo" style="font-size:2.4rem;animation:none">⚡ Brain Spark</div>
@@ -146,25 +209,26 @@
     <div class="grade-btn g6" onclick="selectGrade('ו')"><span class="ge">🚀</span><div class="gn">כיתה ו</div><div class="gs">רמה מקסימלית</div><span class="g-tag">אלופים</span></div>
   </div>
 </div>
-
 <!-- ══ HOME ══ -->
 <div class="scr" id="home">
   <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:420px;margin-bottom:4px">
-    <div class="logo" style="font-size:2.4rem;animation:none">⚡ Brain Spark</div>
     <button class="logout-btn" onclick="fbLogout()">התנתק</button>
+    <div class="logo" style="font-size:2.4rem;animation:none">⚡ Brain Spark</div>
   </div>
-  <div class="pcard" style="margin-top:10px">
-    <div class="pname" id="playerName">⭐ שחקן</div>
-    <div class="plevel" id="levelDisplay">רמה 1</div>
-    <div id="gradeBadgeWrap"></div>
-    <div class="xp-outer"><div class="xp-inner" id="xpBar" style="width:0%"></div></div>
-    <div class="xp-txt" id="xpTxt">0 / 50 נקודות לרמה הבאה</div>
-    <div class="streak-badge" id="streakBadge" style="display:none">🔥 <span id="streakCount">0</span> ברצף!</div>
-  </div>
-  <div class="lb-card" id="homeLbCard">
-    <div class="lb-title">🏆 לוח חברים</div>
-    <div id="homeLbList"><div style="color:var(--txt2);font-size:.85rem;text-align:center;padding:8px">טוען...</div></div>
-    <button onclick="openFriends()" style="width:100%;margin-top:10px;padding:9px;border-radius:10px;border:1px solid rgba(30,144,255,.3);background:rgba(30,144,255,.08);color:var(--a4);font-family:'Rubik',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;">👥 כל החברים ←</button>
+  <div id="hcr" style="display:flex;flex-direction:column;align-items:center;width:100%;max-width:420px;margin-top:10px;margin-bottom:24px">
+    <div class="pcard" style="width:100%;box-sizing:border-box;margin-bottom:18px">
+      <div class="pname" id="playerName">⭐ שחקן</div>
+      <div class="plevel" id="levelDisplay">רמה 1</div>
+      <div id="gradeBadgeWrap"></div>
+      <div class="xp-outer"><div class="xp-inner" id="xpBar" style="width:0%"></div></div>
+      <div class="xp-txt" id="xpTxt">0 / 50 נקודות לרמה הבאה</div>
+      <div class="streak-badge" id="streakBadge" style="display:none">🔥 <span id="streakCount">0</span> ברצף!</div>
+    </div>
+    <div class="lb-card" id="homeLbCard" style="width:100%;box-sizing:border-box;margin-bottom:0">
+      <div class="lb-title">🏆 לוח חברים</div>
+      <div id="homeLbList"><div style="color:var(--txt2);font-size:.85rem;text-align:center;padding:8px">טוען...</div></div>
+      <button onclick="openFriends()" style="width:100%;margin-top:10px;padding:9px;border-radius:10px;border:1px solid rgba(30,144,255,.3);background:rgba(30,144,255,.08);color:var(--a4);font-family:'Rubik',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;">👥 כל החברים ←</button>
+    </div>
   </div>
   <div class="recommend" id="recommendBox" style="display:none">
     <div class="recommend-icon">💡</div>
@@ -177,10 +241,12 @@
       <div style="font-size:.82rem;color:var(--txt2)" id="dailyDesc">2 שאלות מיוחדות מחכות לך</div>
     </div>
   </div>
+  <div style="width:100%;text-align:center;padding:8px 14px;margin:4px 0 6px;display:flex;justify-content:center">
+    <span style="font-family:'Fredoka',sans-serif;font-size:.88rem;color:var(--txt2);white-space:nowrap">🚀 Brain Spark בגרסת בטא — המשחק משתפר כל הזמן! &nbsp;<span style="color:var(--a4);opacity:.8">תודה שאתם חלק מהמסע ⚡</span></span>
+  </div>
   <div class="sec-label">קטגוריות</div>
   <div class="grid" id="mainGrid"></div>
 </div>
-
 <!-- ══ FRIENDS ══ -->
 <div class="scr" id="friends-scr">
   <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:var(--a4);margin-bottom:6px;">👥 חברים</div>
@@ -202,13 +268,11 @@
   </div>
   <button class="back" onclick="show('home')" style="margin-top:20px;">← חזרה</button>
 </div>
-
 <!-- ══ FRIEND PROFILE ══ -->
 <div class="scr" id="fprofile-scr">
   <div class="profile-card" id="fprofileContent"></div>
   <button class="back" onclick="show('friends-scr')" style="margin-top:16px;">← חזרה לחברים</button>
 </div>
-
 <!-- ══ DIFFICULTY ══ -->
 <div class="scr" id="diff-scr">
   <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:var(--a2);margin-bottom:6px;text-align:center;" id="diffTitle"></div>
@@ -221,7 +285,6 @@
   </div>
   <button class="back" onclick="show('home')">← חזרה</button>
 </div>
-
 <!-- ══ QUESTION ══ -->
 <div class="scr" id="minigameScreen"></div>
 <div class="scr" id="q-scr">
@@ -294,20 +357,17 @@
     </div>
   </div>
 </div>
-
 <!-- ══ LEARN ══ -->
 <div class="scr" id="learn-scr">
   <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:var(--a6);margin-bottom:20px;">🎓 בואו נלמד!</div>
   <div class="ltopics" id="learnTopics"></div>
   <button class="back" onclick="show('home')" style="margin-top:18px;">← חזרה</button>
 </div>
-
 <!-- ══ LESSON ══ -->
 <div class="scr" id="lesson-scr">
   <div class="lesson-c" id="lessonContent"></div>
   <button class="back" onclick="show('learn-scr')" style="margin-top:14px;">← חזרה</button>
 </div>
-
 <!-- ══ EXAM PRE ══ -->
 <div class="scr" id="exam-pre-scr">
   <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:#00d2d3;margin-bottom:6px;">🏆 הגדר את המבחן</div>
@@ -326,7 +386,6 @@
   <button onclick="startExam()" style="padding:14px 36px;border-radius:99px;border:none;cursor:pointer;background:linear-gradient(135deg,#00d2d3,var(--a4));color:#fff;font-family:'Rubik',sans-serif;font-size:1.05rem;font-weight:700;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform=''">🚀 התחל מבחן!</button>
   <button class="back" onclick="show('home')">← חזרה</button>
 </div>
-
 <!-- ══ EXAM ══ -->
 <div class="scr" id="exam-scr">
   <div class="exam-hdr">
@@ -340,7 +399,6 @@
   <div id="examQArea" style="width:100%;max-width:580px;"></div>
   <div id="examResults" style="display:none;width:100%;max-width:560px;"></div>
 </div>
-
 <!-- ══ HISTORY ══ -->
 <div class="scr" id="history-scr">
   <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:#00d2d3;margin-bottom:16px;">📊 היסטוריה ★</div>
@@ -351,9 +409,13 @@
     <button onclick="filterHist('bad')" id="hfBad" class="qbtn" style="padding:7px 14px;font-size:.82rem;background:rgba(255,255,255,.06);color:var(--txt2);">❌ שגוי</button>
   </div>
   <div style="display:flex;flex-direction:column;gap:9px;width:100%;max-width:500px;" id="histList"></div>
+  <div style="width:100%;max-width:500px;text-align:center;margin-top:18px;padding:14px;background:rgba(255,255,255,.04);border-radius:14px;border:1px solid rgba(255,255,255,.08)">
+    <span style="font-size:1.1rem">📋</span>
+    <span style="font-family:'Rubik',sans-serif;font-size:.85rem;color:var(--txt2);margin:0 6px">תנאי שימוש ומדיניות פרטיות</span>
+    <button onclick="showTermsModal()" style="padding:5px 14px;background:rgba(30,144,255,.15);border:1px solid rgba(30,144,255,.4);color:var(--a4);border-radius:99px;cursor:pointer;font-family:'Rubik',sans-serif;font-size:.82rem;font-weight:700;">קרא ←</button>
+  </div>
   <button class="back" onclick="show('home')" style="margin-top:16px;">← חזרה</button>
 </div>
-
 <!-- ══ MISTAKES ══ -->
 <div class="scr" id="mistakes-scr">
   <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:var(--streak);margin-bottom:8px;">🔄 לחזור על טעויות</div>
@@ -362,7 +424,6 @@
   <button id="practiceMistakesBtn" style="display:none;margin-top:16px;padding:13px 28px;border-radius:99px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--streak),var(--a1));color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;" onclick="startMistakesPractice()">🔥 תרגל את כל הטעויות!</button>
   <button class="back" onclick="show('home')" style="margin-top:12px;">← חזרה</button>
 </div>
-
 <!-- ══ SETTINGS ══ -->
 <div class="scr" id="settings-scr">
   <div id="settingsTopTabs" style="display:none;gap:0;background:rgba(255,255,255,.06);border-radius:12px;overflow:hidden;margin-bottom:20px;width:100%;max-width:500px;">
@@ -514,7 +575,6 @@
   </div>
   <button class="back" onclick="show('home')" style="margin-top:14px;">← חזרה</button>
 </div>
-
 <!-- ══ OVERLAYS ══ -->
 <div class="lvup-ov" id="lvupOv">
   <div class="lvup-card">
@@ -526,7 +586,6 @@
 </div>
 <div class="pts-pop" id="ptsPop"><div class="pts-val" id="ptsVal">+10</div><div style="color:var(--txt2);font-size:.9rem">נקודות!</div></div>
 <div class="streak-fire" id="strkFire"><div class="sf-val" id="sfVal">🔥 3</div><div class="sf-lbl" id="sfLbl">ברצף!</div></div>
-
 <!-- ══ TERMS MODAL ══ -->
 <div id="termsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9000;align-items:center;justify-content:center;padding:20px;">
   <div style="background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid rgba(255,255,255,.12);border-radius:20px;padding:28px;max-width:460px;width:100%;max-height:80vh;overflow-y:auto;">
@@ -543,23 +602,19 @@
     <button onclick="closeTermsModal()" style="width:100%;margin-top:18px;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--a4),var(--a5));color:#fff;font-family:'Rubik',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;">✅ הבנתי, סגור</button>
   </div>
 </div>
-
 <!-- ══ INIT ══ -->
 <script>
   load();
   createStars();
 </script>
-
 <script src="profile-fields.js"></script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=4');}</script>
-
   <script src="minigame-fishing.js"></script>
   <script src="minigame-dungeon.js"></script>
   <script src="minigame-rocket.js"></script>
   <script src="minigame-chef.js"></script>
   <script src="minigame-builder.js"></script>
   <script src="minigames.js"></script>
-
 <script>
 // ── PATCH: fix minigames tile onclick and export helpers to window ──
 window.show = function(id) {
@@ -587,635 +642,6 @@ function _patchUpdateHome() {
   };
 }
 _patchUpdateHome();
-</script>
-
-<script>
-// ═══════════════════════════════════════════════════════════
-// BRAIN SPARK — Beautiful Kid-Friendly Geometry Questions
-// Injected after questions.js — replaces genShapes completely
-// ═══════════════════════════════════════════════════════════
-(function() {
-
-// Wait for questions.js helpers to be available
-function installGenShapes() {
-  if (typeof rnd === 'undefined' || typeof pick === 'undefined' || typeof ptsForQ === 'undefined') {
-    setTimeout(installGenShapes, 50);
-    return;
-  }
-
-  window.genShapes = function(diff, th) {
-    var grade = window._grade || 'ג';
-    var pts   = ptsForQ('shapes', diff);
-
-    // ─── SVG primitives ───────────────────────────────────────
-    function S(w, h, body) {
-      return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h +
-        '" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;overflow:visible">' +
-        body + '</svg>';
-    }
-
-    function T(x, y, t, col, sz, anc, w) {
-      return '<text x="' + x + '" y="' + y + '" text-anchor="' + (anc || 'middle') +
-        '" font-size="' + (sz || 14) + '" font-family="Fredoka,Rubik,sans-serif" fill="' +
-        (col || '#fff') + '" font-weight="' + (w || '700') + '">' + t + '</text>';
-    }
-
-    // Double-headed engineering dimension arrow with label pill
-    function DIM(x1, y1, x2, y2, label, col, off) {
-      col = col || '#ffd32a'; off = off || 22;
-      var dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx+dy*dy) || 1;
-      var nx = -dy/len, ny = dx/len;
-      var ox1 = x1+nx*off, oy1 = y1+ny*off;
-      var ox2 = x2+nx*off, oy2 = y2+ny*off;
-      var ux = dx/len, uy = dy/len;
-      // Extension lines
-      var out = '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) +
-        '" x2="' + (x1+nx*(off+5)).toFixed(1) + '" y2="' + (y1+ny*(off+5)).toFixed(1) +
-        '" stroke="' + col + '" stroke-width="1.2" opacity=".5"/>';
-      out   += '<line x1="' + x2.toFixed(1) + '" y1="' + y2.toFixed(1) +
-        '" x2="' + (x2+nx*(off+5)).toFixed(1) + '" y2="' + (y2+ny*(off+5)).toFixed(1) +
-        '" stroke="' + col + '" stroke-width="1.2" opacity=".5"/>';
-      // Main line
-      out += '<line x1="' + ox1.toFixed(1) + '" y1="' + oy1.toFixed(1) +
-        '" x2="' + ox2.toFixed(1) + '" y2="' + oy2.toFixed(1) +
-        '" stroke="' + col + '" stroke-width="2" opacity=".9"/>';
-      // Arrowheads
-      function ah(px, py, dux, duy) {
-        var s = 8, w2 = 3.5;
-        var p1x = px-dux*s+duy*w2, p1y = py-duy*s-dux*w2;
-        var p2x = px-dux*s-duy*w2, p2y = py-duy*s+dux*w2;
-        return '<polygon points="' + px.toFixed(1) + ',' + py.toFixed(1) + ' ' +
-          p1x.toFixed(1) + ',' + p1y.toFixed(1) + ' ' + p2x.toFixed(1) + ',' + p2y.toFixed(1) +
-          '" fill="' + col + '"/>';
-      }
-      out += ah(ox1, oy1, -ux, -uy) + ah(ox2, oy2, ux, uy);
-      // Label pill
-      var mx = (ox1+ox2)/2, my = (oy1+oy2)/2;
-      var lw = Math.max(label.length * 7.5 + 16, 36);
-      out += '<rect x="' + (mx-lw/2).toFixed(1) + '" y="' + (my-12).toFixed(1) +
-        '" width="' + lw.toFixed(0) + '" height="24" rx="12" fill="' + col + '"/>';
-      out += T(mx, my+7, label, '#111', 12, 'middle', '800');
-      return out;
-    }
-
-    // Right-angle square marker
-    function RA(x, y, size, flip) {
-      size = size || 12; flip = flip || false;
-      var s = size, fx = flip ? -1 : 1;
-      return '<polyline points="' + (x+s*fx) + ',' + y + ' ' + (x+s*fx) + ',' + (y+s) + ' ' + x + ',' + (y+s) +
-        '" fill="none" stroke="#ffd32a" stroke-width="2.2" opacity=".9"/>';
-    }
-
-    // Glow filter def
-    function GLOW(id, col) {
-      return '<defs><filter id="' + id + '" x="-30%" y="-30%" width="160%" height="160%">' +
-        '<feGaussianBlur stdDeviation="4" result="b"/>' +
-        '<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>' +
-        '</filter></defs>';
-    }
-
-    // Drop shadow
-    function SHADOW(id) {
-      return '<defs><filter id="' + id + '" x="-20%" y="-20%" width="140%" height="140%">' +
-        '<feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="rgba(0,0,0,0.5)"/>' +
-        '</filter></defs>';
-    }
-
-    // Card shell
-    function CARD(svgBody, accent, formula) {
-      var fb = formula ? '<div style="background:' + accent + '18;border:1.5px solid ' + accent +
-        '44;border-radius:12px;padding:8px 14px;margin-bottom:12px;font-family:Fredoka,sans-serif;' +
-        'font-size:1rem;color:' + accent + ';text-align:center;direction:ltr;letter-spacing:.3px">' +
-        formula + '</div>' : '';
-      return '<div style="background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.02));' +
-        'border:2.5px solid ' + accent + '55;border-radius:22px;padding:16px 14px 14px;' +
-        'box-shadow:0 10px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08)">' +
-        fb + '<div style="text-align:center;padding:2px 0 8px">' + svgBody + '</div></div>';
-    }
-
-    function mkQ(question, answer, html, hint) {
-      return {
-        type: 'num', cat: 'shapes', diff: diff,
-        label: '📐 גיאומטריה ומדידה', gameLabel: '', text: question,
-        answer: answer, pts: pts, shapeHtml: html,
-        hint: { type: 'text', msg: hint }, showMul: false, dir: 'rtl'
-      };
-    }
-
-    // ─── SHAPE COLORS ─────────────────────────────────────────
-    var BLUE   = '#4dabf7';
-    var GREEN  = '#51cf66';
-    var ORANGE = '#ff9f43';
-    var PURPLE = '#cc5de8';
-    var PINK   = '#f06595';
-    var TEAL   = '#20c997';
-    var RED    = '#ff6b6b';
-    var YELLOW = '#ffd32a';
-
-    // ═══════════════════════════════════════════════════════
-    // 1. SQUARE — beautiful square with grid + all 4 sides labeled
-    // ═══════════════════════════════════════════════════════
-    function qSquarePerim() {
-      var s    = diff === 'easy' ? rnd(2,7) : diff === 'medium' ? rnd(5,14) : rnd(8,22);
-      var ans  = 4 * s;
-      var col  = BLUE;
-      var side = 148, sx = 76, sy = 36;
-
-      var body = GLOW('gsq', col) + SHADOW('shsq');
-
-      // Checkerboard grid fill
-      var cells = Math.min(s, 8);
-      var cw = side / cells;
-      for (var r = 0; r < cells; r++) {
-        for (var c = 0; c < cells; c++) {
-          body += '<rect x="' + (sx + c*cw).toFixed(1) + '" y="' + (sy + r*cw).toFixed(1) +
-            '" width="' + (cw-0.5).toFixed(1) + '" height="' + (cw-0.5).toFixed(1) +
-            '" fill="' + col + ((r+c)%2===0 ? '50' : '28') + '" rx="1"/>';
-        }
-      }
-
-      // Shape border
-      body += '<rect x="' + sx + '" y="' + sy + '" width="' + side + '" height="' + side +
-        '" fill="none" stroke="' + col + '" stroke-width="4.5" rx="6"' +
-        ' filter="url(#gsq)" stroke-linejoin="round"/>';
-
-      // Right angle markers at all 4 corners
-      body += RA(sx, sy, 13) + RA(sx+side, sy, 13, true);
-      // bottom corners (flip vertically)
-      body += '<polyline points="' + (sx+13) + ',' + (sy+side) + ' ' + (sx+13) + ',' + (sy+side-13) + ' ' + sx + ',' + (sy+side-13) + '" fill="none" stroke="' + YELLOW + '" stroke-width="2.2" opacity=".9"/>';
-      body += '<polyline points="' + (sx+side-13) + ',' + (sy+side) + ' ' + (sx+side-13) + ',' + (sy+side-13) + ' ' + (sx+side) + ',' + (sy+side-13) + '" fill="none" stroke="' + YELLOW + '" stroke-width="2.2" opacity=".9"/>';
-
-      // Dimension arrows on all 4 sides
-      body += DIM(sx, sy, sx+side, sy, s + ' ס"מ', col, -26);
-      body += DIM(sx+side, sy, sx+side, sy+side, s + ' ס"מ', col, 26);
-      body += DIM(sx, sy+side, sx+side, sy+side, s + ' ס"מ', col, 26);
-      body += DIM(sx, sy, sx, sy+side, s + ' ס"מ', col, -26);
-
-      // Big "?" in center
-      body += T(sx+side/2, sy+side/2+13, '?', '#fff', 42, 'middle', '900');
-
-      return mkQ(
-        'מה היקף הריבוע שצלעו ' + s + ' ס"מ?', ans,
-        CARD(S(300, 258, body), col, '4 × ' + s + ' = ?'),
-        '💡 4 × ' + s + ' = ' + ans + ' ס"מ'
-      );
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // 2. RECTANGLE — grid inside, width ≠ height, labeled
-    // ═══════════════════════════════════════════════════════
-    function qRectPerim() {
-      var w   = diff === 'easy' ? rnd(3,8) : diff === 'medium' ? rnd(5,15) : rnd(6,22);
-      var h   = rnd(2, Math.max(3, w-1));
-      var ans = 2*(w+h);
-      var col = GREEN;
-      var pw  = Math.min(w*14, 205), ph = Math.min(Math.max(h*14, 58), 145);
-      var ox  = (300-pw)/2, oy = (240-ph)/2+12;
-
-      var body = GLOW('grc', col);
-
-      // Grid
-      var cw = pw/Math.min(w,8), ch2 = ph/Math.min(h,8);
-      for (var r = 0; r < Math.min(h,8); r++) {
-        for (var c = 0; c < Math.min(w,8); c++) {
-          body += '<rect x="' + (ox+c*cw).toFixed(1) + '" y="' + (oy+r*ch2).toFixed(1) +
-            '" width="' + (cw-0.5).toFixed(1) + '" height="' + (ch2-0.5).toFixed(1) +
-            '" fill="' + col + ((r+c)%2===0?'48':'28') + '" rx="1"/>';
-        }
-      }
-      body += '<rect x="'+ox+'" y="'+oy+'" width="'+pw+'" height="'+ph+'" fill="none" stroke="'+col+'" stroke-width="4.5" rx="6" filter="url(#grc)" stroke-linejoin="round"/>';
-      body += RA(ox, oy, 13) + RA(ox+pw, oy, 13, true);
-      body += '<polyline points="'+(ox+13)+','+(oy+ph)+' '+(ox+13)+','+(oy+ph-13)+' '+ox+','+(oy+ph-13)+'" fill="none" stroke="'+YELLOW+'" stroke-width="2.2" opacity=".9"/>';
-      body += '<polyline points="'+(ox+pw-13)+','+(oy+ph)+' '+(ox+pw-13)+','+(oy+ph-13)+' '+(ox+pw)+','+(oy+ph-13)+'" fill="none" stroke="'+YELLOW+'" stroke-width="2.2" opacity=".9"/>';
-      body += DIM(ox, oy, ox+pw, oy, w + ' ס"מ', col, -26);
-      body += DIM(ox, oy+ph, ox+pw, oy+ph, w + ' ס"מ', col, 26);
-      body += DIM(ox+pw, oy, ox+pw, oy+ph, h + ' ס"מ', ORANGE, 26);
-      body += DIM(ox, oy, ox, oy+ph, h + ' ס"מ', ORANGE, -26);
-      body += T(ox+pw/2, oy+ph/2+13, '?', '#fff', 40, 'middle', '900');
-
-      return mkQ(
-        'מה היקף המלבן? (רוחב ' + w + ' ס"מ, גובה ' + h + ' ס"מ)', ans,
-        CARD(S(300, 255, body), col, '2 × (' + w + ' + ' + h + ') = ?'),
-        '💡 2 × (' + w + '+' + h + ') = ' + ans + ' ס"מ'
-      );
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // 3. RECTANGLE AREA — colorful grid, labeled dimensions
-    // ═══════════════════════════════════════════════════════
-    function qRectArea() {
-      var w   = diff === 'easy' ? rnd(2,6) : diff === 'medium' ? rnd(4,11) : rnd(5,16);
-      var h   = rnd(2, Math.max(3, w-1));
-      var ans = w * h;
-      var col = ORANGE;
-      var pw  = Math.min(w*18, 210), ph = Math.min(Math.max(h*18, 62), 155);
-      var ox  = (300-pw)/2, oy = (248-ph)/2+6;
-
-      var body = GLOW('gar', col);
-
-      // Colorful grid cells
-      var cw = pw/w, ch2 = ph/h;
-      var colors = ['#ff9f4366','#ffd32a55','#ff6b6b44','#51cf6644','#4dabf755','#cc5de844'];
-      for (var r = 0; r < h; r++) {
-        for (var c = 0; c < w; c++) {
-          body += '<rect x="'+(ox+c*cw).toFixed(1)+'" y="'+(oy+r*ch2).toFixed(1)+
-            '" width="'+(cw-1).toFixed(1)+'" height="'+(ch2-1).toFixed(1)+
-            '" fill="'+colors[(r*w+c)%colors.length]+'" rx="3"/>';
-        }
-      }
-      // Grid lines
-      for (var i = 0; i <= w; i++) body += '<line x1="'+(ox+i*cw).toFixed(1)+'" y1="'+oy+'" x2="'+(ox+i*cw).toFixed(1)+'" y2="'+(oy+ph)+'" stroke="'+col+'" stroke-width="1" opacity=".3"/>';
-      for (var j = 0; j <= h; j++) body += '<line x1="'+ox+'" y1="'+(oy+j*ch2).toFixed(1)+'" x2="'+(ox+pw)+'" y2="'+(oy+j*ch2).toFixed(1)+'" stroke="'+col+'" stroke-width="1" opacity=".3"/>';
-
-      body += '<rect x="'+ox+'" y="'+oy+'" width="'+pw+'" height="'+ph+'" fill="none" stroke="'+col+'" stroke-width="4.5" rx="6" filter="url(#gar)"/>';
-      body += RA(ox, oy, 13);
-      body += DIM(ox, oy-4, ox+pw, oy-4, w+' ס"מ', col, -26);
-      body += DIM(ox-4, oy, ox-4, oy+ph, h+' ס"מ', YELLOW, -26);
-      body += T(ox+pw/2, oy+ph/2+13, '?', '#fff', 42, 'middle', '900');
-      // Cell counter
-      if (w <= 8 && h <= 6) body += T(ox+pw/2, oy+ph-10, w+'×'+h, col+'88', 10, 'middle', '600');
-
-      return mkQ(
-        'מה שטח המלבן? (' + w + ' ס"מ × ' + h + ' ס"מ)', ans,
-        CARD(S(300, 262, body), col, w + ' × ' + h + ' = ?'),
-        '💡 ' + w + ' × ' + h + ' = ' + ans + ' ס"מ²'
-      );
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // 4. TRIANGLE — colored sides, height line, vertex dots
-    // ═══════════════════════════════════════════════════════
-    function qTrianglePerim() {
-      var a = rnd(3, diff==='hard'?17:11);
-      var b = rnd(3, diff==='hard'?15:10);
-      var c = rnd(3, diff==='hard'?13:9);
-      var ans = a + b + c;
-      var p1x=150,p1y=28, p2x=262,p2y=198, p3x=38,p3y=198;
-
-      var body = GLOW('gtr', RED) + SHADOW('shtr');
-      body += '<polygon points="'+p1x+','+p1y+' '+p2x+','+p2y+' '+p3x+','+p3y+
-        '" fill="'+RED+'22" stroke="'+RED+'" stroke-width="4.5" stroke-linejoin="round" filter="url(#gtr)"/>';
-      // Vertex dots
-      [[p1x,p1y],[p2x,p2y],[p3x,p3y]].forEach(function(p) {
-        body += '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="6" fill="'+RED+'"/>';
-      });
-      // Each side in different color
-      body += DIM(p3x, p3y, p2x, p2y, a+' ס"מ', RED, 26);
-      body += DIM(p2x, p2y, p1x, p1y, b+' ס"מ', YELLOW, 26);
-      body += DIM(p1x, p1y, p3x, p3y, c+' ס"מ', PURPLE, -26);
-      body += T(150, 128, '?', '#fff', 40, 'middle', '900');
-
-      return mkQ(
-        'מה היקף המשולש?', ans,
-        CARD(S(300, 242, body), RED, a+' + '+b+' + '+c+' = ?'),
-        '💡 '+a+' + '+b+' + '+c+' = '+ans+' ס"מ'
-      );
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // 5. TRIANGLE AREA — height dashed line, base + height labeled
-    // ═══════════════════════════════════════════════════════
-    function qTriangleArea() {
-      var base, height;
-      do { base = rnd(4,15)*2; height = rnd(3,12); } while ((base*height)%2 !== 0);
-      var ans = base*height/2;
-      var col = PURPLE;
-      var bpx = Math.min(base*11, 212), hpx = Math.min(Math.max(height*11,65),152);
-      var ox = (300-bpx)/2, oy = 18;
-      var tipX = ox + bpx/2;
-
-      var body = GLOW('gta', col) + SHADOW('shta');
-      body += '<polygon points="'+tipX+','+oy+' '+(ox+bpx)+','+(oy+hpx)+' '+ox+','+(oy+hpx)+
-        '" fill="'+col+'25" stroke="'+col+'" stroke-width="4.5" stroke-linejoin="round" filter="url(#gta)"/>';
-
-      // Height dashed line (yellow)
-      body += '<line x1="'+tipX+'" y1="'+oy+'" x2="'+tipX+'" y2="'+(oy+hpx)+
-        '" stroke="'+YELLOW+'" stroke-width="3" stroke-dasharray="9,5"/>';
-      // Right angle at foot
-      body += '<polyline points="'+(tipX+12)+','+(oy+hpx)+' '+(tipX+12)+','+(oy+hpx-12)+' '+tipX+','+(oy+hpx-12)+
-        '" fill="none" stroke="'+YELLOW+'" stroke-width="2.2" opacity=".9"/>';
-
-      // Height label (floating pill)
-      var hy = oy + hpx/2;
-      body += '<rect x="'+(tipX+10)+'" y="'+(hy-13)+'" width="56" height="26" rx="13" fill="'+YELLOW+'"/>';
-      body += T(tipX+38, hy+7, height+' ס"מ', '#111', 12, 'middle', '800');
-
-      // Vertex dots
-      [[tipX,oy],[ox+bpx,oy+hpx],[ox,oy+hpx]].forEach(function(p){
-        body += '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="6" fill="'+col+'"/>';
-      });
-
-      // Base dimension
-      body += DIM(ox, oy+hpx, ox+bpx, oy+hpx, base+' ס"מ', col, 26);
-
-      body += T(tipX-30, oy+hpx/2+8, '?', '#fff', 38, 'middle', '900');
-
-      return mkQ(
-        'מה שטח המשולש? (בסיס '+base+' ס"מ, גובה '+height+' ס"מ)', ans,
-        CARD(S(300, 238, body), col, '(' + base + ' × ' + height + ') ÷ 2 = ?'),
-        '💡 ('+base+'×'+height+') ÷ 2 = '+ans+' ס"מ²'
-      );
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // 6. CIRCLE — concentric rings, radius arrow, labeled
-    // ═══════════════════════════════════════════════════════
-    function qCircle() {
-      var r   = diff==='easy' ? rnd(2,5) : diff==='medium' ? rnd(3,8) : rnd(4,12);
-      var col = PINK;
-      var askDiam = diff === 'easy' || Math.random() < 0.5;
-      var ans = askDiam ? 2*r : Math.round(3.14*r*r);
-      var cr  = Math.min(r*11, 98), cx = 150, cy = 120;
-
-      var body = GLOW('gcr', col) + SHADOW('shcr');
-
-      // Outer glow circle
-      body += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(cr+8)+'" fill="'+col+'12"/>';
-
-      // Concentric decorative rings
-      body += '<circle cx="'+cx+'" cy="'+cy+'" r="'+cr+'" fill="'+col+'25" stroke="'+col+'" stroke-width="4.5" filter="url(#gcr)"/>';
-      body += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(cr*0.72).toFixed(0)+'" fill="none" stroke="'+col+'" stroke-width="1.2" opacity=".25" stroke-dasharray="6,4"/>';
-      body += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(cr*0.44).toFixed(0)+'" fill="none" stroke="'+col+'" stroke-width="1.2" opacity=".18" stroke-dasharray="5,4"/>';
-
-      // Center dot
-      body += '<circle cx="'+cx+'" cy="'+cy+'" r="8" fill="'+YELLOW+'"/>';
-      body += '<circle cx="'+cx+'" cy="'+cy+'" r="4" fill="#fff"/>';
-
-      // Radius line
-      body += '<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+cr)+'" y2="'+cy+'" stroke="'+YELLOW+'" stroke-width="3.5" stroke-linecap="round"/>';
-      body += '<circle cx="'+(cx+cr)+'" cy="'+cy+'" r="5" fill="'+col+'"/>';
-
-      // Radius label pill
-      var rx = cx + cr/2, ry = cy - 18;
-      body += '<rect x="'+(rx-22)+'" y="'+(ry-13)+'" width="44" height="26" rx="13" fill="'+YELLOW+'"/>';
-      body += T(rx, ry+7, 'r = ' + r, '#111', 12, 'middle', '800');
-
-      if (askDiam) {
-        // Diameter line
-        body += '<line x1="'+(cx-cr)+'" y1="'+cy+'" x2="'+(cx+cr)+'" y2="'+cy+'" stroke="#a29bfe" stroke-width="2" stroke-dasharray="7,4" opacity=".6"/>';
-        body += DIM(cx-cr, cy, cx+cr, cy, 'd = ?', '#a29bfe', 30);
-      } else {
-        // Area label
-        body += T(cx, cy+cr+20, 'שטח = π × r²', '#fff', 13, 'middle', '600');
-        body += T(cx, cy+cr+36, '= 3.14 × '+r+'² = ?', col, 12, 'middle', '700');
-      }
-
-      var question = askDiam
-        ? 'מה קוטר העיגול? (רדיוס ' + r + ' ס"מ)'
-        : 'מה שטח העיגול? (r = ' + r + ' ס"מ, π = 3.14, עגל שלם)';
-      var formula = askDiam ? 'd = 2 × ' + r + ' = ?' : 'π × ' + r + '² = 3.14 × ' + r*r + ' ≈ ?';
-      var hint = askDiam ? '💡 2 × '+r+' = '+(2*r)+' ס"מ' : '💡 3.14 × '+r*r+' ≈ '+ans+' ס"מ²';
-
-      return mkQ(question, ans, CARD(S(300, askDiam?248:252, body), col, formula), hint);
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // 7. RULER — pencil drawn over ruler, read length
-    // ═══════════════════════════════════════════════════════
-    function qRuler() {
-      var len    = diff==='easy' ? rnd(2,7) : diff==='medium' ? rnd(4,12) : rnd(6,18);
-      var col    = TEAL;
-      var ppc    = Math.min(Math.floor(240/(len+3)), 22);
-      var totalW = (len+3)*ppc;
-      var ox = 22, oy = 108;
-
-      var body = '';
-
-      // Ruler body (yellow-ish)
-      body += '<rect x="'+ox+'" y="'+oy+'" width="'+totalW+'" height="40" fill="#ffd32a18" stroke="'+YELLOW+'" stroke-width="2.5" rx="5"/>';
-      body += '<rect x="'+ox+'" y="'+oy+'" width="'+totalW+'" height="8" fill="'+YELLOW+'22" rx="5"/>';
-
-      // Tick marks and numbers
-      for (var i = 0; i <= len+2; i++) {
-        var tx = ox + i*ppc;
-        var big = i%5===0;
-        body += '<line x1="'+tx+'" y1="'+oy+'" x2="'+tx+'" y2="'+(oy-(big?18:10))+'" stroke="'+YELLOW+'" stroke-width="'+(big?2.5:1.2)+'" opacity=".9"/>';
-        if (i%2===0) body += T(tx, oy-21, i, '#ffd32a', 9);
-      }
-      body += T(ox+totalW/2, oy+30, 'ס"מ', '#ffd32a55', 9);
-
-      // Pencil body
-      var pencilW = len*ppc;
-      // Body (blue rectangle)
-      body += '<rect x="'+ox+'" y="'+(oy-58)+'" width="'+(pencilW*0.82)+'" height="28" fill="#4dabf766" stroke="#4dabf7" stroke-width="2.2" rx="4"/>';
-      // Pencil stripes
-      for (var s = 0; s < 4; s++) {
-        body += '<rect x="'+(ox+s*14+4)+'" y="'+(oy-58)+'" width="8" height="28" fill="#4dabf733" rx="2"/>';
-      }
-      // Metal band
-      body += '<rect x="'+ox+'" y="'+(oy-58)+'" width="14" height="28" fill="#aaa8" stroke="#888" stroke-width="1" rx="4"/>';
-      // Eraser (pink)
-      body += '<rect x="'+ox+'" y="'+(oy-58)+'" width="10" height="28" fill="#f0659566" stroke="#f06595" stroke-width="1.5" rx="4"/>';
-      // Tip (triangle)
-      var tipStart = ox + pencilW*0.82;
-      body += '<polygon points="'+tipStart+','+(oy-58)+' '+tipStart+','+(oy-30)+' '+(ox+pencilW)+','+(oy-44)+'" fill="#ff9f4388" stroke="#ff9f43" stroke-width="1.8"/>';
-      // Pencil tip point
-      body += '<circle cx="'+(ox+pencilW)+'" cy="'+(oy-44)+'" r="3" fill="#ff9f43"/>';
-
-      // Drop lines to ruler
-      body += '<line x1="'+ox+'" y1="'+(oy-58)+'" x2="'+ox+'" y2="'+oy+'" stroke="'+col+'" stroke-width="1.5" stroke-dasharray="4,3" opacity=".5"/>';
-      body += '<line x1="'+(ox+pencilW)+'" y1="'+(oy-44)+'" x2="'+(ox+pencilW)+'" y2="'+oy+'" stroke="#ff9f43" stroke-width="1.5" stroke-dasharray="4,3" opacity=".5"/>';
-
-      // Length brace above pencil
-      var braceY = oy - 72;
-      body += '<line x1="'+ox+'" y1="'+braceY+'" x2="'+(ox+pencilW)+'" y2="'+braceY+'" stroke="'+col+'" stroke-width="3"/>';
-      body += '<line x1="'+ox+'" y1="'+(braceY)+'" x2="'+ox+'" y2="'+(braceY+10)+'" stroke="'+col+'" stroke-width="2.2"/>';
-      body += '<line x1="'+(ox+pencilW)+'" y1="'+(braceY)+'" x2="'+(ox+pencilW)+'" y2="'+(braceY+10)+'" stroke="'+col+'" stroke-width="2.2"/>';
-      // Length pill
-      body += '<rect x="'+(ox+pencilW/2-18)+'" y="'+(braceY-18)+'" width="36" height="22" rx="11" fill="'+col+'"/>';
-      body += T(ox+pencilW/2, braceY-3, '?', '#111', 12, 'middle', '900');
-
-      var svgW = totalW + 50;
-      var htmlBody = '<svg width="'+svgW+'" height="128" viewBox="0 0 '+svgW+' 128" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto">'+body+'</svg>';
-      return mkQ(
-        'כמה ס"מ ארוך העיפרון?', len,
-        '<div style="background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:2.5px solid '+col+'55;border-radius:22px;padding:16px 14px 14px;box-shadow:0 10px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08)">' +
-        '<div style="background:'+col+'18;border:1.5px solid '+col+'44;border-radius:12px;padding:8px 14px;margin-bottom:12px;font-family:Fredoka,sans-serif;font-size:1rem;color:'+col+';text-align:center">📏 קרא את הסרגל!</div>' +
-        '<div style="text-align:center;padding:2px 0 8px;overflow-x:auto">'+htmlBody+'</div></div>',
-        '💡 מ-0 עד הקצה = ' + len + ' ס"מ'
-      );
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // 8. COUNT SIDES — shape with colored numbered sides
-    // ═══════════════════════════════════════════════════════
-    function qCountSides() {
-      var shapes = [
-        {name:'משולש', n:3, pts:'150,30 264,202 36,202', col:GREEN},
-        {name:'ריבוע', n:4, pts:'70,48 230,48 230,194 70,194', col:BLUE},
-        {name:'מלבן', n:4, pts:'44,78 256,78 256,168 44,168', col:TEAL},
-        {name:'מחומש', n:5, pts:'150,26 246,98 210,208 90,208 54,98', col:PURPLE},
-        {name:'משושה', n:6, pts:'150,24 232,70 232,162 150,210 68,162 68,70', col:ORANGE},
-      ];
-      var sh  = pick(shapes), col = sh.col;
-      var pArr = sh.pts.split(' ').map(function(p){return p.split(',').map(Number);});
-      var sideColors = [RED, YELLOW, GREEN, BLUE, PURPLE, ORANGE];
-
-      var body = GLOW('gcs', col) + SHADOW('shcs');
-      body += '<polygon points="'+sh.pts+'" fill="'+col+'22" stroke="'+col+'" stroke-width="4.5" stroke-linejoin="round" filter="url(#gcs)"/>';
-
-      // Each side: colored highlight + numbered badge
-      for (var i = 0; i < pArr.length; i++) {
-        var a = pArr[i], b = pArr[(i+1)%pArr.length];
-        var mx = (a[0]+b[0])/2, my = (a[1]+b[1])/2;
-        var sc = sideColors[i % sideColors.length];
-        body += '<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="'+sc+'" stroke-width="6" stroke-linecap="round" opacity=".75"/>';
-        body += '<circle cx="'+mx.toFixed(1)+'" cy="'+my.toFixed(1)+'" r="17" fill="'+sc+'" stroke="#fff" stroke-width="2.5" filter="url(#shcs)"/>';
-        body += T(mx, my+6, ''+(i+1), '#fff', 14, 'middle', '900');
-      }
-      // Vertex dots
-      pArr.forEach(function(p){
-        body += '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="5" fill="'+col+'"/>';
-      });
-
-      return mkQ(
-        'כמה צלעות יש ל'+sh.name+'?', sh.n,
-        '<div style="background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:2.5px solid '+col+'55;border-radius:22px;padding:16px 14px 14px;box-shadow:0 10px 40px rgba(0,0,0,.5)">'+
-        '<div style="background:'+col+'18;border:1.5px solid '+col+'44;border-radius:12px;padding:8px 14px;margin-bottom:12px;font-family:Fredoka,sans-serif;font-size:1rem;color:'+col+';text-align:center">🔢 ספור את הצלעות הצבעוניות!</div>'+
-        '<div style="text-align:center;padding:2px 0 8px">'+S(300,248,body)+'</div></div>',
-        '💡 '+sh.n+' צלעות — ספור העיגולים'
-      );
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // 9. MISSING ANGLE IN TRIANGLE
-    // ═══════════════════════════════════════════════════════
-    function qMissingAngle() {
-      var a = rnd(35,80), b = rnd(25,100-a), c = 180-a-b;
-      if (c <= 8 || c >= 172) return qMissingAngle();
-      var hide = pick([0,1,2]), vals = [a,b,c];
-      var col = RED;
-      var p1x=150,p1y=28, p2x=264,p2y=200, p3x=36,p3y=200;
-
-      var body = GLOW('gma', col) + SHADOW('shma');
-      body += '<polygon points="'+p1x+','+p1y+' '+p2x+','+p2y+' '+p3x+','+p3y+
-        '" fill="'+col+'20" stroke="'+col+'" stroke-width="4.5" stroke-linejoin="round" filter="url(#gma)"/>';
-
-      var corners = [[p1x,p1y],[p2x,p2y],[p3x,p3y]];
-      var lbOff   = [[-2,-18],[22,10],[-22,10]];
-      var arcCols = [RED, YELLOW, GREEN];
-
-      vals.forEach(function(v, i) {
-        var isHide = (i === hide);
-        var lbl = isHide ? '?' : v+'°';
-        var col2 = isHide ? YELLOW : arcCols[i];
-        var px = corners[i][0] + lbOff[i][0];
-        var py = corners[i][1] + lbOff[i][1];
-        var lw = isHide ? 36 : Math.max(v >= 100 ? 52 : 44, 36);
-        body += '<rect x="'+(px-lw/2).toFixed(0)+'" y="'+(py-14)+'" width="'+lw+'" height="28" rx="14" fill="'+col2+'" opacity="'+(isHide?'1':'.9')+'"/>';
-        body += T(px, py+7, lbl, isHide?'#111':'#fff', isHide?17:13, 'middle', '900');
-      });
-
-      [[p1x,p1y],[p2x,p2y],[p3x,p3y]].forEach(function(p){
-        body += '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="5" fill="'+col+'"/>';
-      });
-      body += T(150, 130, '180°', '#ffffff28', 11);
-
-      var known = vals.filter(function(_,i){return i!==hide;});
-      return mkQ(
-        'מצא את הזווית החסרה (?) במשולש', vals[hide],
-        CARD(S(300,238,body), col, '180° − '+known[0]+'° − '+known[1]+'° = ?'),
-        '💡 180 − '+known[0]+' − '+known[1]+' = '+vals[hide]+'°'
-      );
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // 10. ANGLE TYPE — ray diagram + 3 buttons
-    // ═══════════════════════════════════════════════════════
-    function qAngleType() {
-      var cases = [
-        {deg:90, name:'ישרה', num:2, col:TEAL},
-        {deg:45, name:'חדה',  num:1, col:GREEN},
-        {deg:60, name:'חדה',  num:1, col:GREEN},
-        {deg:30, name:'חדה',  num:1, col:GREEN},
-        {deg:120,name:'קהה',  num:3, col:ORANGE},
-        {deg:135,name:'קהה',  num:3, col:ORANGE},
-        {deg:150,name:'קהה',  num:3, col:ORANGE},
-      ];
-      var pool = diff==='easy' ? cases.slice(0,4) : cases;
-      var ch = pick(pool), col = ch.col;
-      var vx=80, vy=172, r=108;
-      var rad = ch.deg * Math.PI / 180;
-      var ex = vx+r, ey = vy;
-      var ex2 = vx+r*Math.cos(-rad), ey2 = vy+r*Math.sin(-rad);
-
-      var body = GLOW('gat', col);
-
-      // Background sector fill
-      var lax = vx+r*0.95, lay = vy;
-      var lax2 = vx+r*0.95*Math.cos(-rad), lay2 = vy+r*0.95*Math.sin(-rad);
-      body += '<path d="M'+vx+','+vy+' L'+lax.toFixed(1)+','+lay.toFixed(1)+' A'+(r*0.95).toFixed(0)+','+(r*0.95).toFixed(0)+' 0 '+(ch.deg>180?1:0)+',0 '+lax2.toFixed(1)+','+lay2.toFixed(1)+' Z" fill="'+col+'18"/>';
-
-      // Rays
-      body += '<line x1="'+vx+'" y1="'+vy+'" x2="'+ex+'" y2="'+ey+'" stroke="'+col+'" stroke-width="6" stroke-linecap="round" filter="url(#gat)"/>';
-      body += '<line x1="'+vx+'" y1="'+vy+'" x2="'+ex2.toFixed(1)+'" y2="'+ey2.toFixed(1)+'" stroke="'+col+'" stroke-width="6" stroke-linecap="round" filter="url(#gat)"/>';
-
-      // Arc
-      var arcR = 44;
-      var ax1 = vx+arcR, ay1 = vy;
-      var ax2 = vx+arcR*Math.cos(-rad), ay2 = vy+arcR*Math.sin(-rad);
-      body += '<path d="M'+ax1+','+ay1+' A'+arcR+','+arcR+' 0 '+(ch.deg>180?1:0)+',0 '+ax2.toFixed(1)+','+ay2.toFixed(1)+'" fill="'+col+'30" stroke="'+col+'" stroke-width="3"/>';
-
-      // Right angle box
-      if (ch.deg===90) {
-        body += '<polyline points="'+(vx+16)+','+vy+' '+(vx+16)+','+(vy-16)+' '+vx+','+(vy-16)+'" fill="none" stroke="'+col+'" stroke-width="2.5" opacity=".9"/>';
-      }
-
-      // Degree badge
-      var midRad = rad/2;
-      var bx = vx+72*Math.cos(-midRad), by = vy+72*Math.sin(-midRad);
-      body += '<rect x="'+(bx-26)+'" y="'+(by-16)+'" width="52" height="32" rx="16" fill="'+col+'"/>';
-      body += T(bx, by+7, ch.deg+'°', '#fff', 15, 'middle', '900');
-
-      // Vertex dot
-      body += '<circle cx="'+vx+'" cy="'+vy+'" r="9" fill="'+col+'"/>';
-      body += '<circle cx="'+vx+'" cy="'+vy+'" r="4" fill="#fff"/>';
-
-      // Ray endpoints
-      body += '<circle cx="'+ex+'" cy="'+ey+'" r="5" fill="'+col+'" opacity=".5"/>';
-      body += '<circle cx="'+ex2.toFixed(1)+'" cy="'+ey2.toFixed(1)+'" r="5" fill="'+col+'" opacity=".5"/>';
-
-      var optBox = '<div style="display:flex;gap:8px;justify-content:center;margin-top:10px">' +
-        '<div style="background:#51cf6622;border:2px solid #51cf6666;border-radius:14px;padding:9px 14px;font-family:Fredoka,sans-serif;font-size:.92rem;color:#51cf66;text-align:center;flex:1"><b style="font-size:1.2rem;display:block">1</b>⚡ חדה<br><span style="font-size:.72rem;opacity:.7">&lt; 90°</span></div>' +
-        '<div style="background:#20c99722;border:2px solid #20c99766;border-radius:14px;padding:9px 14px;font-family:Fredoka,sans-serif;font-size:.92rem;color:#20c997;text-align:center;flex:1"><b style="font-size:1.2rem;display:block">2</b>⬛ ישרה<br><span style="font-size:.72rem;opacity:.7">= 90°</span></div>' +
-        '<div style="background:#ff9f4322;border:2px solid #ff9f4366;border-radius:14px;padding:9px 14px;font-family:Fredoka,sans-serif;font-size:.92rem;color:#ff9f43;text-align:center;flex:1"><b style="font-size:1.2rem;display:block">3</b>🔔 קהה<br><span style="font-size:.72rem;opacity:.7">&gt; 90°</span></div>' +
-        '</div>';
-
-      return mkQ(
-        'איזה סוג זווית? (1=חדה  2=ישרה  3=קהה)', ch.num,
-        '<div style="background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:2.5px solid '+col+'55;border-radius:22px;padding:16px 14px 14px;box-shadow:0 10px 40px rgba(0,0,0,.5)">'+
-        '<div style="background:'+col+'18;border:1.5px solid '+col+'44;border-radius:12px;padding:8px 14px;margin-bottom:12px;font-family:Fredoka,sans-serif;font-size:1rem;color:'+col+';text-align:center">📐 זיהוי זוויות</div>'+
-        '<div style="text-align:center;padding:2px 0 6px">'+S(282,198,body)+'</div>'+
-        optBox+'</div>',
-        '💡 '+ch.deg+'° → זווית '+ch.name
-      );
-    }
-
-    // ─── Grade-based pools ────────────────────────────────────
-    var easy, med, hard;
-    if (grade==='א'||grade==='ב') {
-      easy=[qCountSides,qRuler,qCountSides]; med=[qCountSides,qRuler,qAngleType]; hard=[qAngleType,qRuler,qRectPerim];
-    } else if (grade==='ג') {
-      easy=[qSquarePerim,qRectPerim,qCountSides,qRuler]; med=[qRectPerim,qTrianglePerim,qMissingAngle,qRuler]; hard=[qTrianglePerim,qMissingAngle,qRectArea,qAngleType];
-    } else if (grade==='ד') {
-      easy=[qRectArea,qSquarePerim,qRuler,qAngleType]; med=[qRectArea,qTriangleArea,qMissingAngle,qTrianglePerim]; hard=[qTriangleArea,qMissingAngle,qCircle,qRectArea];
-    } else if (grade==='ה') {
-      easy=[qRectArea,qTriangleArea,qCircle,qAngleType]; med=[qTriangleArea,qCircle,qMissingAngle,qRectArea]; hard=[qCircle,qMissingAngle,qTriangleArea,qRectArea];
-    } else {
-      easy=[qRectArea,qTriangleArea,qCircle,qMissingAngle]; med=[qCircle,qMissingAngle,qTriangleArea,qRectArea]; hard=[qCircle,qMissingAngle,qTriangleArea,qTrianglePerim];
-    }
-
-    var pool = diff==='easy' ? easy : diff==='medium' ? med : hard;
-    return pick(pool)();
-  };
-
-  console.log('✅ Brain Spark geometry visuals loaded!');
-}
-
-installGenShapes();
-
-})();
-
 </script>
 </body>
 </html>
