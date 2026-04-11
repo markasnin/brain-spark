@@ -281,612 +281,334 @@ function checkWordEquation(userA, userOp, userB, q) {
   return 'wrong';
 }
 
+// ══════════════════════════════════════════════════════════════
+// genShapes — INLINE geometry questions with full SVG visuals
+// No external file dependency — works always!
+// ══════════════════════════════════════════════════════════════
 function genShapes(diff, th) {
-  if (window.genShapesInteractive) {
-    return window.genShapesInteractive(diff);
+  // Forward to shapes.js if loaded (higher quality)
+  if (window.genShapesInteractive) return window.genShapesInteractive(diff);
+
+  var grade = window._grade || 'ג';
+  var pts = ptsForQ('shapes', diff);
+
+  // ── SVG helpers ──
+  function S(w,h,body){ return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;overflow:visible">'+body+'</svg>'; }
+  function T(x,y,t,col,sz,anc){ return '<text x="'+x+'" y="'+y+'" text-anchor="'+(anc||'middle')+'" font-size="'+(sz||13)+'" font-family="Fredoka,Rubik,sans-serif" fill="'+(col||'#e2e8f0')+'" font-weight="700">'+t+'</text>'; }
+  function glow(id,col){ return '<defs><filter id="'+id+'"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'; }
+  // Dimension label with dashed line + pill
+  function DIM(x1,y1,x2,y2,lbl,col,off){
+    col=col||'#ffd32a'; off=off||16;
+    var mx=(x1+x2)/2, my=(y1+y2)/2;
+    var dx=x2-x1, dy=y2-y1, len=Math.sqrt(dx*dx+dy*dy)||1;
+    var nx=-dy/len, ny=dx/len;
+    var lx=mx+nx*off, ly=my+ny*off;
+    return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="1.2" stroke-dasharray="4,3" opacity=".6"/>'
+      +'<rect x="'+(lx-17)+'" y="'+(ly-9)+'" width="34" height="17" rx="8" fill="'+col+'22" stroke="'+col+'44" stroke-width="1"/>'
+      +T(lx,ly+4,lbl,col,10);
   }
-  // Fallback if shapes.js not loaded
-  const shapes = [
-    {q:'כמה צלעות יש למשולש?',a:3},{q:'כמה פינות יש לריבוע?',a:4},
-    {q:'כמה צלעות יש למלבן?',a:4},{q:'כמה פינות יש לעיגול?',a:0},
-    {q:'כמה צלעות יש למחומש?',a:5},{q:'כמה צלעות יש למשושה?',a:6}
-  ];
-  const s = pick(shapes);
-  return { type:'num', cat:'shapes', diff, label:th.label, gameLabel:'', text:s.q, answer:s.a, pts:ptsForQ('shapes',diff), hint:{type:'text',msg:'💡 ספור את הקצוות!'}, showMul:false, dir:'rtl' };
+  // Right-angle box
+  function RA(x,y){ return '<polyline points="'+(x+10)+','+y+' '+(x+10)+','+(y+10)+' '+x+','+(y+10)+'" fill="none" stroke="#ffd32a" stroke-width="1.8" opacity=".8"/>'; }
+  // Card wrapper
+  function CARD(inner,accent){
+    return '<div style="background:linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:2px solid '+accent+'55;border-radius:18px;padding:14px 12px 12px;box-shadow:0 6px 28px rgba(0,0,0,.4)">'+inner+'</div>';
+  }
+  function CHIP(txt,col){ return '<div style="display:inline-flex;align-items:center;gap:5px;background:'+col+'1a;border:1.5px solid '+col+'55;border-radius:99px;padding:4px 13px;font-family:Fredoka,sans-serif;font-size:.9rem;color:'+col+';margin-bottom:10px">'+txt+'</div>'; }
+  function FACT(emoji,txt){ return '<div style="display:flex;align-items:center;gap:7px;font-family:Rubik,sans-serif;font-size:.82rem;color:#8892b0;margin-top:4px"><span>'+emoji+'</span><span>'+txt+'</span></div>'; }
+
+  var PAL = ['#1e90ff','#2ed573','#ff6348','#ffd32a','#c77dff','#ff9f43','#00d2d3','#ff6eb4'];
+  function pc(i){ return PAL[i%PAL.length]; }
+  function mkQ(text,answer,shapeHtml,hint){ return {type:'num',cat:'shapes',diff,label:'📐 גיאומטריה ומדידה',gameLabel:'',text:text,answer:answer,pts:pts,shapeHtml:shapeHtml,hint:{type:'text',msg:hint},showMul:false,dir:'rtl'}; }
+
+  // ══ POOL of question generators ══
+
+  // 1. Count sides — interactive click dots on each side
+  function qCountSides(){
+    var shapes=[
+      {name:'משולש',n:3,pts:'150,35 262,200 38,200',col:'#2ed573',emoji:'🔺'},
+      {name:'ריבוע',n:4,pts:'72,52 228,52 228,192 72,192',col:'#1e90ff',emoji:'🟦'},
+      {name:'מלבן',n:4,pts:'48,78 252,78 252,172 48,172',col:'#00d2d3',emoji:'▭'},
+      {name:'מחומש',n:5,pts:'150,28 244,96 210,208 90,208 56,96',col:'#c77dff',emoji:'⬠'},
+      {name:'משושה',n:6,pts:'150,25 231,70 231,162 150,210 69,162 69,70',col:'#ff9f43',emoji:'⬡'},
+    ];
+    var sh=pick(shapes), c=sh.col;
+    var pArr=sh.pts.split(' ').map(function(p){return p.split(',').map(Number);});
+    var body=glow('gsh',c)+'<polygon points="'+sh.pts+'" fill="'+c+'22" stroke="'+c+'" stroke-width="3.5" filter="url(#gsh)"/>';
+    for(var i=0;i<pArr.length;i++){
+      var a=pArr[i],b=pArr[(i+1)%pArr.length];
+      var mx=(a[0]+b[0])/2, my=(a[1]+b[1])/2;
+      body+='<circle cx="'+mx+'" cy="'+my+'" r="14" fill="'+c+'" opacity=".95"/>';
+      body+=T(mx,my+5,i+1,'#111',11);
+    }
+    body+=T(150,125,sh.emoji,'',28);
+    var html=CARD(CHIP(sh.emoji+' ספור את הצלעות!','#ffd32a')+'<div style="text-align:center;margin-bottom:8px">'+S(300,240,body)+'</div>'+FACT('💡','כל עיגול = צלע אחת. כמה עיגולים?'),'#ffd32a');
+    return mkQ('כמה צלעות יש ל'+sh.name+'?',sh.n,html,'💡 '+sh.n+' צלעות — ספור העיגולים');
+  }
+
+  // 2. Perimeter of square — labeled sides
+  function qPerimSquare(){
+    var s=diff==='easy'?rnd(2,8):diff==='medium'?rnd(5,15):rnd(8,25);
+    var answer=4*s; var c='#1e90ff';
+    var sx=75,sy=38,sd=150;
+    var body=glow('gsq',c)+'<rect x="'+sx+'" y="'+sy+'" width="'+sd+'" height="'+sd+'" fill="'+c+'22" stroke="'+c+'" stroke-width="3.5" rx="5" filter="url(#gsq)"/>';
+    body+=RA(sx,sy+sd-10); body+=RA(sx+sd-10,sy); body+=RA(sx,sy); body+=RA(sx+sd-10,sy+sd-10);
+    body+=DIM(sx,sy-2,sx+sd,sy-2,s+' ס"מ',c,18);
+    body+=DIM(sx+sd+2,sy,sx+sd+2,sy+sd,s+' ס"מ',c,18);
+    body+=DIM(sx,sy+sd+2,sx+sd,sy+sd+2,s+' ס"מ','#54a0ff',-18);
+    body+=DIM(sx-2,sy,sx-2,sy+sd,s+' ס"מ','#54a0ff',-18);
+    body+=T(sx+sd/2,sy+sd/2+8,'?','#fff',28);
+    var html=CARD(CHIP('🟦 ריבוע — 4 צלעות שוות!',c)+'<div style="text-align:center;margin-bottom:8px">'+S(300,255,body)+'</div>'+FACT('🧮','היקף = 4 × '+s+' = '+answer+' ס"מ'),c);
+    return mkQ('מה היקף הריבוע שצלעו '+s+' ס"מ?',answer,html,'💡 4 × '+s+' = '+answer);
+  }
+
+  // 3. Perimeter of rectangle — labeled sides
+  function qPerimRect(){
+    var w=diff==='easy'?rnd(3,8):diff==='medium'?rnd(5,16):rnd(6,24);
+    var h=rnd(2,Math.max(3,w-1));
+    var answer=2*(w+h); var c='#00d2d3';
+    var pw=Math.min(w*12,200), ph=Math.min(Math.max(h*12,55),140);
+    var ox=(300-pw)/2, oy=(220-ph)/2+10;
+    var body=glow('grc',c)+'<rect x="'+ox+'" y="'+oy+'" width="'+pw+'" height="'+ph+'" fill="'+c+'22" stroke="'+c+'" stroke-width="3.5" rx="5" filter="url(#grc)"/>';
+    body+=RA(ox,oy); body+=RA(ox+pw-10,oy);
+    body+=DIM(ox,oy-4,ox+pw,oy-4,w+' ס"מ',c,18);
+    body+=DIM(ox-4,oy,ox-4,oy+ph,h+' ס"מ','#ffd32a',18);
+    body+=T(ox+pw/2,oy+ph/2+8,'?','#fff',26);
+    var html=CARD(CHIP('▭ מלבן — 2 זוגות שווים!',c)+'<div style="text-align:center;margin-bottom:8px">'+S(300,230,body)+'</div>'+FACT('🧮','2 × ('+w+' + '+h+') = 2 × '+(w+h)+' = '+answer+' ס"מ'),c);
+    return mkQ('מה היקף המלבן? ('+w+' ס"מ × '+h+' ס"מ)',answer,html,'💡 2×('+w+'+'+h+') = '+answer);
+  }
+
+  // 4. Perimeter of triangle — all sides labeled
+  function qPerimTri(){
+    var a=rnd(3,diff==='hard'?18:10), b=rnd(3,diff==='hard'?16:10), c2=rnd(3,diff==='hard'?14:9);
+    var answer=a+b+c2; var c='#2ed573';
+    var body=glow('gtr',c)+'<polygon points="150,30 262,198 38,198" fill="'+c+'22" stroke="'+c+'" stroke-width="3.5" filter="url(#gtr)"/>';
+    body+=DIM(38,198,262,198,a+' ס"מ',c,-20);
+    body+=DIM(262,198,150,30,b+' ס"מ','#ff9f43',20);
+    body+=DIM(150,30,38,198,c2+' ס"מ','#c77dff',-20);
+    body+=T(150,130,'?','#fff',26);
+    var html=CARD(CHIP('🔺 משולש — 3 צלעות!',c)+'<div style="text-align:center;margin-bottom:8px">'+S(300,235,body)+'</div>'+FACT('🧮',a+' + '+b+' + '+c2+' = '+answer+' ס"מ'),c);
+    return mkQ('מה היקף המשולש? (צלעות: '+a+', '+b+', '+c2+' ס"מ)',answer,html,'💡 '+a+'+'+b+'+'+c2+' = '+answer);
+  }
+
+  // 5. Area of rectangle — grid fill
+  function qAreaRect(){
+    var w=diff==='easy'?rnd(2,7):diff==='medium'?rnd(4,14):rnd(5,20);
+    var h=rnd(2,Math.max(3,w-1));
+    var answer=w*h; var c='#ff6348';
+    var pw=Math.min(w*12,200), ph=Math.min(Math.max(h*12,55),145);
+    var ox=(300-pw)/2, oy=(220-ph)/2+8;
+    var body=''; var cw2=pw/Math.min(w,7), ch2=ph/Math.min(h,7);
+    for(var ri=0;ri<Math.min(h,7);ri++) for(var ci=0;ci<Math.min(w,7);ci++)
+      body+='<rect x="'+(ox+ci*cw2).toFixed(1)+'" y="'+(oy+ri*ch2).toFixed(1)+'" width="'+(cw2-1).toFixed(1)+'" height="'+(ch2-1).toFixed(1)+'" fill="'+c+((ri+ci)%2===0?'44':'22')+'" rx="1"/>';
+    body+=glow('gar',c)+'<rect x="'+ox+'" y="'+oy+'" width="'+pw+'" height="'+ph+'" fill="none" stroke="'+c+'" stroke-width="3.5" rx="5" filter="url(#gar)"/>';
+    body+=DIM(ox,oy-5,ox+pw,oy-5,w+' ס"מ',c,18);
+    body+=DIM(ox-5,oy,ox-5,oy+ph,h+' ס"מ','#ffd32a',18);
+    body+=T(ox+pw/2,oy+ph/2+8,'?','#fff',28);
+    var html=CARD(CHIP('📐 שטח = אורך × רוחב',c)+'<div style="text-align:center;margin-bottom:8px">'+S(300,240,body)+'</div>'+FACT('🧮',w+' × '+h+' = '+answer+' ס"מ²'),c);
+    return mkQ('מה שטח המלבן? ('+w+' × '+h+' ס"מ)',answer,html,'💡 '+w+' × '+h+' = '+answer);
+  }
+
+  // 6. Area of triangle — height line shown
+  function qAreaTri(){
+    var base, height;
+    do { base=rnd(4,16)*2; height=rnd(3,12); } while((base*height)%2!==0);
+    var answer=base*height/2; var c='#c77dff';
+    var bpx=Math.min(base*9,210), hpx=Math.min(Math.max(height*9,60),155);
+    var ox=(300-bpx)/2, oy=16, tipX=ox+bpx/2;
+    var body=glow('gta',c)+'<polygon points="'+tipX+','+oy+' '+(ox+bpx)+','+(oy+hpx)+' '+ox+','+(oy+hpx)+'" fill="'+c+'22" stroke="'+c+'" stroke-width="3.5" filter="url(#gta)"/>';
+    body+='<line x1="'+tipX+'" y1="'+oy+'" x2="'+tipX+'" y2="'+(oy+hpx)+'" stroke="#ffd32a" stroke-width="2" stroke-dasharray="6,4"/>';
+    body+=RA(tipX,oy+hpx-10);
+    body+=DIM(ox,oy+hpx+6,ox+bpx,oy+hpx+6,base+' ס"מ',c,-20);
+    body+=T(tipX+14,oy+hpx/2,height+' ס"מ','#ffd32a',12,'start');
+    body+=T(tipX,oy+hpx/2,'?','#fff',26);
+    var html=CARD(CHIP('🔺 שטח = (בסיס × גובה) ÷ 2',c)+'<div style="text-align:center;margin-bottom:8px">'+S(300,230,body)+'</div>'+FACT('🧮','('+base+' × '+height+') ÷ 2 = '+answer+' ס"מ²'),c);
+    return mkQ('מה שטח המשולש? (בסיס '+base+', גובה '+height+' ס"מ)',answer,html,'💡 ('+base+'×'+height+')÷2 = '+answer);
+  }
+
+  // 7. Grid area — count squares
+  function qGridArea(){
+    var cols=diff==='easy'?rnd(2,5):rnd(3,9), rows=diff==='easy'?rnd(2,5):rnd(2,8);
+    var answer=cols*rows; var c='#ff9f43';
+    var cell=Math.min(Math.floor(200/Math.max(cols,rows)),30);
+    var gw=cols*cell, gh=rows*cell, ox=(300-gw)/2, oy=Math.max((220-gh)/2,16);
+    var body='';
+    for(var r2=0;r2<rows;r2++) for(var c2=0;c2<cols;c2++){
+      var hue=((r2*cols+c2)/(rows*cols)*90+180)|0;
+      body+='<rect x="'+(ox+c2*cell)+'" y="'+(oy+r2*cell)+'" width="'+(cell-1)+'" height="'+(cell-1)+'" fill="hsla('+hue+',65%,62%,.5)" stroke="rgba(255,255,255,.2)" stroke-width="1" rx="2"/>';
+      if(cell>=24) body+=T(ox+c2*cell+cell/2,oy+r2*cell+cell/2+4,r2*cols+c2+1,'rgba(0,0,0,.6)',cell>=26?9:8);
+    }
+    body+='<rect x="'+ox+'" y="'+oy+'" width="'+gw+'" height="'+gh+'" fill="none" stroke="'+c+'" stroke-width="2.5" rx="3"/>';
+    body+=DIM(ox,oy-6,ox+gw,oy-6,cols+'',c,16);
+    body+=DIM(ox-6,oy,ox-6,oy+gh,rows+'',c,16);
+    var html=CARD(CHIP('⬛ ספור ריבועים! '+cols+' × '+rows,c)+'<div style="text-align:center;margin-bottom:8px">'+S(300,240,body)+'</div>'+FACT('🧮','שורות × עמודות = '+rows+' × '+cols+' = '+answer),c);
+    return mkQ('כמה ריבועים בגריד?',answer,html,'💡 '+rows+' × '+cols+' = '+answer);
+  }
+
+  // 8. Angle type — identify acute/right/obtuse
+  function qAngleType(){
+    var cases=[
+      {deg:90,name:'ישרה',num:2,col:'#00d2d3'},{deg:45,name:'חדה',num:1,col:'#2ed573'},
+      {deg:60,name:'חדה',num:1,col:'#2ed573'},{deg:120,name:'קהה',num:3,col:'#ff9f43'},
+      {deg:135,name:'קהה',num:3,col:'#ff9f43'},{deg:30,name:'חדה',num:1,col:'#2ed573'},
+    ];
+    var pool=diff==='easy'?cases.slice(0,3):cases;
+    var ch=pick(pool); var c=ch.col;
+    var cx=140,cy=158,r=100;
+    var rad=ch.deg*Math.PI/180;
+    var x2=cx+r*Math.cos(-rad), y2=cy+r*Math.sin(-rad);
+    var body=glow('gag',c)
+      +'<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+r)+'" y2="'+cy+'" stroke="'+c+'" stroke-width="5" stroke-linecap="round" filter="url(#gag)"/>'
+      +'<line x1="'+cx+'" y1="'+cy+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+c+'" stroke-width="5" stroke-linecap="round" filter="url(#gag)"/>';
+    var arad=rad; var ax1=cx+40*Math.cos(-arad), ay1=cy+40*Math.sin(-arad);
+    body+='<path d="M'+(cx+40)+','+cy+' A40,40 0 0,0 '+ax1.toFixed(1)+','+ay1.toFixed(1)+'" fill="'+c+'22" stroke="'+c+'" stroke-width="2.5"/>';
+    if(ch.deg===90) body+=RA(cx,cy-10);
+    var midRad=ch.deg/2*Math.PI/180;
+    body+=T(cx+62*Math.cos(-midRad),cy+62*Math.sin(-midRad)+4,ch.deg+'°','#ffd32a',17);
+    body+='<circle cx="'+cx+'" cy="'+cy+'" r="7" fill="'+c+'"/>';
+    var html=CARD(CHIP('📐 זיהוי זוויות!',c)+'<div style="text-align:center;margin-bottom:8px">'+S(280,190,body)+'</div>'
+      +'<div style="display:flex;gap:7px;justify-content:center">'
+      +'<div style="background:#2ed57322;border:1.5px solid #2ed57366;border-radius:9px;padding:6px 10px;font-size:.75rem;color:#2ed573;font-family:Rubik,sans-serif">1 ⚡ חדה<br>&lt;90°</div>'
+      +'<div style="background:#00d2d322;border:1.5px solid #00d2d366;border-radius:9px;padding:6px 10px;font-size:.75rem;color:#00d2d3;font-family:Rubik,sans-serif">2 🔲 ישרה<br>=90°</div>'
+      +'<div style="background:#ff9f4322;border:1.5px solid #ff9f4366;border-radius:9px;padding:6px 10px;font-size:.75rem;color:#ff9f43;font-family:Rubik,sans-serif">3 🔔 קהה<br>&gt;90°</div>'
+      +'</div>',c);
+    return mkQ('איזה סוג זווית? (1=חדה  2=ישרה  3=קהה)',ch.num,html,'💡 '+ch.deg+'° → זווית '+ch.name);
+  }
+
+  // 9. Missing angle in triangle
+  function qMissingAngle(){
+    var a=rnd(35,80), b=rnd(25,100-a), c2=180-a-b;
+    if(c2<=5||c2>=170) return qMissingAngle();
+    var hide=pick([0,1,2]), vals=[a,b,c2]; var c='#ff6348';
+    var lbPos=[[150,58],[238,192],[58,192]];
+    var body=glow('gat',c)+'<polygon points="150,30 268,198 32,198" fill="'+c+'22" stroke="'+c+'" stroke-width="3.5" filter="url(#gat)"/>';
+    vals.forEach(function(v,i){
+      var lbl=i===hide?'?°':v+'°'; var col=i===hide?'#ffd32a':'#e2e8f0';
+      body+='<circle cx="'+lbPos[i][0]+'" cy="'+(lbPos[i][1]-10)+'" r="20" fill="'+(i===hide?'#ffd32a33':c+'22')+'" stroke="'+(i===hide?'#ffd32a':c)+'66" stroke-width="1.5"/>';
+      body+=T(lbPos[i][0],lbPos[i][1]-4,lbl,col,13);
+    });
+    body+=T(150,130,'180°','#8892b0',11);
+    var known=vals.filter(function(_,i){return i!==hide;});
+    var html=CARD(CHIP('🔺 סכום זוויות משולש = 180°',c)+'<div style="text-align:center;margin-bottom:8px">'+S(300,225,body)+'</div>'+FACT('🧮',known.join('° + ')+'° + ? = 180°')+FACT('💡','? = 180 - '+(known[0]+known[1])+' = '+vals[hide]+'°'),c);
+    return mkQ('מצא את הזווית החסרה במשולש',vals[hide],html,'💡 180 - '+(known[0]+known[1])+' = '+vals[hide]);
+  }
+
+  // 10. Circle — identify diameter or circumference
+  function qCircle(){
+    var r=diff==='easy'?rnd(2,5):diff==='medium'?rnd(3,9):rnd(4,14);
+    var d=2*r; var c='#ff6eb4';
+    var askD=diff==='easy'||Math.random()<.5;
+    var answer=askD?d:Math.round(3.14*r*r);
+    var cr=Math.min(r*9,95), cx2=150, cy2=115;
+    var body=glow('gcr',c)+'<circle cx="'+cx2+'" cy="'+cy2+'" r="'+cr+'" fill="'+c+'28" stroke="'+c+'" stroke-width="3.5" filter="url(#gcr)"/>';
+    body+='<circle cx="'+cx2+'" cy="'+cy2+'" r="'+(cr*.65).toFixed(0)+'" fill="none" stroke="'+c+'22" stroke-width="1.5"/>';
+    body+='<line x1="'+cx2+'" y1="'+cy2+'" x2="'+(cx2+cr)+'" y2="'+cy2+'" stroke="#ffd32a" stroke-width="2.5"/>';
+    body+='<circle cx="'+cx2+'" cy="'+cy2+'" r="5" fill="#ffd32a"/>';
+    body+=T(cx2+cr/2+2,cy2-10,'r = '+r,'#ffd32a',13);
+    if(!askD){ body+='<line x1="'+(cx2-cr)+'" y1="'+cy2+'" x2="'+(cx2+cr)+'" y2="'+cy2+'" stroke="#c77dff" stroke-width="1.5" stroke-dasharray="5,4" opacity=".5"/>'; }
+    body+=T(cx2,cy2+(askD?10:5),askD?'d = ?':'π×r²=?','#fff',22);
+    var label=askD?'הקוטר = 2 × רדיוס':'שטח = π × r²';
+    var html=CARD(CHIP('⭕ '+label,c)+'<div style="text-align:center;margin-bottom:8px">'+S(300,228,body)+'</div>'+FACT('🧮',askD?'d = 2 × '+r+' = '+d:'3.14 × '+r+'² = '+answer+' ס"מ²'),c);
+    return mkQ(askD?'קוטר עיגול עם רדיוס '+r+' ס"מ?':'שטח עיגול עם רדיוס '+r+' ס"מ? (π=3.14)',answer,html,askD?'💡 2 × '+r+' = '+d:'💡 3.14 × '+r*r+' ≈ '+answer);
+  }
+
+  // 11. Measurement — ruler reading
+  function qRuler(){
+    var len=diff==='easy'?rnd(2,8):diff==='medium'?rnd(5,15):rnd(8,25);
+    var unit=diff==='hard'?pick(['מ"מ','ס"מ']):'ס"מ';
+    var objs=['עיפרון ✏️','גזר 🥕','ספר 📚','שרביט 🪄','חרב ⚔️'];
+    var obj=pick(objs);
+    var pixPerCm=Math.min(Math.floor(240/Math.max(len+2,8)),22);
+    var rulerW=(len+2)*pixPerCm, ox=20, oy=92;
+    var body='';
+    body+='<rect x="'+ox+'" y="'+oy+'" width="'+rulerW+'" height="32" fill="#ffd32a22" stroke="#ffd32a" stroke-width="2" rx="4"/>';
+    for(var i=0;i<=len+1;i++){
+      var tx4=ox+i*pixPerCm;
+      body+='<line x1="'+tx4+'" y1="'+oy+'" x2="'+tx4+'" y2="'+(i%5===0?oy-13:oy-6)+'" stroke="#ffd32a" stroke-width="'+(i%5===0?2:1)+'" opacity=".8"/>';
+      if(i%2===0) body+=T(tx4,oy-16,i,'#8892b0',9);
+    }
+    body+=T(ox+rulerW/2,oy+20,'ס"מ','#ffd32a88',10);
+    body+='<rect x="'+ox+'" y="'+(oy-46)+'" width="'+(len*pixPerCm)+'" height="30" rx="8" fill="#2ed57355" stroke="#2ed573" stroke-width="2.5"/>';
+    body+=T(ox+len*pixPerCm/2,oy-24,obj,'',20);
+    body+='<line x1="'+ox+'" y1="'+(oy-49)+'" x2="'+ox+'" y2="'+(oy-6)+'" stroke="#2ed573" stroke-width="1.5" stroke-dasharray="3,2" opacity=".6"/>';
+    body+='<line x1="'+(ox+len*pixPerCm)+'" y1="'+(oy-49)+'" x2="'+(ox+len*pixPerCm)+'" y2="'+(oy-6)+'" stroke="#2ed573" stroke-width="1.5" stroke-dasharray="3,2" opacity=".6"/>';
+    var html=CARD(CHIP('📏 קרא את הסרגל!','#2ed573')+'<div style="text-align:center;margin-bottom:8px;overflow-x:auto">'+S(rulerW+50,135,body)+'</div>'+FACT('💡','מתחיל מ-0, הקצה הימני = ?'),'#2ed573');
+    return mkQ('כמה ס"מ ארוך ה'+obj+'?',len,html,'💡 '+len+' ס"מ');
+  }
+
+  // 12. Symmetry axes
+  function qSymmetry(){
+    var shapes=[
+      {name:'ריבוע',axes:4,pts:'75,55 225,55 225,185 75,185',col:'#1e90ff'},
+      {name:'מלבן',axes:2,pts:'40,80 260,80 260,170 40,170',col:'#00d2d3'},
+      {name:'משולש שווה-צלעות',axes:3,pts:'150,30 255,195 45,195',col:'#2ed573'},
+      {name:'מעוין',axes:2,pts:'150,25 255,112 150,195 45,112',col:'#c77dff'},
+    ];
+    var sh=pick(shapes); var c=sh.col;
+    var axC=['#ffd32a','#ff6eb4','#a8e063','#00d2d3'];
+    var axLines='';
+    if(sh.axes>=1) axLines+='<line x1="150" y1="22" x2="150" y2="215" stroke="'+axC[0]+'" stroke-width="2.5" stroke-dasharray="8,5" opacity=".8"/>';
+    if(sh.axes>=2) axLines+='<line x1="28" y1="118" x2="272" y2="118" stroke="'+axC[1]+'" stroke-width="2.5" stroke-dasharray="8,5" opacity=".8"/>';
+    if(sh.axes>=3) axLines+='<line x1="42" y1="42" x2="258" y2="194" stroke="'+axC[2]+'" stroke-width="2.5" stroke-dasharray="6,4" opacity=".7"/>';
+    if(sh.axes>=4) axLines+='<line x1="258" y1="42" x2="42" y2="194" stroke="'+axC[3]+'" stroke-width="2.5" stroke-dasharray="6,4" opacity=".7"/>';
+    var body=glow('gsym',c)+'<polygon points="'+sh.pts+'" fill="'+c+'28" stroke="'+c+'" stroke-width="3" filter="url(#gsym)"/>'+axLines;
+    var html=CARD(CHIP('🪞 ספור צירי סימטריה!',c)+'<div style="text-align:center;margin-bottom:8px">'+S(300,240,body)+'</div>'+FACT('💡','כל קו צבעוני = ציר סימטריה אחד'),c);
+    return mkQ('כמה צירי סימטריה יש ל'+sh.name+'?',sh.axes,html,'💡 '+sh.axes+' צירי סימטריה');
+  }
+
+  // 13. L-shape area
+  function qLShape(){
+    var W, H, w, h;
+    do { W=rnd(5,12); H=rnd(4,W); w=rnd(2,W-2); h=rnd(2,H-2); } while(w>=W||h>=H);
+    var answer=W*H-w*h; var c='#ff9f43';
+    var sc=Math.min(14,Math.floor(160/Math.max(W,H)));
+    var Wp=W*sc, Hp=H*sc, wp=w*sc, hp=h*sc;
+    var ox=Math.max((300-Wp)/2,22), oy=Math.max((230-Hp)/2,18);
+    var pts=[ox+','+oy,(ox+Wp)+','+oy,(ox+Wp)+','+(oy+hp),(ox+Wp-wp)+','+(oy+hp),(ox+Wp-wp)+','+(oy+Hp),ox+','+(oy+Hp)].join(' ');
+    var body='';
+    for(var ri2=0;ri2<H;ri2++) for(var ci2=0;ci2<W;ci2++){
+      if(ci2>=W-w&&ri2<h) continue;
+      body+='<rect x="'+(ox+ci2*sc)+'" y="'+(oy+ri2*sc)+'" width="'+(sc-1)+'" height="'+(sc-1)+'" fill="'+c+((ri2+ci2)%2===0?'44':'22')+'" rx="1"/>';
+    }
+    body+=glow('gls',c)+'<polygon points="'+pts+'" fill="none" stroke="'+c+'" stroke-width="3.5" filter="url(#gls)"/>';
+    body+='<rect x="'+(ox+Wp-wp)+'" y="'+oy+'" width="'+wp+'" height="'+hp+'" fill="#ff475711" stroke="#ff4757" stroke-width="1.5" stroke-dasharray="5,3" rx="3"/>';
+    body+=T(ox+Wp-wp/2,oy+hp/2+5,'🚫','',15);
+    body+=T(ox+Wp/4,oy+Hp/2+8,'?','#fff',26);
+    var html=CARD(CHIP('🔡 צורת L',c)+'<div style="text-align:center;margin-bottom:8px">'+S(300,240,body)+'</div>'+FACT('🧮',W+'×'+H+' - '+w+'×'+h+' = '+(W*H)+' - '+(w*h)+' = '+answer+' ס"מ²'),c);
+    return mkQ('מה שטח הצורה? ('+W+'×'+H+' פחות '+w+'×'+h+')',answer,html,'💡 '+W*H+' - '+w*h+' = '+answer);
+  }
+
+  // ── Pick pool by grade ──
+  var easyPool, medPool, hardPool;
+  if(grade==='א'||grade==='ב'){
+    easyPool=[qCountSides,qCountSides,qRuler,qSymmetry];
+    medPool=[qCountSides,qSymmetry,qRuler,qPerimSquare];
+    hardPool=[qSymmetry,qAngleType,qPerimSquare,qRuler];
+  } else if(grade==='ג'){
+    easyPool=[qPerimSquare,qPerimRect,qGridArea,qCountSides,qRuler];
+    medPool=[qPerimRect,qPerimTri,qGridArea,qAngleType,qRuler];
+    hardPool=[qPerimTri,qMissingAngle,qAreaRect,qAngleType,qRuler];
+  } else if(grade==='ד'){
+    easyPool=[qAreaRect,qPerimRect,qGridArea,qAngleType,qRuler];
+    medPool=[qAreaRect,qAreaTri,qMissingAngle,qPerimTri,qGridArea];
+    hardPool=[qAreaTri,qMissingAngle,qCircle,qLShape,qAreaRect];
+  } else if(grade==='ה'){
+    easyPool=[qAreaRect,qAreaTri,qCircle,qGridArea,qAngleType];
+    medPool=[qAreaTri,qCircle,qMissingAngle,qLShape,qPerimTri];
+    hardPool=[qCircle,qLShape,qMissingAngle,qAreaTri,qAreaRect];
+  } else {
+    easyPool=[qAreaRect,qAreaTri,qCircle,qMissingAngle,qGridArea];
+    medPool=[qCircle,qLShape,qMissingAngle,qAreaTri,qPerimTri];
+    hardPool=[qCircle,qLShape,qMissingAngle,qAreaTri,qGridArea];
+  }
+  var pool=diff==='easy'?easyPool:diff==='medium'?medPool:hardPool;
+  return pick(pool)(diff);
 }
 
-// ══════════════════════════════════════════════════════════════
-// genFrac v3 — SPECTACULAR interactive fraction questions
-// Handwritten SVG fractions · Tap-to-answer shapes · 17 types
-// ══════════════════════════════════════════════════════════════
+
 function genFrac(diff, th) {
-
-  var pts = ptsForQ('fractions', diff);
-
-  // ── 1. HANDWRITTEN fraction (SVG with Caveat font + wobbly line) ─
-  function frac(n, d, color, sz) {
-    color = color || '#fff';
-    sz    = sz    || 1;
-    var W = Math.round(52*sz), H = Math.round(68*sz);
-    var fs = Math.round(24*sz);
-    var mid = Math.round(H/2);
-    var x1 = Math.round(5*sz), x2 = Math.round(47*sz);
-    // Wobbly hand-drawn line using cubic bezier
-    var cy1 = mid + (Math.random()<.5?-1:1)*Math.round(rnd(1,3)*sz);
-    var cy2 = mid + (Math.random()<.5?-1:1)*Math.round(rnd(1,3)*sz);
-    var d_attr = 'M'+x1+' '+mid+' C '+(x1+10*sz)+' '+cy1+' '+(x2-10*sz)+' '+cy2+' '+x2+' '+mid;
-    return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H
-      +'" style="display:inline-block;vertical-align:middle;overflow:visible">'
-      // Numerator
-      +'<text x="'+(W/2)+'" y="'+(mid-5)+'" text-anchor="middle" dominant-baseline="auto"'
-      +' font-family="Caveat,\'Patrick Hand\',cursive" font-size="'+fs+'" font-weight="700" fill="'+color+'">'+n+'</text>'
-      // Wobbly vinculum
-      +'<path d="'+d_attr+'" stroke="'+color+'" stroke-width="'+(2.5*sz)+'" stroke-linecap="round" fill="none"/>'
-      // Denominator
-      +'<text x="'+(W/2)+'" y="'+(mid+5)+'" text-anchor="middle" dominant-baseline="hanging"'
-      +' font-family="Caveat,\'Patrick Hand\',cursive" font-size="'+fs+'" font-weight="700" fill="'+color+'">'+d+'</text>'
-      +'</svg>';
-  }
-
-  // ── 2. PIZZA SVG (static display) ───────────────────────────
-  function pizza(n, d, col, size) {
-    col  = col  || '#ff6348';
-    size = size || 130;
-    var cx=size/2, cy=size/2, r=size/2-5;
-    var s='';
-    for(var i=0;i<d;i++){
-      var a1=(i/d)*2*Math.PI-Math.PI/2, a2=((i+1)/d)*2*Math.PI-Math.PI/2;
-      var x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
-      var x2=cx+r*Math.cos(a2), y2=cy+r*Math.sin(a2);
-      var lg=(1/d)>.5?1:0;
-      var fill=i<n?col:'#16213e';
-      // pepperoni dot on filled slices
-      var dot='';
-      if(i<n){var ma=((i+.5)/d)*2*Math.PI-Math.PI/2;
-        dot='<circle cx="'+(cx+r*.55*Math.cos(ma)).toFixed(1)+'" cy="'+(cy+r*.55*Math.sin(ma)).toFixed(1)+'" r="4" fill="#8b0000" opacity=".75"/>';}
-      s+='<path d="M'+cx+','+cy+' L'+x1.toFixed(1)+','+y1.toFixed(1)
-        +' A'+r+','+r+' 0 '+lg+',1 '+x2.toFixed(1)+','+y2.toFixed(1)+' Z"'
-        +' fill="'+fill+'" stroke="#fff" stroke-width="2.5"/>'+dot;
-    }
-    return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size
-      +'" style="display:block;margin:0 auto;filter:drop-shadow(0 5px 15px rgba(0,0,0,.55))">'
-      +'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#c97c1e" stroke="#fff" stroke-width="2"/>'+s+'</svg>';
-  }
-
-  // ── 3. INTERACTIVE PIZZA (tap slices, auto-fills answer) ────
-  function pizzaTap(d, pre, col, size) {
-    col  = col  || '#ff6348';
-    size = size || 140;
-    var id='pz'+Math.floor(Math.random()*99999);
-    var cx=size/2, cy=size/2, r=size/2-5;
-    var paths='';
-    for(var i=0;i<d;i++){
-      var a1=(i/d)*2*Math.PI-Math.PI/2, a2=((i+1)/d)*2*Math.PI-Math.PI/2;
-      var x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
-      var x2=cx+r*Math.cos(a2), y2=cy+r*Math.sin(a2);
-      var lg=(1/d)>.5?1:0;
-      var fill=i<pre?col:'#16213e';
-      paths+='<path id="'+id+'s'+i+'" d="M'+cx+','+cy
-        +' L'+x1.toFixed(1)+','+y1.toFixed(1)+' A'+r+','+r+' 0 '+lg+',1 '+x2.toFixed(1)+','+y2.toFixed(1)+' Z"'
-        +' fill="'+fill+'" stroke="#fff" stroke-width="2.5"'
-        +' style="cursor:pointer;transition:all .2s;transform-origin:'+cx+'px '+cy+'px"'
-        +' onclick="_pzClick(\''+id+'\','+i+','+d+',\''+col+'\')"'
-        +' onmouseover="this.style.filter=\'brightness(1.35)\';this.style.transform=\'scale(1.07)\'"'
-        +' onmouseout="this.style.filter=\'\';this.style.transform=\'\'"/>';
-    }
-    var svg='<svg id="'+id+'" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size
-      +'" style="display:block;margin:0 auto;filter:drop-shadow(0 5px 15px rgba(0,0,0,.5))">'
-      +'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#c97c1e" stroke="#fff" stroke-width="2"/>'+paths
-      +'<text id="'+id+'lb" x="'+cx+'" y="'+(size+18)+'" text-anchor="middle"'
-      +' font-family="Caveat,cursive" font-size="15" fill="#8892b0">'+pre+' / '+d+'</text>'
-      +'</svg>';
-    // Inline script — safe because shapeHtml is innerHTML'd into the DOM
-    var scr='<script>window._pzClick=function(id,i,d,col){'
-      +'var el=document.getElementById(id+"s"+i);if(!el)return;'
-      +'var on=el.getAttribute("fill")!==col;'
-      +'el.setAttribute("fill",on?col:"#16213e");'
-      +'var c=0;for(var j=0;j<d;j++){var s=document.getElementById(id+"s"+j);if(s&&s.getAttribute("fill")===col)c++;}'
-      +'var lb=document.getElementById(id+"lb");if(lb)lb.textContent=c+" / "+d;'
-      +'window._shapeAnswer&&window._shapeAnswer(c);'
-      +'};<\/script>';
-    return svg+scr;
-  }
-
-  // ── 4. BAR (static) ─────────────────────────────────────────
-  function bar(n, d, col, w, h) {
-    col=col||'#54a0ff'; w=w||240; h=h||42;
-    var cw=w/d, cells='';
-    for(var i=0;i<d;i++)
-      cells+='<rect x="'+(i*cw+2).toFixed(1)+'" y="2" width="'+(cw-4).toFixed(1)+'" height="'+(h-4)+'"'
-        +' fill="'+(i<n?col:'#16213e')+'" stroke="'+col+'" stroke-width="2" rx="5"/>';
-    return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="display:block;margin:0 auto">'+cells+'</svg>';
-  }
-
-  // ── 5. BAR (interactive tap) ─────────────────────────────────
-  function barTap(d, pre, col, w, h) {
-    col=col||'#54a0ff'; w=w||260; h=h||48;
-    var id='br'+Math.floor(Math.random()*99999);
-    var cw=w/d, cells='';
-    for(var i=0;i<d;i++)
-      cells+='<rect id="'+id+'c'+i+'" x="'+(i*cw+2).toFixed(1)+'" y="2" width="'+(cw-4).toFixed(1)+'" height="'+(h-4)+'"'
-        +' fill="'+(i<pre?col:'#16213e')+'" stroke="'+col+'" stroke-width="2" rx="6"'
-        +' style="cursor:pointer;transition:fill .15s"'
-        +' onclick="_brClick(\''+id+'\','+i+','+d+',\''+col+'\')"'
-        +' onmouseover="this.style.filter=\'brightness(1.4)\'" onmouseout="this.style.filter=\'\'"/>';
-    var svg='<svg id="'+id+'" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="display:block;margin:0 auto">'+cells+'</svg>';
-    var scr='<script>window._brClick=function(id,i,d,col){'
-      +'var el=document.getElementById(id+"c"+i);if(!el)return;'
-      +'var on=el.getAttribute("fill")!==col;el.setAttribute("fill",on?col:"#16213e");'
-      +'var c=0;for(var j=0;j<d;j++){var b=document.getElementById(id+"c"+j);if(b&&b.getAttribute("fill")===col)c++;}'
-      +'window._shapeAnswer&&window._shapeAnswer(c);'
-      +'};<\/script>';
-    return svg+scr;
-  }
-
-  // ── 6. GRID (static) ────────────────────────────────────────
-  function grid(n, tot, col) {
-    col=col||'#2ed573';
-    var cols=Math.min(tot,6), rows=Math.ceil(tot/cols);
-    var cw=36,ch=36,gap=5;
-    var W=cols*(cw+gap)-gap, H=rows*(ch+gap)-gap, cells='';
-    for(var i=0;i<tot;i++){
-      var c=i%cols, r=Math.floor(i/cols);
-      cells+='<rect x="'+(c*(cw+gap))+'" y="'+(r*(ch+gap))+'" width="'+cw+'" height="'+ch+'"'
-        +' fill="'+(i<n?col:'#16213e')+'" stroke="'+col+'" stroke-width="2" rx="7"/>';
-    }
-    return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:block;margin:0 auto">'+cells+'</svg>';
-  }
-
-  // ── 7. GRID (interactive tap) ────────────────────────────────
-  function gridTap(tot, pre, col) {
-    col=col||'#2ed573';
-    var cols=Math.min(tot,6), rows=Math.ceil(tot/cols);
-    var cw=40,ch=40,gap=6;
-    var W=cols*(cw+gap)-gap, H=rows*(ch+gap)-gap;
-    var id='gd'+Math.floor(Math.random()*99999);
-    var cells='';
-    for(var i=0;i<tot;i++){
-      var c=i%cols, r=Math.floor(i/cols);
-      var x=c*(cw+gap), y=r*(ch+gap);
-      cells+='<rect id="'+id+'g'+i+'" x="'+x+'" y="'+y+'" width="'+cw+'" height="'+ch+'"'
-        +' fill="'+(i<pre?col:'#16213e')+'" stroke="'+col+'" stroke-width="2" rx="8"'
-        +' style="cursor:pointer;transition:all .15s;transform-origin:'+(x+cw/2)+'px '+(y+ch/2)+'px"'
-        +' onclick="_gdClick(\''+id+'\','+i+','+tot+',\''+col+'\')"'
-        +' onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'\'"/>';
-    }
-    var svg='<svg id="'+id+'" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:block;margin:0 auto">'+cells+'</svg>';
-    var scr='<script>window._gdClick=function(id,i,tot,col){'
-      +'var el=document.getElementById(id+"g"+i);if(!el)return;'
-      +'var on=el.getAttribute("fill")!==col;el.setAttribute("fill",on?col:"#16213e");'
-      +'var c=0;for(var j=0;j<tot;j++){var g=document.getElementById(id+"g"+j);if(g&&g.getAttribute("fill")===col)c++;}'
-      +'window._shapeAnswer&&window._shapeAnswer(c);'
-      +'};<\/script>';
-    return svg+scr;
-  }
-
-  // ── 8. CHOCOLATE BAR (interactive) ──────────────────────────
-  function choco(rows, cols, pre) {
-    var cw=36,ch=26,gap=4;
-    var W=cols*(cw+gap)-gap, H=rows*(ch+gap)-gap;
-    var tot=rows*cols;
-    var id='ch'+Math.floor(Math.random()*99999);
-    var col='#a0522d';
-    var cells='';
-    for(var i=0;i<tot;i++){
-      var c=i%cols, r=Math.floor(i/cols);
-      var x=c*(cw+gap), y=r*(ch+gap);
-      var fill=i<pre?col:'#1a0a00';
-      cells+='<rect id="'+id+'k'+i+'" x="'+x+'" y="'+y+'" width="'+cw+'" height="'+ch+'"'
-        +' fill="'+fill+'" stroke="#3d1800" stroke-width="2.5" rx="4"'
-        +' style="cursor:pointer;transition:fill .15s"'
-        +' onclick="_gdClick(\''+id+'k\','+i+','+tot+',\''+col+'\')"'
-        +' onmouseover="this.style.filter=\'brightness(1.3)\'" onmouseout="this.style.filter=\'\'"/>';
-      // shine
-      cells+='<rect x="'+(x+3)+'" y="'+(y+2)+'" width="'+(cw-6)+'" height="3" rx="1" fill="rgba(255,255,255,.1)"/>';
-    }
-    var svg='<svg id="'+id+'" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H
-      +'" style="display:block;margin:0 auto;filter:drop-shadow(0 3px 8px rgba(0,0,0,.5))">'+cells+'</svg>';
-    var scr='<script>window._gdClick=window._gdClick||function(id,i,tot,col){'
-      +'var el=document.getElementById(id+i);if(!el)return;'
-      +'var on=el.getAttribute("fill")!==col;el.setAttribute("fill",on?col:"#1a0a00");'
-      +'var c=0;for(var j=0;j<tot;j++){var g=document.getElementById(id+j);if(g&&g.getAttribute("fill")===col)c++;}'
-      +'window._shapeAnswer&&window._shapeAnswer(c);'
-      +'};<\/script>';
-    return svg+scr;
-  }
-
-  // ── 9. NUMBER LINE ───────────────────────────────────────────
-  function numLine(n, d, w) {
-    w=w||270;
-    var h=58, pad=22, iw=w-pad*2, ty=28;
-    var out='';
-    out+='<rect x="'+pad+'" y="'+(ty-7)+'" width="'+(iw*(n/d)).toFixed(1)+'" height="14" fill="rgba(84,160,255,.25)" rx="3"/>';
-    out+='<line x1="'+pad+'" y1="'+ty+'" x2="'+(pad+iw)+'" y2="'+ty+'" stroke="#e2e8f0" stroke-width="2.5"/>';
-    out+='<polygon points="'+(pad+iw)+','+(ty-5)+' '+(pad+iw+10)+','+ty+' '+(pad+iw)+','+(ty+5)+'" fill="#e2e8f0"/>';
-    for(var i=0;i<=d;i++){
-      var x=(pad+iw*(i/d)).toFixed(1);
-      out+='<line x1="'+x+'" y1="'+(ty-7)+'" x2="'+x+'" y2="'+(ty+7)+'" stroke="#e2e8f0" stroke-width="2"/>';
-      out+='<text x="'+x+'" y="'+(ty+22)+'" text-anchor="middle" font-family="Caveat,cursive" font-size="13" fill="#8892b0">'+i+'/'+d+'</text>';
-    }
-    var mx=(pad+iw*(n/d)).toFixed(1);
-    out+='<circle cx="'+mx+'" cy="'+ty+'" r="8" fill="#ffd32a" stroke="#fff" stroke-width="2"/>';
-    out+='<text x="'+mx+'" y="'+(ty-14)+'" text-anchor="middle" font-family="Caveat,cursive" font-size="13" font-weight="700" fill="#ffd32a">'+n+'/'+d+'</text>';
-    return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="display:block;margin:0 auto">'+out+'</svg>';
-  }
-
-  // ── UI helpers ───────────────────────────────────────────────
-  function wrap(inner, accent) {
-    accent=accent||'#54a0ff';
-    return '<div style="background:linear-gradient(160deg,rgba(255,255,255,.05) 0%,rgba(255,255,255,.02) 100%);'
-      +'border:2px solid '+accent+'55;border-radius:18px;padding:14px 12px 12px;'
-      +'box-shadow:0 6px 28px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)">'+inner+'</div>';
-  }
-  function pill(txt, col) {
-    col=col||'#ffd32a';
-    return '<div style="display:inline-flex;align-items:center;gap:5px;background:'+col+'1a;'
-      +'border:1.5px solid '+col+'55;border-radius:99px;padding:4px 14px;'
-      +'font-family:Caveat,cursive;font-size:.95rem;color:'+col+';margin-bottom:10px">'+txt+'</div>';
-  }
-  function row(els, gap) { // flex row
-    gap=gap||'10px';
-    return '<div style="display:flex;align-items:center;justify-content:center;gap:'+gap+';flex-wrap:wrap">'+els+'</div>';
-  }
-  function hbr(txt, col) { // Hebrew hint text below shape
-    col=col||'#8892b0';
-    return '<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:.92rem;color:'+col+';margin-top:8px;line-height:1.6">'+txt+'</div>';
-  }
-  function lbr(txt, col) { // LTR label
-    col=col||'#e2e8f0';
-    return '<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1rem;color:'+col+';margin-bottom:10px;line-height:1.7">'+txt+'</div>';
-  }
-  function autotip() {
-    return '<div style="font-family:Caveat,cursive;font-size:.75rem;color:#4a5568;text-align:center;margin-top:5px">'
-      +'\u05d4\u05ea\u05e9\u05d5\u05d1\u05d4 \u05de\u05ea\u05e2\u05d3\u05db\u05e0\u05ea \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea &#x1F447;</div>';
-  }
-
-  // Font loader (once)
-  var FL='<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">';
-
-  // Colour palette
-  var PAL=['#ff6348','#54a0ff','#2ed573','#ffd32a','#c77dff','#ff9f43','#00d2d3','#ff4dac'];
-
-  // Helper: pick fraction pairs per difficulty
-  function pairs(hard) {
-    if(!hard) return [[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6],[2,4]];
-    return [[2,3],[3,4],[2,5],[3,5],[4,5],[5,6],[3,8],[5,8],[7,8]];
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // QUESTION TYPES
-  // ═══════════════════════════════════════════════════════════
-
-  var easyPool  = ['pizza_tap','bar_tap','grid_tap','pizza_read','bar_read','pizza_word_simple','grid_count'];
-  var medPool   = ['bar_compare','missing_num','bar_add','choco_tap','numline_read','pizza_word_hard','grid_of_total'];
-  var hardPool  = ['add_visual','sub_visual','mixed_bars','equivalent','word_story','compare_pizza','bar_compare'];
-  var pool      = diff==='easy'?easyPool:diff==='medium'?medPool:hardPool;
-  var qt        = pick(pool);
-
-  // ── EASY 1: Tap pizza to shade ───────────────────────────────
-  if(qt==='pizza_tap'){
-    var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6]]);
-    var n=fr[0],d=fr[1]; var col=pick(['#ff6348','#ee5a24','#ff9f43']);
-    var things=['\u05e4\u05d9\u05e6\u05d4','\u05e2\u05d5\u05d2\u05d4','\u05d8\u05d0\u05e8\u05d8'];
-    var thing=pick(things);
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pill('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05db\u05d3\u05d9 \u05dc\u05e6\u05d1\u05d5\u05e2 \u05d0\u05d5\u05ea\u05df!','#ffd32a')
-        +lbr('Shade '+frac(n,d,'#ffd32a',1.1)+' of the '+thing)
-        +pizzaTap(d,0,col,148)
-        +autotip()
-      ,col),
-      answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05de\u05ea\u05d5\u05da '+d},showMul:false,dir:'rtl'};
-  }
-
-  // ── EASY 2: Tap bar segments ─────────────────────────────────
-  if(qt==='bar_tap'){
-    var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3],[1,5],[2,5],[3,5],[4,5],[1,6],[5,6]]);
-    var n=fr[0],d=fr[1]; var col=pick(PAL);
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pill('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05ea\u05d0\u05d9\u05dd \u05dc\u05e6\u05d1\u05d9\u05e2\u05d4!','#ffd32a')
-        +lbr('Color '+frac(n,d,'#ffd32a',1.1)+' of the bar')
-        +barTap(d,0,col,264,50)
-        +autotip()
-      ,col),
-      answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05ea\u05d0\u05d9\u05dd \u05de\u05ea\u05d5\u05da '+d},showMul:false,dir:'rtl'};
-  }
-
-  // ── EASY 3: Tap grid squares ─────────────────────────────────
-  if(qt==='grid_tap'){
-    var tot=pick([4,6,8,9,10,12]);
-    var n=rnd(1,tot-1); var col=pick(PAL);
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pill('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05e8\u05d9\u05d1\u05d5\u05e2\u05d9\u05dd \u05dc\u05e6\u05d1\u05d9\u05e2\u05d4!','#ffd32a')
-        +lbr('Color '+frac(n,tot,'#ffd32a',1.05)+' of the squares')
-        +gridTap(tot,0,col)
-        +autotip()
-      ,col),
-      answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05de\u05ea\u05d5\u05da '+tot+' \u05e8\u05d9\u05d1\u05d5\u05e2\u05d9\u05dd'},showMul:false,dir:'rtl'};
-  }
-
-  // ── EASY 4: Read pizza — what fraction is shaded? ────────────
-  if(qt==='pizza_read'){
-    var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6],[1,8],[3,8]]);
-    var n=fr[0],d=fr[1]; var col=pick(['#ff6348','#ee5a24']);
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pill('\u05db\u05ea\u05d5\u05d1 \u05d0\u05ea \u05d4\u05e0\u05d5\u05de\u05e8\u05d8\u05d5\u05e8 (\u05d4\u05de\u05e1\u05e4\u05e8 \u05dc\u05de\u05e2\u05dc\u05d4)','#2ed573')
-        +pizza(n,d,col,138)
-        +lbr('Pizza cut into <b style="color:#ffd32a">'+d+'</b> equal slices &nbsp;→&nbsp; '+frac('?',d,'#2ed573',1.05)+' are shaded')
-      ,'#2ed573'),
-      answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05e1\u05e4\u05d5\u05e8 \u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05e6\u05d1\u05d5\u05e2\u05d5\u05ea: '+n},showMul:false,dir:'rtl'};
-  }
-
-  // ── EASY 5: Read bar — write numerator ───────────────────────
-  if(qt==='bar_read'){
-    var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3],[1,5],[2,5],[3,5],[4,5]]);
-    var n=fr[0],d=fr[1]; var col=pick(PAL);
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pill('\u05db\u05ea\u05d5\u05d1 \u05d0\u05ea \u05d4\u05e0\u05d5\u05de\u05e8\u05d8\u05d5\u05e8','#2ed573')
-        +bar(n,d,col,256,46)
-        +lbr(frac('?',d,'#2ed573',1.05)+' of the bar is colored')
-      ,'#2ed573'),
-      answer:n,hint:{type:'text',msg:'&#x1F4A1; '+n+' \u05ea\u05d0\u05d9\u05dd \u05e6\u05d1\u05d5\u05e2\u05d9\u05dd \u05de\u05ea\u05d5\u05da '+d},showMul:false,dir:'rtl'};
-  }
-
-  // ── EASY 6: Pizza word simple ────────────────────────────────
-  if(qt==='pizza_word_simple'){
-    var d=pick([4,6,8]);
-    var ate=rnd(1,d-1); var left=d-ate;
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pizza(left,d,'#ff6348',132)
-        +'<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:1.05rem;color:#e2e8f0;margin-top:10px;line-height:1.9">'
-        +'\u05e4\u05d9\u05e6\u05d4 \u05e9\u05dc <span style="color:#ffd32a;font-size:1.25em;font-weight:700">'+d+'</span> \u05d7\u05ea\u05d9\u05db\u05d5\u05ea.'
-        +' \u05d0\u05db\u05dc\u05d5 <span style="color:#ff6348;font-size:1.25em;font-weight:700">'+ate+'</span> \u05d7\u05ea\u05d9\u05db\u05d5\u05ea.'
-        +'<br>\u05db\u05de\u05d4 \u05d7\u05ea\u05d9\u05db\u05d5\u05ea <span style="color:#2ed573;font-weight:700">\u05e0\u05e9\u05d0\u05e8\u05d5</span>?'
-        +'</div>'
-      ,'#ff6348'),
-      answer:left,hint:{type:'text',msg:'&#x1F4A1; '+d+' - '+ate+' = '+left},showMul:false,dir:'rtl'};
-  }
-
-  // ── EASY 7: Count shaded grid squares ────────────────────────
-  if(qt==='grid_count'){
-    var tot=pick([4,6,8,9,12]); var n=rnd(1,tot-1); var col=pick(PAL);
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pill('\u05db\u05de\u05d4 \u05e8\u05d9\u05d1\u05d5\u05e2\u05d9\u05dd \u05e6\u05d1\u05d5\u05e2\u05d9\u05dd?','#2ed573')
-        +grid(n,tot,col)
-        +lbr(frac('?',tot,'#2ed573',1.05)+' of the grid is shaded')
-      ,'#2ed573'),
-      answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05e1\u05e4\u05d5\u05e8: '+n+' \u05e6\u05d1\u05d5\u05e2\u05d9\u05dd \u05de\u05ea\u05d5\u05da '+tot},showMul:false,dir:'rtl'};
-  }
-
-  // ── MEDIUM 1: Compare two bars ───────────────────────────────
-  if(qt==='bar_compare'||qt==='compare_pizza'){
-    var allP=[[1,2],[1,4],[3,4],[1,3],[2,3],[1,6],[5,6],[2,5],[3,5]];
-    var fr1=pick(allP); var n1=fr1[0],d1=fr1[1];
-    var fr2=pick(allP.filter(function(p){return !(p[0]===n1&&p[1]===d1);}));
-    var n2=fr2[0],d2=fr2[1];
-    if(Math.abs(n1/d1-n2/d2)<0.05){n2++;d2+=2;}
-    var bigger=(n1/d1>=n2/d2)?1:2;
-    var p1=Math.round(n1/d1*100), p2=Math.round(n2/d2*100);
-    var useP=(qt==='compare_pizza');
-    var shape1=useP?pizza(n1,d1,'#54a0ff',100):bar(n1,d1,'#54a0ff',118,36);
-    var shape2=useP?pizza(n2,d2,'#ff6348',100):bar(n2,d2,'#ff6348',118,36);
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pill('\u05d0\u05d9\u05d6\u05d4 \u05e9\u05d1\u05e8 \u05d2\u05d3\u05d5\u05dc \u05d9\u05d5\u05ea\u05e8? \u05db\u05ea\u05d5\u05d1 1 \u05d0\u05d5 2','#c77dff')
-        +'<div style="display:flex;gap:16px;justify-content:center;align-items:flex-end;margin-bottom:6px">'
-        +'<div style="text-align:center"><div style="font-family:Caveat,cursive;color:#8892b0;font-size:1rem;margin-bottom:4px">1</div>'+shape1+'<div style="margin-top:5px">'+frac(n1,d1,'#54a0ff',1)+'</div></div>'
-        +'<div style="font-family:Caveat,cursive;font-size:1.8rem;color:#e2e8f0;font-weight:700;padding-bottom:14px">VS</div>'
-        +'<div style="text-align:center"><div style="font-family:Caveat,cursive;color:#8892b0;font-size:1rem;margin-bottom:4px">2</div>'+shape2+'<div style="margin-top:5px">'+frac(n2,d2,'#ff6348',1)+'</div></div>'
-        +'</div>'
-        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;color:#4a5568;font-size:.82rem">(1)='+p1+'%&nbsp;&nbsp;(2)='+p2+'%</div>'
-      ,'#c77dff'),
-      answer:bigger,hint:{type:'text',msg:'&#x1F4A1; '+n1+'/'+d1+'='+p1+'%  |  '+n2+'/'+d2+'='+p2+'%'},showMul:false,dir:'rtl'};
-  }
-
-  // ── MEDIUM 2: Missing numerator / denominator ────────────────
-  if(qt==='missing_num'){
-    var bases=[[1,2],[1,4],[1,3],[2,3],[3,4]];
-    var fr=pick(bases); var n=fr[0],d=fr[1];
-    var mult=rnd(2,4); var n2=n*mult,d2=d*mult;
-    var askN=Math.random()<.5;
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pill('\u05e9\u05e0\u05d9 \u05e9\u05d1\u05e8\u05d9\u05dd \u05e9\u05d5\u05d5\u05d9\u05dd — \u05de\u05e6\u05d0 ?','#ffd32a')
-        +row(
-          '<div style="text-align:center">'+bar(n,d,'#54a0ff',118,34)+'<div style="margin-top:4px">'+frac(n,d,'#54a0ff',1)+'</div></div>'
-          +'<div style="font-family:Caveat,cursive;font-size:2rem;color:#e2e8f0;font-weight:700">=</div>'
-          +'<div style="text-align:center">'+bar(n2,d2,'#ffd32a',118,34)+'<div style="margin-top:4px">'+frac(askN?'?':n2,askN?d2:'?','#ffd32a',1)+'</div></div>'
-        )
-        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;color:#4a5568;font-size:.85rem;margin-top:4px">× '+mult+' on top and bottom</div>'
-      ,'#ffd32a'),
-      answer:askN?n2:d2,hint:{type:'text',msg:'&#x1F4A1; '+n+'×'+mult+'='+n2+', '+d+'×'+mult+'='+d2},showMul:false,dir:'rtl'};
-  }
-
-  // ── MEDIUM 3: Add fractions (same denominator) ───────────────
-  if(qt==='bar_add'){
-    var d=pick([2,3,4,5,6,8]);
-    var n1=rnd(1,d-2); var n2=rnd(1,d-n1); var ans=n1+n2;
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pill('\u05d7\u05d1\u05e8 \u05e9\u05d1\u05e8\u05d9\u05dd!','#2ed573')
-        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#e2e8f0;margin-bottom:10px">'
-        +frac(n1,d,'#54a0ff',1.05)
-        +'<span style="font-size:1.3rem;vertical-align:middle"> + </span>'
-        +frac(n2,d,'#ff6348',1.05)
-        +'<span style="font-size:1.3rem;vertical-align:middle"> = </span>'
-        +frac('?',d,'#2ed573',1.05)
-        +'</div>'
-        +row(bar(n1,d,'#54a0ff',122,36)+'<span style="font-family:Caveat,cursive;font-size:1.3rem;color:#e2e8f0">+</span>'+bar(n2,d,'#ff6348',122,36))
-        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;color:#4a5568;font-size:.85rem;margin-top:5px">'+n1+' + '+n2+' = ? (denominator stays '+d+')</div>'
-      ,'#2ed573'),
-      answer:ans,hint:{type:'text',msg:'&#x1F4A1; '+n1+' + '+n2+' = '+ans},showMul:false,dir:'rtl'};
-  }
-
-  // ── MEDIUM 4: Chocolate bar tap ──────────────────────────────
-  if(qt==='choco_tap'){
-    var cfg=pick([[2,4],[3,4],[2,6],[3,6]]); var rows=cfg[0],cols=cfg[1];
-    var tot=rows*cols; var n=rnd(1,tot-1);
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pill('\u05dc\u05d7\u05e5 \u05e2\u05dc \u05e7\u05d5\u05d1\u05d9\u05d5\u05ea \u05e9\u05d5\u05e7\u05d5\u05dc\u05d3 \u05dc\u05e6\u05d1\u05d9\u05e2\u05d4!','#ff9f43')
-        +lbr('Color '+frac(n,tot,'#ff9f43',1.05)+' of the chocolate bar')
-        +choco(rows,cols,0)
-        +autotip()
-      ,'#ff9f43'),
-      answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05e7\u05d5\u05d1\u05d9\u05d5\u05ea \u05de\u05ea\u05d5\u05da '+tot},showMul:false,dir:'rtl'};
-  }
-
-  // ── MEDIUM 5: Number line ─────────────────────────────────────
-  if(qt==='numline_read'){
-    var d=pick([2,3,4,5,6]); var n=rnd(1,d-1);
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pill('\u05d0\u05d9\u05e4\u05d4 \u05e2\u05dc \u05e6\u05d9\u05e8 \u05d4\u05de\u05e1\u05e4\u05e8\u05d9\u05dd?','#54a0ff')
-        +numLine(n,d,272)
-        +lbr('The marker shows '+frac(n,d,'#ffd32a',1.05)+'&nbsp;— write the numerator')
-      ,'#54a0ff'),
-      answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05d4\u05e1\u05de\u05df \u05e0\u05de\u05e6\u05d0 \u05d1 '+n+'/'+d},showMul:false,dir:'rtl'};
-  }
-
-  // ── MEDIUM 6: Pizza word hard ─────────────────────────────────
-  if(qt==='pizza_word_hard'){
-    var d=pick([6,8,12]);
-    var fr=pick([[1,3],[2,3],[1,4],[3,4],[1,2]]); var n=fr[0],base=fr[1];
-    var tot=d; while(tot%base!==0)tot++;
-    var ate=tot*n/base; var left=tot-ate;
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pizza(left,tot,'#ff6348',130)
-        +'<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:1rem;color:#e2e8f0;line-height:1.9;margin-top:10px">'
-        +'\u05e4\u05d9\u05e6\u05d4 \u05e9\u05dc <span style="color:#ffd32a;font-weight:700">'+tot+'</span> \u05d7\u05ea\u05d9\u05db\u05d5\u05ea.'
-        +'<br>\u05d0\u05db\u05dc\u05d5 '+frac(n,base,'#ff6348',.9)+' \u05de\u05d4\u05e4\u05d9\u05e6\u05d4.'
-        +'<br>\u05db\u05de\u05d4 \u05d7\u05ea\u05d9\u05db\u05d5\u05ea <span style="color:#2ed573">\u05e0\u05e9\u05d0\u05e8\u05d5</span>?'
-        +'</div>'
-      ,'#ff6348'),
-      answer:left,hint:{type:'text',msg:'&#x1F4A1; '+tot+'×'+n+'/'+base+'='+ate+' \u05e0\u05d0\u05db\u05dc. '+tot+'-'+ate+'='+left},showMul:false,dir:'rtl'};
-  }
-
-  // ── MEDIUM 7: Grid of total ───────────────────────────────────
-  if(qt==='grid_of_total'){
-    var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3],[1,5],[1,6]]);
-    var n=fr[0],d=fr[1];
-    var tot=rnd(2,5)*d; var part=tot*n/d; var col=pick(PAL);
-    var things=['\u05ea\u05e4\u05d5\u05d7\u05d9\u05dd','\u05db\u05d5\u05db\u05d1\u05d9\u05dd','\u05e2\u05d5\u05d2\u05d9\u05d5\u05ea','\u05dc\u05d1\u05d1\u05d5\u05ea','\u05e4\u05e8\u05d7\u05d9\u05dd'];
-    var thing=pick(things);
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        grid(part,tot,col)
-        +'<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:1rem;color:#e2e8f0;margin-top:10px;line-height:1.8">'
-        +frac(n,d,'#ffd32a',.95)+' \u05de\u05ea\u05d5\u05da '+tot+' '+thing+'. \u05db\u05de\u05d4 '+thing+' \u05e6\u05d1\u05d5\u05e2\u05d9\u05dd?'
-        +'</div>'
-      ,col),
-      answer:part,hint:{type:'text',msg:'&#x1F4A1; '+tot+'÷'+d+'='+(tot/d)+'. ×'+n+'='+part},showMul:false,dir:'rtl'};
-  }
-
-  // ── HARD 1: Add fractions visual with result bar ─────────────
-  if(qt==='add_visual'){
-    var d=pick([2,3,4,5,6,8]);
-    var n1=rnd(1,d-2); var n2=rnd(1,d-n1); var ans=n1+n2;
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pill('\u05d7\u05d1\u05e8 \u05e9\u05d1\u05e8\u05d9\u05dd!','#2ed573')
-        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#e2e8f0;margin-bottom:10px">'
-        +frac(n1,d,'#54a0ff',1.05)+'<span style="font-size:1.3rem;vertical-align:middle"> + </span>'
-        +frac(n2,d,'#ff6348',1.05)+'<span style="font-size:1.3rem;vertical-align:middle"> = </span>'
-        +frac('?',d,'#2ed573',1.05)+'</div>'
-        +row(bar(n1,d,'#54a0ff',124,36)+'<span style="font-family:Caveat,cursive;font-size:1.2rem;color:#e2e8f0">+</span>'+bar(n2,d,'#ff6348',124,36))
-        +'<div style="text-align:center;margin-top:6px">'+bar(ans,d,'#2ed573',258,38)+'</div>'
-        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;color:#4a5568;font-size:.83rem;margin-top:4px">'+n1+' + '+n2+' = ? (denominator '+d+')</div>'
-      ,'#2ed573'),
-      answer:ans,hint:{type:'text',msg:'&#x1F4A1; '+n1+' + '+n2+' = '+ans},showMul:false,dir:'rtl'};
-  }
-
-  // ── HARD 2: Subtract fractions visual ────────────────────────
-  if(qt==='sub_visual'){
-    var d=pick([2,3,4,5,6,8]);
-    var n1=rnd(2,d); var n2=rnd(1,n1-1); var ans=n1-n2;
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pill('\u05d7\u05e1\u05e8 \u05e9\u05d1\u05e8\u05d9\u05dd!','#ff6348')
-        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:1.1rem;color:#e2e8f0;margin-bottom:10px">'
-        +frac(n1,d,'#2ed573',1.05)+'<span style="font-size:1.3rem;vertical-align:middle"> − </span>'
-        +frac(n2,d,'#ff6348',1.05)+'<span style="font-size:1.3rem;vertical-align:middle"> = </span>'
-        +frac('?',d,'#ffd32a',1.05)+'</div>'
-        +'<div style="text-align:center;margin-bottom:5px">'+bar(n1,d,'#2ed573',258,36)+'</div>'
-        +row(bar(ans,d,'#ffd32a',124,36)+'<span style="font-family:Caveat,cursive;font-size:1.2rem;color:#e2e8f0">+</span>'+bar(n2,d,'#ff6348',124,36))
-      ,'#ff6348'),
-      answer:ans,hint:{type:'text',msg:'&#x1F4A1; '+n1+' − '+n2+' = '+ans},showMul:false,dir:'rtl'};
-  }
-
-  // ── HARD 3: Mixed number — count unit fractions ───────────────
-  if(qt==='mixed_bars'){
-    var d=pick([2,3,4]); var whole=rnd(1,3); var num=rnd(1,d-1);
-    var tot=whole*d+num;
-    var mc=['#54a0ff','#2ed573','#ffd32a','#ff6348'];
-    var bs='<div style="display:flex;flex-direction:column;gap:5px;align-items:center;margin-bottom:10px">';
-    for(var i=0;i<whole;i++) bs+=bar(d,d,mc[i%mc.length],224,32);
-    bs+=bar(num,d,'#c77dff',224,32)+'</div>';
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pill('\u05db\u05de\u05d4 \u05d7\u05dc\u05e7\u05d9\u05dd \u05d1\u05e1\u05da \u05d4\u05db\u05dc?','#c77dff')
-        +bs
-        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;font-size:.97rem;color:#e2e8f0">'
-        +whole+' whole bars + '+frac(num,d,'#c77dff',.93)+' = how many '+frac(1,d,'#8892b0',.82)+' pieces?'
-        +'</div>'
-      ,'#c77dff'),
-      answer:tot,hint:{type:'text',msg:'&#x1F4A1; '+whole+'×'+d+'='+(whole*d)+'. +'+num+'='+tot},showMul:false,dir:'rtl'};
-  }
-
-  // ── HARD 4: Equivalent fraction ──────────────────────────────
-  if(qt==='equivalent'){
-    var bases=[[1,2],[1,3],[2,3],[1,4],[3,4]];
-    var fr=pick(bases); var n=fr[0],d=fr[1];
-    var mult=rnd(2,5); var n2=n*mult,d2=d*mult;
-    var askN=Math.random()<.5;
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        pill('\u05e9\u05d1\u05e8\u05d9\u05dd \u05e9\u05d5\u05d5\u05d9\u05dd — \u05de\u05e6\u05d0 ?','#c77dff')
-        +'<div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">'
-        +'<div style="text-align:center">'+bar(n,d,'#54a0ff',118,34)+'<div style="margin-top:4px">'+frac(n,d,'#54a0ff',1)+'</div></div>'
-        +'<div style="font-family:Caveat,cursive;font-size:2rem;color:#e2e8f0;font-weight:700">=</div>'
-        +'<div style="text-align:center">'+bar(n2,d2,'#c77dff',118,34)+'<div style="margin-top:4px">'+frac(askN?'?':n2,askN?d2:'?','#c77dff',1)+'</div></div>'
-        +'</div>'
-        +'<div style="direction:ltr;text-align:center;font-family:Caveat,cursive;color:#4a5568;font-size:.85rem">multiply by '+mult+'/'+mult+'</div>'
-      ,'#c77dff'),
-      answer:askN?n2:d2,hint:{type:'text',msg:'&#x1F4A1; '+n+'×'+mult+'='+n2+', '+d+'×'+mult+'='+d2},showMul:false,dir:'rtl'};
-  }
-
-  // ── HARD 5: Word story with grid ─────────────────────────────
-  if(qt==='word_story'){
-    var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3]]); var n=fr[0],d=fr[1];
-    var mults=[12,16,20,24].filter(function(t){return t%d===0;}); var tot=pick(mults)||d*4;
-    var part=tot*n/d; var col=pick(PAL);
-    var stories=[
-      '\u05d1\u05db\u05d9\u05ea\u05d4 \u05d9\u05e9 '+tot+' \u05ea\u05dc\u05de\u05d9\u05d3\u05d9\u05dd. '+frac(n,d,'#ffd32a',.9)+' \u05de\u05d4\u05dd \u05de\u05d1\u05d9\u05d0\u05d9\u05dd \u05db\u05e8\u05d9\u05da. \u05db\u05de\u05d4?',
-      '\u05d1\u05e4\u05d0\u05e8\u05e7 \u05d4\u05d9\u05d5 '+tot+' \u05e6\u05d9\u05e4\u05d5\u05e8\u05d9\u05dd. '+frac(n,d,'#54a0ff',.9)+' \u05de\u05d4\u05df \u05e2\u05e4\u05d5. \u05db\u05de\u05d4?',
-      '\u05dc\u05d3\u05e0\u05d9 '+tot+' \u05de\u05d8\u05d1\u05e2\u05d5\u05ea. \u05e0\u05ea\u05df '+frac(n,d,'#ff6348',.9)+' \u05dc\u05d0\u05d7\u05d5\u05ea\u05d5. \u05db\u05de\u05d4?',
-    ];
-    return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-      shapeHtml: FL+wrap(
-        grid(part,tot,col)
-        +'<div style="direction:rtl;text-align:center;font-family:Caveat,cursive;font-size:1rem;color:#e2e8f0;margin-top:10px;line-height:1.9">'+pick(stories)+'</div>'
-      ,col),
-      answer:part,hint:{type:'text',msg:'&#x1F4A1; '+tot+'÷'+d+'='+(tot/d)+'. ×'+n+'='+part},showMul:false,dir:'rtl'};
-  }
-
-  // ── Fallback ─────────────────────────────────────────────────
-  var fr=pick([[1,2],[1,4],[3,4],[1,3],[2,3]]); var n=fr[0],d=fr[1];
-  return {type:'num',cat:'fractions',diff,label:th.label,gameLabel:'',text:'',pts,
-    shapeHtml: FL+wrap(
-      pill('\u05e6\u05d1\u05e2 '+n+' \u05d7\u05ea\u05d9\u05db\u05d5\u05ea!','#ffd32a')
-      +pizzaTap(d,0,'#ff6348',142)
-      +autotip()
-    ,'#ff6348'),
-    answer:n,hint:{type:'text',msg:'&#x1F4A1; \u05e6\u05d1\u05e2 '+n+' \u05d7\u05ea\u05d9\u05db\u05d5\u05ea \u05de\u05ea\u05d5\u05da '+d},showMul:false,dir:'rtl'};
+  const pairs = [[1,2],[1,4],[3,4],[1,3],[2,3]];
+  const [n,d] = pick(pairs);
+  const total = rnd(4,20)*d;
+  const part  = total*n/d;
+  return { type:'num', cat:'fractions', diff, label:th.label, gameLabel:'', text:`כמה זה ${n}/${d} מתוך ${total}?`, answer:part, pts:ptsForQ('fractions',diff), hint:{type:'text',msg:`💡 ${total}÷${d}=${total/d} לחלק. ×${n}=${part}`}, showMul:false, dir:'rtl' };
 }
