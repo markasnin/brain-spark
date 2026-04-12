@@ -1,4 +1,4 @@
-const CACHE = 'brainspark-v5';
+const CACHE = 'brainspark-v4';
 const FILES = [
   './index.html',
   './style.css',
@@ -36,19 +36,10 @@ self.addEventListener('activate', e => {
       Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
     )
   );
-  self.clients.claim();
 });
 
-// Network-first: try network, fall back to cache
 self.addEventListener('fetch', e => {
   e.respondWith(
-    fetch(e.request)
-      .then(res => {
-        // Update cache with fresh response
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-        return res;
-      })
-      .catch(() => caches.match(e.request))
+    caches.match(e.request).then(r => r || fetch(e.request))
   );
 });
