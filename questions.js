@@ -1,5 +1,3 @@
-window.genShapesInteractive = null; // disable old shapes.js
-
 // ══ QUESTION GENERATION ══
 
 // ── Grade-aware word story banks ──
@@ -287,6 +285,7 @@ function checkWordEquation(userA, userOp, userB, q) {
 // genShapes v4 — Real drawn shapes, dimension arrows, kid-friendly
 // ══════════════════════════════════════════════════════════════
 function genShapes(diff, th) {
+
   var grade = window._grade || 'ג';
   var pts = ptsForQ('shapes', diff);
 
