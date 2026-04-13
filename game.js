@@ -20,6 +20,8 @@ function applyGradeConfig() {
   (gc.availableLearnTopics||[]).forEach(t => { if(!st.learnedTopics.includes(t)) st.learnedTopics.push(t); });
   st.examTopics = st.examTopics.filter(t => (gc.availableExamTopics||[]).includes(t));
   if (st.examTopics.length===0) st.examTopics = (gc.availableExamTopics||['add']).slice(0,2);
+  // Patch geometry generators so every shapes/measurement question gets rich SVG visuals
+  setTimeout(function(){ if (window.patchGeometryGenerators) window.patchGeometryGenerators(); }, 50);
 }
 
 async function selectGrade(grade) {
