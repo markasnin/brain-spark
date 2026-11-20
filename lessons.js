@@ -602,7 +602,7 @@ function openReminder() {
   _buildReminderChips();
   // Auto-select first topic for current grade
   const grade = (window.GRADE_CONFIG || {}).gradeId || 'ו';
-  const first = REMINDER_TOPICS.find(t => t.grade.includes(grade));
+  const first = reminderTopicsForGrade(grade)[0];
   if (first) _showReminderCard(first.id);
   show('remind-scr');
 }
@@ -622,13 +622,24 @@ function _ensureReminderScreen() {
   document.body.appendChild(scr);
 }
 
+function reminderTopicsForGrade(grade) {
+  const aligned = Object.keys(curriculum[grade] || {});
+  const topics = ALL_CATS.filter(cat => aligned.includes(cat.id))
+    .map(cat => ({...cat, color:cat.borderColor || '#54a0ff'}));
+  const gradeTopics = window.GRADE_CONFIG?.availableCategories || [];
+  return [...topics, ...REMINDER_TOPICS.filter(t => t.grade.includes(grade)
+    && !aligned.includes(t.id)
+    && (gradeTopics.includes('negatives') || t.id !== 'r_integers')
+    && (gradeTopics.includes('percent') || t.id !== 'r_percents'))];
+}
+
 function _buildReminderChips() {
   const container = document.getElementById('remChips');
   if (!container) return;
   container.innerHTML = '';
   const grade = (window.GRADE_CONFIG || {}).gradeId || 'ו';
 
-  REMINDER_TOPICS.filter(t => t.grade.includes(grade)).forEach(t => {
+  reminderTopicsForGrade(grade).forEach(t => {
     const chip = document.createElement('button');
     chip.className = 'rem-chip';
     chip.id = 'chip-' + t.id;
@@ -647,10 +658,17 @@ function _showReminderCard(id) {
   const wrap = document.getElementById('remCardWrap');
   if (!wrap) return;
 
-  const ref = REMINDERS[id];
+  const grade = window.GRADE_CONFIG?.gradeId || 'ו';
+  const topic = reminderTopicsForGrade(grade).find(t => t.id === id);
+  const examples = curriculum[grade]?.[id] && curriculumDifficulties.map(diff => {
+    const q = curriculumQuestion(grade, id, diff, 5);
+    return [q.text + (q.shapeHtml || ''), q.explanation + '<br><strong>' + q.answer + '</strong>'];
+  });
+  const ref = examples
+    ? {color:topic.color, title:topic.name, sections:[{head:'דוגמאות פתורות', rows:examples}]}
+    : REMINDERS[id];
   if (!ref) { wrap.innerHTML = `<div class="rem-empty">⚠️ אין מידע לנושא זה עדיין.</div>`; return; }
 
-  const topic = REMINDER_TOPICS.find(t => t.id === id);
   const icon = topic?.icon || '📚';
   const color = ref.color;
   const glow = color + '44';
