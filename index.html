@@ -2,13 +2,13 @@
 <html lang="he" dir="rtl">
 <head>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
-<link rel="manifest" href="manifest.json?v=7">
+<link rel="manifest" href="manifest.json?v=8">
 <meta name="theme-color" content="#07050f">
 <meta charset="UTF-8">
-<meta name="brainspark-release" content="7">
+<meta name="brainspark-release" content="8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Brain Spark ⚡</title>
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=8">
 <!-- Grade config loader slot -->
 <script id="gradeScript"></script>
 <!-- ══ LOAD ORDER ══
@@ -20,15 +20,15 @@
   6. ui.js             — show, updateHome, buildGrid, settings, friends UI
   7. firebase.js       — Firebase init + all async Firebase functions (module)
 -->
-<script src="special-users.js?v=7"></script>
-<script src="config.js?v=7"></script>
-<script src="question-visuals.js?v=7"></script>
-<script src="curriculum.js?v=7"></script>
-<script src="questions.js?v=7"></script>
-<script src="game.js?v=7"></script>
-<script src="lessons.js?v=7"></script>
-<script src="ui.js?v=7"></script>
-<script type="module" src="firebase.js?v=7"></script>
+<script src="special-users.js?v=8"></script>
+<script src="config.js?v=8"></script>
+<script src="question-visuals.js?v=8"></script>
+<script src="curriculum.js?v=8"></script>
+<script src="questions.js?v=8"></script>
+<script src="game.js?v=8"></script>
+<script src="lessons.js?v=8"></script>
+<script src="ui.js?v=8"></script>
+<script type="module" src="firebase.js?v=8"></script>
 </head>
 <body>
 <div id="bg"></div>
@@ -147,41 +147,44 @@
 </div>
 <!-- ══ HOME ══ -->
 <div class="scr" id="home">
-  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:420px;margin-bottom:4px">
+  <header class="home-header">
     <button class="logout-btn" onclick="fbLogout()">התנתק</button>
-    <div class="logo" style="font-size:2.4rem;animation:none">⚡ Brain Spark</div>
+    <div class="logo">⚡ Brain Spark</div>
+  </header>
+  <div class="home-layout">
+    <main class="home-practice" aria-labelledby="practiceTitle">
+      <h1 id="practiceTitle">מה מתרגלים היום?</h1>
+      <div id="mainGrid"></div>
+    </main>
+    <aside class="home-sidebar" aria-label="התקדמות ופעילות">
+      <div id="hcr">
+        <div class="pcard">
+          <div class="pname" id="playerName">⭐ שחקן</div>
+          <div class="plevel" id="levelDisplay">רמה 1</div>
+          <div id="gradeBadgeWrap"></div>
+          <div class="xp-outer"><div class="xp-inner" id="xpBar" style="width:0%"></div></div>
+          <div class="xp-txt" id="xpTxt">0 / 50 נקודות לרמה הבאה</div>
+          <div class="streak-badge" id="streakBadge" style="display:none">🔥 <span id="streakCount">0</span> ברצף!</div>
+        </div>
+        <div class="lb-card" id="homeLbCard">
+          <div class="lb-title">🏆 לוח חברים</div>
+          <div id="homeLbList"><div style="color:var(--txt2);font-size:.85rem;text-align:center;padding:8px">טוען...</div></div>
+          <button onclick="openFriends()" style="width:100%;margin-top:10px;padding:9px;border-radius:10px;border:1px solid rgba(30,144,255,.3);background:rgba(30,144,255,.08);color:var(--a4);font-family:'Rubik',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;">👥 כל החברים ←</button>
+        </div>
+      </div>
+      <div class="recommend" id="recommendBox" style="display:none">
+        <div class="recommend-icon">💡</div>
+        <div class="recommend-text" id="recommendText"></div>
+      </div>
+      <div class="daily-banner" id="dailyBanner" onclick="startDaily()">
+        <div style="font-size:2rem">📅</div>
+        <div>
+          <div style="font-weight:700;font-size:1rem;color:var(--a2)">משימה יומית!</div>
+          <div style="font-size:.82rem;color:var(--txt2)" id="dailyDesc">2 שאלות מיוחדות מחכות לך</div>
+        </div>
+      </div>
+    </aside>
   </div>
-  <div id="hcr" style="display:flex;flex-direction:column;align-items:center;width:100%;max-width:420px;margin-top:10px;margin-bottom:24px">
-    <div class="pcard" style="width:100%;box-sizing:border-box;margin-bottom:18px">
-      <div class="pname" id="playerName">⭐ שחקן</div>
-      <div class="plevel" id="levelDisplay">רמה 1</div>
-      <div id="gradeBadgeWrap"></div>
-      <div class="xp-outer"><div class="xp-inner" id="xpBar" style="width:0%"></div></div>
-      <div class="xp-txt" id="xpTxt">0 / 50 נקודות לרמה הבאה</div>
-      <div class="streak-badge" id="streakBadge" style="display:none">🔥 <span id="streakCount">0</span> ברצף!</div>
-    </div>
-    <div class="lb-card" id="homeLbCard" style="width:100%;box-sizing:border-box;margin-bottom:0">
-      <div class="lb-title">🏆 לוח חברים</div>
-      <div id="homeLbList"><div style="color:var(--txt2);font-size:.85rem;text-align:center;padding:8px">טוען...</div></div>
-      <button onclick="openFriends()" style="width:100%;margin-top:10px;padding:9px;border-radius:10px;border:1px solid rgba(30,144,255,.3);background:rgba(30,144,255,.08);color:var(--a4);font-family:'Rubik',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;">👥 כל החברים ←</button>
-    </div>
-  </div>
-  <div class="recommend" id="recommendBox" style="display:none">
-    <div class="recommend-icon">💡</div>
-    <div class="recommend-text" id="recommendText"></div>
-  </div>
-  <div class="daily-banner" id="dailyBanner" onclick="startDaily()">
-    <div style="font-size:2rem">📅</div>
-    <div>
-      <div style="font-weight:700;font-size:1rem;color:var(--a2)">משימה יומית!</div>
-      <div style="font-size:.82rem;color:var(--txt2)" id="dailyDesc">2 שאלות מיוחדות מחכות לך</div>
-    </div>
-  </div>
-  <div style="width:100%;text-align:center;padding:8px 14px;margin:4px 0 6px;display:flex;justify-content:center">
-    <span style="font-family:'Fredoka',sans-serif;font-size:.88rem;color:var(--txt2);white-space:nowrap">🚀 Brain Spark בגרסת בטא — המשחק משתפר כל הזמן! &nbsp;<span style="color:var(--a4);opacity:.8">תודה שאתם חלק מהמסע ⚡</span></span>
-  </div>
-  <div class="sec-label">קטגוריות</div>
-  <div class="grid" id="mainGrid"></div>
 </div>
 <!-- ══ FRIENDS ══ -->
 <div class="scr" id="friends-scr">
@@ -546,14 +549,14 @@
   load();
   createStars();
 </script>
-<script src="profile-fields.js?v=7"></script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=7');}</script>
-  <script src="minigame-fishing.js?v=7"></script>
-  <script src="minigame-dungeon.js?v=7"></script>
-  <script src="minigame-rocket.js?v=7"></script>
-  <script src="minigame-chef.js?v=7"></script>
-  <script src="minigame-builder.js?v=7"></script>
-  <script src="minigames.js?v=7"></script>
+<script src="profile-fields.js?v=8"></script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=8');}</script>
+  <script src="minigame-fishing.js?v=8"></script>
+  <script src="minigame-dungeon.js?v=8"></script>
+  <script src="minigame-rocket.js?v=8"></script>
+  <script src="minigame-chef.js?v=8"></script>
+  <script src="minigame-builder.js?v=8"></script>
+  <script src="minigames.js?v=8"></script>
 <script>
 // ── PATCH: fix minigames tile onclick and export helpers to window ──
 window.show = function(id) {
@@ -582,7 +585,7 @@ function _patchUpdateHome() {
 }
 _patchUpdateHome();
 </script>
-  <script src="geometry.js?v=7"></script>
+  <script src="geometry.js?v=8"></script>
   <footer class="site-credit" lang="en" dir="ltr">Made by <strong>MindUp™</strong></footer>
 </body>
 </html>
