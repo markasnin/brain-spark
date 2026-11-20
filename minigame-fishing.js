@@ -98,6 +98,7 @@ window.FishingGame = (function () {
       <button onclick="window.FishingGame.exit()" style="width:100%;margin-top:6px;padding:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#adb5bd;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.82rem;cursor:pointer">← חזרה לבית</button>
     `;
     if (state.phase === 'casting') animateCast();
+    mountMinigameVisual(el, state.activeQ);
   }
 
   function renderOceanBg() {
@@ -152,7 +153,7 @@ window.FishingGame = (function () {
         <div style="font-family:'Fredoka',sans-serif;font-size:1.1rem;color:${f.color};margin-bottom:2px">${f.name}</div>
         <div style="font-size:.78rem;color:${RARITY_COLORS[f.rarity]};font-weight:700;margin-bottom:8px">${RARITY_NAMES[f.rarity]} • +${f.pts} נק'</div>
         <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.25);border-radius:10px;padding:6px 12px;margin-bottom:10px">
-          <span style="font-family:'Rubik',sans-serif;font-size:1rem;color:#fff;font-weight:700;direction:${q.dir || 'rtl'}">${q.text}</span>
+          <span style="font-family:'Rubik',sans-serif;font-size:1rem;color:#fff;font-weight:700;direction:${q.dir || 'rtl'}" class="minigame-prompt">${questionPrompt(q)}</span>
           <span id="fishTimer" style="color:#74c0fc;font-family:'Fredoka',sans-serif;font-size:1.1rem;font-weight:900;white-space:nowrap;margin-right:8px">⏱ ${_fFmt(secs)}</span>
         </div>
         <div style="display:flex;gap:8px">
