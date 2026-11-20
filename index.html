@@ -90,6 +90,7 @@
 -->
 <script src="special-users.js"></script>
 <script src="config.js"></script>
+<script src="curriculum.js"></script>
 <script src="questions.js"></script>
 <script src="game.js"></script>
 <script src="lessons.js"></script>
@@ -154,7 +155,8 @@
           <div class="reg-grade-card rg3" onclick="selectRegGrade('ג')" data-grade="ג"><span class="rgc-emoji">⚡</span><div class="rgc-name">כיתה ג</div><div class="rgc-sub">+ חילוק</div></div>
           <div class="reg-grade-card rg4" onclick="selectRegGrade('ד')" data-grade="ד"><span class="rgc-emoji">🔮</span><div class="rgc-name">כיתה ד</div><div class="rgc-sub">שברים</div></div>
           <div class="reg-grade-card rg5" onclick="selectRegGrade('ה')" data-grade="ה"><span class="rgc-emoji">🏆</span><div class="rgc-name">כיתה ה</div><div class="rgc-sub">מספרים גדולים</div></div>
-          <div class="reg-grade-card rg6" onclick="selectRegGrade('ו')" data-grade="ו"><span class="rgc-emoji">🚀</span><div class="rgc-name">כיתה ו</div><div class="rgc-sub">רמה מקסימלית</div></div>
+          <div class="reg-grade-card rg6" onclick="selectRegGrade('ו')" data-grade="ו"><span class="rgc-emoji">🚀</span><div class="rgc-name">כיתה ו</div><div class="rgc-sub">סיום היסודי</div></div>
+          <div class="reg-grade-card rg7" onclick="selectRegGrade('ז')" data-grade="ז"><span class="rgc-emoji">🧭</span><div class="rgc-name">כיתה ז</div><div class="rgc-sub">חטיבת ביניים</div></div>
         </div>
         <input type="hidden" id="regGrade" value="">
         <button class="reg-next-btn" onclick="regGoStep(3)">המשך ←</button>
@@ -206,7 +208,8 @@
     <div class="grade-btn g3" onclick="selectGrade('ג')"><span class="ge">⚡</span><div class="gn">כיתה ג</div><div class="gs">+ חילוק</div><span class="g-tag">מתקדמים</span></div>
     <div class="grade-btn g4" onclick="selectGrade('ד')"><span class="ge">🔮</span><div class="gn">כיתה ד</div><div class="gs">+ שברים וגיאומטריה</div><span class="g-tag">אתגר</span></div>
     <div class="grade-btn g5" onclick="selectGrade('ה')"><span class="ge">🏆</span><div class="gn">כיתה ה</div><div class="gs">מספרים גדולים</div><span class="g-tag">מקצוענים</span></div>
-    <div class="grade-btn g6" onclick="selectGrade('ו')"><span class="ge">🚀</span><div class="gn">כיתה ו</div><div class="gs">רמה מקסימלית</div><span class="g-tag">אלופים</span></div>
+    <div class="grade-btn g6" onclick="selectGrade('ו')"><span class="ge">🚀</span><div class="gn">כיתה ו</div><div class="gs">סיום היסודי</div><span class="g-tag">אלופים</span></div>
+    <div class="grade-btn g7" onclick="selectGrade('ז')"><span class="ge">🧭</span><div class="gn">כיתה ז</div><div class="gs">חטיבת ביניים</div><span class="g-tag">חטיבה</span></div>
   </div>
 </div>
 <!-- ══ HOME ══ -->
@@ -335,7 +338,7 @@
       </div>
     </div>
     <div id="numAnsWrap">
-      <div class="ans-row"><input type="number" class="ans-inp" id="ansInp" placeholder="?" onkeydown="if(event.key==='Enter')submitAns()"><div class="ans-eq">=</div></div>
+      <div class="ans-row"><input type="number" step="any" class="ans-inp" id="ansInp" placeholder="?" onkeydown="if(event.key==='Enter')submitAns()"><div class="ans-eq">=</div></div>
     </div>
     <div id="wordAnsWrap" style="display:none">
       <textarea class="word-inp" id="wordInp" placeholder="כתוב תשובה מלאה במשפט..."></textarea>
@@ -480,7 +483,8 @@
             <div class="reg-grade-card rg3" onclick="selectSetGrade('ג')" data-grade="ג"><span class="rgc-emoji">⚡</span><div class="rgc-name">כיתה ג</div><div class="rgc-sub">+ חילוק</div></div>
             <div class="reg-grade-card rg4" onclick="selectSetGrade('ד')" data-grade="ד"><span class="rgc-emoji">🔮</span><div class="rgc-name">כיתה ד</div><div class="rgc-sub">שברים</div></div>
             <div class="reg-grade-card rg5" onclick="selectSetGrade('ה')" data-grade="ה"><span class="rgc-emoji">🏆</span><div class="rgc-name">כיתה ה</div><div class="rgc-sub">מספרים גדולים</div></div>
-            <div class="reg-grade-card rg6" onclick="selectSetGrade('ו')" data-grade="ו"><span class="rgc-emoji">🚀</span><div class="rgc-name">כיתה ו</div><div class="rgc-sub">רמה מקסימלית</div></div>
+            <div class="reg-grade-card rg6" onclick="selectSetGrade('ו')" data-grade="ו"><span class="rgc-emoji">🚀</span><div class="rgc-name">כיתה ו</div><div class="rgc-sub">סיום היסודי</div></div>
+            <div class="reg-grade-card rg7" onclick="selectSetGrade('ז')" data-grade="ז"><span class="rgc-emoji">🧭</span><div class="rgc-name">כיתה ז</div><div class="rgc-sub">חטיבת ביניים</div></div>
           </div>
           <button onclick="fbChangeGrade()" style="width:100%;padding:11px;background:rgba(30,144,255,.2);border:1px solid var(--a4);color:var(--a4);border-radius:12px;cursor:pointer;font-family:'Rubik',sans-serif;font-weight:700;font-size:.95rem;">✅ עדכן כיתה</button>
         </div>
@@ -608,7 +612,7 @@
   createStars();
 </script>
 <script src="profile-fields.js"></script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=4');}</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=5');}</script>
   <script src="minigame-fishing.js"></script>
   <script src="minigame-dungeon.js"></script>
   <script src="minigame-rocket.js"></script>
