@@ -242,6 +242,8 @@ function curriculumQuestion(grade, cat, diff, n = rnd(2, 9)) {
   const question = { type:'num', cat, diff, text, answer, explanation, pts:ptsForQ(cat, diff), hint:{ type:'text', msg:explanation } };
   if (shapeHtml) question.shapeHtml = shapeHtml;
   if (visual) question.visual = visual;
+  const localized = questionTranslations(grade,cat,level,n);
+  if (localized) question.localized = localized;
   return question;
 }
 

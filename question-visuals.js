@@ -1,8 +1,11 @@
 /* Shared presentation for practice, exams and minigames. */
 function questionPrompt(q) {
   const escape = text => text.replace(/[&<>]/g, char => ({'&':'&amp;', '<':'&lt;', '>':'&gt;'})[char]);
-  return escape(q.text).replace(/\u2066([^\u2069]+)\u2069|(-?\d+(?:[.,/]\d+)*[%°]?)/g,
+  const format = text => escape(text).replace(/\u2066([^\u2069]+)\u2069|(-?\d+(?:[.,/]\d+)*[%°]?)/g,
     (_, expression, number) => `<bdi dir="ltr" class="math-token">${expression ?? number}</bdi>`);
+  if (!q.localized) return format(q.text);
+  return [q.text,...q.localized].map((text,i) =>
+    `<span class="question-language" data-language="${['he','en','ru','ar'][i]}" dir="auto">${format(text)}</span>`).join('');
 }
 
 function mountQuestionVisual(container, q) {

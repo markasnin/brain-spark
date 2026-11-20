@@ -66,7 +66,7 @@ function loadQ(q) {
   if (qs.isDaily) { dl.style.display='block'; dl.textContent=`📅 שאלה יומית ${qs.isDailyIdx+1}/2`; } else dl.style.display='none';
   const qt = document.getElementById('qTxt');
   qt.innerHTML = questionPrompt(q);
-  qt.dir = q.dir || 'rtl';
+  qt.dir = q.dir || 'auto';
   qt.classList.toggle('is-equation', q.dir === 'ltr');
   document.getElementById('qCard').dataset.topic = q.cat;
   const progress = document.getElementById('questionProgress');
@@ -409,7 +409,7 @@ function loadExamQ(){
         <span style="color:var(--txt2);font-size:.78rem">${qs.examIdx+1} / 10</span>
       </div>
       <div style="font-size:.78rem;color:var(--a6);text-align:center;margin-bottom:5px">${q.label||''}</div>
-      <div class="qtxt ${q.dir==='ltr'?'is-equation':''}" dir="${q.dir||'rtl'}">${questionPrompt(q)}</div>
+      <div class="qtxt ${q.dir==='ltr'?'is-equation':''}" dir="${q.dir||'auto'}">${questionPrompt(q)}</div>
       <div class="question-visual" id="examVisual" hidden></div>
       ${q.showMul?'<div id="emv" style="margin-bottom:10px"></div>':''}
       <div style="background:rgba(255,71,87,.07);border:1.5px solid rgba(255,71,87,.28);border-radius:12px;padding:8px 14px;margin-bottom:16px;font-size:.8rem;color:#ff8090;text-align:center;font-weight:600">
