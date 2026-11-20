@@ -286,6 +286,46 @@ uiTranslations.set('רמה',['Level','Уровень','المستوى','Niveau',
 uiTranslations.set('שעה',['Hour','Час','الساعة','Heure','Година']);
 uiTranslations.set('ביטויים אלגבריים',['Algebraic expressions','Алгебраические выражения','التعابير الجبرية','Expressions algébriques','Алгебраїчні вирази']);
 
+// Short feedback and picture-model labels used during practice and exams.
+for (const [he, ...labels] of [
+  ['נכון!', 'Correct!', 'Верно!', 'صحيح!', 'Correct !', 'Правильно!'],
+  ['נכון מאוד!', 'That’s right!', 'Всё верно!', 'إجابة صحيحة!', 'C’est juste !', 'Усе правильно!'],
+  ['לא נכון', 'Incorrect', 'Неверно', 'إجابة خاطئة', 'Incorrect', 'Неправильно'],
+  ['הפעם לא...', 'Not quite this time', 'В этот раз не получилось', 'ليست صحيحة هذه المرة', 'Pas tout à fait', 'Цього разу не вийшло'],
+  ['לא הצלחת', 'Not quite', 'Не совсем', 'ليست صحيحة', 'Pas tout à fait', 'Не зовсім'],
+  ['מדהים!', 'Amazing!', 'Отлично!', 'مذهل!', 'Bravo !', 'Чудово!'],
+  ['אלוף!', 'Great job!', 'Молодец!', 'أحسنت!', 'Bien joué !', 'Молодець!'],
+  ['גאון!', 'Brilliant!', 'Блестяще!', 'رائع!', 'Excellent !', 'Блискуче!'],
+  ['נפלא!', 'Wonderful!', 'Прекрасно!', 'ممتاز!', 'Super !', 'Прекрасно!'],
+  ['התשובה:', 'Answer:', 'Ответ:', 'الإجابة:', 'Réponse :', 'Відповідь:'],
+  ['הגשת:', 'Your answer:', 'Твой ответ:', 'إجابتك:', 'Ta réponse :', 'Твоя відповідь:'],
+  ['נכון:', 'Correct answer:', 'Верный ответ:', 'الإجابة الصحيحة:', 'Bonne réponse :', 'Правильна відповідь:'],
+  ['הכנס מספר!', 'Enter a number!', 'Введи число!', 'أدخل رقمًا!', 'Entre un nombre !', 'Введи число!'],
+  ['שתי קבוצות תפוחים','Two groups of apples','Две группы яблок','مجموعتان من التفاح','Deux groupes de pommes','Дві групи яблук'],
+  ['הקישו על תפוחים כדי להסיר אותם','Tap apples to remove them','Нажимай на яблоки, чтобы убрать их','اضغط على التفاح لإزالته','Touche les pommes pour les retirer','Торкайся яблук, щоб їх прибрати'],
+  ['קבוצות שוות של כוכבים','Equal groups of stars','Равные группы звёзд','مجموعات متساوية من النجوم','Groupes égaux d’étoiles','Рівні групи зірок'],
+  ['חלקו את פרוסות הפיצה שווה בשווה','Share the pizza slices equally','Раздели кусочки пиццы поровну','وزّع قطع البيتزا بالتساوي','Partage les parts de pizza à parts égales','Поділи шматочки піци порівну'],
+  ['אפס את החלוקה','Reset sharing','Начать деление заново','إعادة التوزيع','Recommencer le partage','Почати розподіл заново'],
+  ['פרוסות לחלוקה','Slices to share','Кусочки для деления','قطع للتوزيع','Parts à partager','Шматочки для розподілу'],
+  ['קבוצות','Groups','Группы','مجموعات','Groupes','Групи'],
+  ['בכל קבוצה','In each group','В каждой группе','في كل مجموعة','Dans chaque groupe','У кожній групі'],
+  ['קחו','Take away','Убери','أزل','Retire','Забери'],
+]) uiTranslations.set(he,labels);
+
+function feedbackTranslation(core,index) {
+  const correct = core.match(/^([−-]?\d+(?:[.,]\d+)?) — נכון מאוד!$/);
+  if (correct) return correct[1]+' — '+uiTranslations.get('נכון מאוד!')[index];
+  const remaining = core.match(/^(😅 )?לא נכון! עוד (\d+) ניסיון\/ות$/);
+  if (remaining) {
+    const n=remaining[2];
+    return [
+      `😅 Incorrect. Attempts left: ${n}`, `😅 Неверно. Осталось попыток: ${n}`, `😅 إجابة خاطئة. المحاولات المتبقية: ${n}`,
+      `😅 Incorrect. Tentatives restantes : ${n}`, `😅 Неправильно. Залишилося спроб: ${n}`,
+    ][index];
+  }
+  return '';
+}
+
 function generatedTranslation(core,index) {
   const normalized = normalizeTranslation(core);
   const exact = Object.hasOwn(appTranslations,normalized) && appTranslations[normalized][index];
@@ -305,7 +345,7 @@ function interfaceText(source, language = activeLanguage) {
   if (language === 'he' || !/[\u05d0-\u05ea]/.test(source)) return source;
   const index = translationLanguages.indexOf(language);
   const core = source.trim();
-  const direct = uiTranslations.get(core)?.[index];
+  const direct = feedbackTranslation(core,index) || uiTranslations.get(core)?.[index];
   if (direct) return source.replace(core,()=>direct);
   const grade = core.match(/^כיתה ([אבגדהוז])['׳]?$/);
   if (grade) return source.replace(core, () => uiTranslations.get('כיתה')[index]+' '+('אבגדהוז'.indexOf(grade[1])+1));
@@ -325,7 +365,7 @@ function interfaceText(source, language = activeLanguage) {
       `Question ${n} sur ${total}`,`Завдання ${n} з ${total}`,
     ][index]);
   }
-  const decorated = core.match(/^([^\u05d0-\u05ea]*)([\u05d0-\u05ea][\s\S]*?[\u05d0-\u05ea\d!?.:)])([^\p{L}\p{N}]*)$/u);
+  const decorated = core.match(/^([^\u05d0-\u05ea]*)([\u05d0-\u05ea][\s\S]*[\u05d0-\u05ea\d!?.:)])([^\p{L}\p{N}]*)$/u);
   if (decorated) {
     const [,prefix,label,suffix] = decorated;
     if ((prefix || suffix) && !/\p{N}/u.test(prefix.replace(/[½¼⅓²]/g,''))) {

@@ -360,7 +360,9 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
 /* Home dashboard and topic navigation */
 #home { padding-inline:clamp(14px,3vw,44px); }
 .home-layout { width:100%; max-width:1440px; }
-.home-layout { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; }
+.home-layout { display:grid; grid-template-columns:minmax(0,1fr); grid-template-areas:"profile" "practice"; gap:24px; }
+.home-sidebar { grid-area:profile; }
+.home-practice { grid-area:practice; }
 .home-practice { min-width:0; }
 .home-practice h1 { margin:0 0 16px; font:650 clamp(1.35rem,3vw,2rem) Rubik,sans-serif; }
 .home-sidebar, #hcr { display:grid; align-content:start; gap:12px; min-width:0; }
@@ -574,3 +576,24 @@ html[lang="ar"] body { font-family:Tahoma,Rubik,sans-serif; }
 .math-fraction { display:inline-grid; grid-template-rows:auto auto; vertical-align:middle; align-items:center; text-align:center; line-height:1.08; margin-inline:.14em; min-inline-size:1ch; padding:.12em .12em; }
 .math-fraction > span:first-child { padding:0 .17em .09em; border-block-end:.085em solid currentColor; }
 .math-fraction > span:last-child { padding:.09em .17em 0; }
+
+/* Picture models use individual objects for small quantities and count cards for larger ones. */
+.picture-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; }
+.picture-quantity { min-width:2.5rem; min-height:2.2rem; padding:.4rem .55rem; background:#232747; border:1px solid #aeb7e84a; border-radius:10px; text-align:center; }
+.picture-quantity small { display:block; font-size:.72rem; margin-top:.18rem; color:#d3dcf8; }
+.picture-items { display:block; overflow-wrap:anywhere; max-width:13ch; font-size:1.2rem; letter-spacing:.085em; }
+.picture-count { font-size:1.05rem; }
+.picture-symbol { display:inline-grid; place-items:center; font-size:1.15rem; color:#d1d6ff; }
+.picture-apple-grid, .pizza-trays { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; }
+.picture-apple, .pizza-tray { min-height:34px; padding:4px 7px; border:1px solid #b4bbfa55; border-radius:8px; background:#232747; color:#f7f9ff; cursor:pointer; }
+.picture-apple[aria-pressed="true"] { opacity:.45; text-decoration:line-through; border-style:dashed; }
+.picture-apple:focus-visible, .pizza-tray:focus-visible { outline:2px solid #81e6d9; outline-offset:2px; }
+.pizza-tray:disabled { cursor:default; }
+.pizza-tray b { display:inline-block; min-width:1.2ch; }
+.picture-equation { text-align:center; font-size:1.3rem; }
+.math-fraction { color:inherit; font-family:"Cambria Math","Times New Roman",serif; font-weight:400; line-height:1; padding:0; margin-inline:.12em; }
+.math-fraction > span:first-child { padding:0 .14em .13em; border-block-end:1px solid currentColor; }
+.math-fraction > span:last-child { padding:.13em .14em 0; }
+.qtxt.is-equation .math-fraction { font-size:.92em; }
+.pizza-pile { display:block; max-width:15ch; font-size:1rem; line-height:1.35; overflow-wrap:anywhere; }
+.pizza-pile:empty { display:none; }

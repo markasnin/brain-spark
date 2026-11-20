@@ -12,7 +12,7 @@ function questionPrompt(q) {
       const [token, expression, numerator, operator, denominator] = match;
       format += escape(text.slice(cursor, match.index));
       if (operator && q.cat === 'div') {
-        format += `<bdi dir="ltr" class="math-token math-fraction" aria-label="${numerator} ÷ ${denominator}"><span aria-hidden="true">${numerator}</span><span aria-hidden="true">${denominator}</span></bdi>`;
+        format += fractionMarkup(numerator, denominator);
       } else {
         format += `<bdi dir="ltr" class="math-token">${escape(expression ?? token)}</bdi>`;
       }
@@ -40,9 +40,9 @@ function mountQuestionVisual(container, q) {
       if (svg) addShapeExplorer(container, svg);
     }
   } else {
-    const arithmetic = q.dir === 'ltr' && q.text.match(/^(\d+)\s*([+−-])\s*(\d+)\s*=\s*\?$/);
-    if (arithmetic && +arithmetic[1] + (arithmetic[2]==='+' ? +arithmetic[3] : 0) <= 20) {
-      mountCounters(container, +arithmetic[1], arithmetic[2]==='+' ? '+' : '−', +arithmetic[3]);
+    const picture = arithmeticPictureData(q);
+    if (picture) {
+      mountArithmeticPicture(container,q,picture);
       return;
     }
     const fraction = q.text.match(/(?:^|\s)([1-9])\/([2-9])(?=\s|$)/);
@@ -279,31 +279,99 @@ function mountMinigameVisual(root, question) {
   mountQuestionVisual(visual, question);
 }
 
-function mountCounters(container, first, operation, second) {
-  const row = (count, kind) => Array.from({length:count}, () =>
-    `<i class="counter ${kind}"></i>`).join('');
-  const dots = operation === '+'
-    ? row(first,'first') + row(second,'second')
-    : row(first,'first');
-  container.innerHTML = `<div class="counter-groups" dir="ltr" aria-hidden="true">${dots}</div>
-    <output class="visual-feedback">${operation === '+' ? `${first} בקבוצה הכחולה, ${second} בקבוצה הסגולה` : `אפשר לסמן ${second} נקודות כדי לראות מה נשאר.`}</output>`;
-  if (operation !== '−') return;
-  const counters = [...container.querySelectorAll('.counter')];
-  const group = container.querySelector('.counter-groups');
-  group.removeAttribute('aria-hidden');
-  const output = container.querySelector('output');
-  const buttons = counters.map((dot,i) => {
-    const button = document.createElement('button');
-    button.className = dot.className;
-    button.type = 'button';
-    button.setAttribute('aria-label', `נקודה ${i+1}`);
-    button.setAttribute('aria-pressed', 'false');
-    button.addEventListener('click', () => {
-      const selected = button.classList.toggle('is-removed');
-      button.setAttribute('aria-pressed', String(selected));
-      output.textContent = `סימנתם ${group.querySelectorAll('.is-removed').length} מתוך ${second} נקודות להסרה.`;
+
+function fractionMarkup(numerator, denominator, className = '') {
+  return `<bdi dir="ltr" class="math-fraction ${className}" aria-label="${numerator} ÷ ${denominator}"><span aria-hidden="true">${numerator}</span><span aria-hidden="true">${denominator}</span></bdi>`;
+}
+
+function arithmeticPictureData(q) {
+  const grade = q.picture?.grade || window.GRADE_CONFIG?.gradeId || window._grade;
+  if (!['א','ב','ג','ד','ה'].includes(grade)) return null;
+  if (q.picture) return q.picture;
+  if (!['add','sub','mul','div'].includes(q.cat)) return null;
+  const math = q.text.match(/^([\d,.\u00a0\u202f]+)\s*([+−×÷/-])\s*([\d,.\u00a0\u202f]+)\s*=\s*\?$/);
+  if (!math) return null;
+  const readOperand = value => Number(value.replace(/[^\d]/g,''));
+  return {first:readOperand(math[1]),second:readOperand(math[3])};
+}
+
+function pictureQuantity(symbol, count, label = '', cap = 12) {
+  const icons = count > cap
+    ? `<span class="picture-count" aria-hidden="true">${symbol} <b>${count.toLocaleString()}</b></span>`
+    : `<span class="picture-items" aria-hidden="true">${count===0?'0':symbol.repeat(count)}</span>`;
+  return `<div class="picture-quantity" dir="auto" aria-label="${count}">${icons}${label ? `<small>${label}</small>` : ''}</div>`;
+}
+
+function mountArithmeticPicture(container,q,picture) {
+  const {first,second,extra,knownGroupSize} = picture;
+  if (q.cat === 'add') {
+    container.innerHTML = `<div class="picture-row" role="group" aria-label="שתי קבוצות תפוחים">
+      ${pictureQuantity('🍎',first)}<span class="picture-symbol">+</span>${pictureQuantity('🍏',second)}
+    </div>`;
+  } else if (q.cat === 'sub') {
+    if (first <= 24) {
+      const apples = Array.from({length:first}, (_,i) =>
+        `<button type="button" class="picture-apple" aria-label="🍎 ${i+1}" aria-pressed="false">🍎</button>`).join('');
+      container.innerHTML = `<div class="picture-row"><div class="picture-apple-grid" dir="ltr">${apples}</div>
+        <span class="picture-symbol">−</span>${pictureQuantity('🍎',second,'קחו')}</div>
+        <p class="visual-feedback">הקישו על תפוחים כדי להסיר אותם</p>`;
+      for (const button of container.querySelectorAll('.picture-apple')) {
+        button.addEventListener('click', () => {
+          button.setAttribute('aria-pressed',String(button.getAttribute('aria-pressed')!=='true'));
+        });
+      }
+    } else {
+      container.innerHTML = `<div class="picture-row">${pictureQuantity('🍎',first)}<span class="picture-symbol">−</span>${pictureQuantity('🍎',second,'קחו')}</div>`;
+    }
+  } else if (q.cat === 'mul') {
+    const groups = first <= 6 && second <= 8
+      ? Array.from({length:first},()=>pictureQuantity('⭐',second)).join('')
+      : pictureQuantity('🧺',first,'קבוצות',0) + '<span class="picture-symbol">×</span>' + pictureQuantity('⭐',second,'בכל קבוצה',0);
+    container.innerHTML = `<div class="picture-row" role="group" aria-label="קבוצות שוות של כוכבים">${groups}</div>`;
+  } else if (q.cat === 'div') {
+    mountPizzaSharing(container,first,second,extra,knownGroupSize);
+  }
+}
+
+function mountPizzaSharing(container,total,divisor,extra,knownGroupSize) {
+  const formula = extra !== undefined
+    ? `<div class="picture-equation" dir="ltr">${fractionMarkup(total,divisor)}${extra ? ' + '+extra : ''} = ?</div>`
+    : '';
+  if (knownGroupSize || total>32 || divisor>8) {
+    container.innerHTML = formula + `<div class="picture-row">${pictureQuantity('🍕',total,'פרוסות לחלוקה',8)}
+      <span class="picture-symbol">÷</span>${pictureQuantity(knownGroupSize?'🍕':'🍽️',divisor,knownGroupSize?'בכל קבוצה':'קבוצות',0)}</div>`;
+    return;
+  }
+  container.innerHTML = formula + `<p class="visual-feedback">חלקו את פרוסות הפיצה שווה בשווה</p>
+    <div class="picture-row"><div class="picture-quantity"><b class="pizza-remaining"></b><span class="pizza-pile" aria-hidden="true"></span><small>פרוסות לחלוקה</small></div></div>
+    <div class="pizza-trays">${Array.from({length:divisor}, (_,i)=>
+      `<button type="button" class="pizza-tray" aria-label="🍽️ ${i+1}"><span aria-hidden="true">🍽️</span> <b>0</b><span class="pizza-pile" aria-hidden="true"></span></button>`).join('')}</div>
+    <button type="button" class="shape-explore pizza-reset">אפס את החלוקה</button>`;
+  const remainingLabel = container.querySelector('.pizza-remaining');
+  const looseSlices = container.querySelector('.picture-quantity .pizza-pile');
+  const trays = [...container.querySelectorAll('.pizza-tray')];
+  const counts = trays.map(()=>0);
+  let remaining = total;
+  function refresh() {
+    remainingLabel.textContent = `🍕 ${remaining}`;
+    looseSlices.textContent = '🍕'.repeat(remaining);
+    trays.forEach((tray,i) => {
+      tray.querySelector('b').textContent = counts[i];
+      tray.querySelector('.pizza-pile').textContent = '🍕'.repeat(counts[i]);
+      tray.disabled = remaining === 0;
+      tray.setAttribute('aria-label',`🍽️ ${i+1} · 🍕 ${counts[i]}`);
     });
-    return button;
+  }
+  trays.forEach((tray,i)=>tray.addEventListener('click', () => {
+    if (remaining===0) return;
+    remaining--;
+    counts[i]++;
+    refresh();
+  }));
+  container.querySelector('.pizza-reset').addEventListener('click', () => {
+    counts.fill(0);
+    remaining = total;
+    refresh();
   });
-  group.replaceChildren(...buttons);
+  refresh();
 }

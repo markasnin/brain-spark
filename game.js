@@ -79,7 +79,13 @@ function loadQ(q) {
   document.getElementById('nextBtns').style.display='none';
   document.getElementById('moreBtn').style.display='none';
   const mv=document.getElementById('mulVis');
-  if (q.showMul) { mv.style.display='block'; buildMulGroups(q.mulA,q.mulB,q.mulEmoji); buildMulTable(q.mulA,q.mulB); } else mv.style.display='none';
+  if (q.showMul) {
+    const pictured = Boolean(arithmeticPictureData(q));
+    mv.style.display = 'block';
+    document.getElementById('mulGrps').style.display = pictured ? 'none' : '';
+    if (!pictured) buildMulGroups(q.mulA,q.mulB,q.mulEmoji);
+    buildMulTable(q.mulA,q.mulB);
+  } else mv.style.display = 'none';
   window._shapeAnswer = function(v) { const el=document.getElementById('ansInp'); if(el&&!qs.done){el.value=Math.round(v);} };
   const na=document.getElementById('numAnsWrap'),wa=document.getElementById('wordAnsWrap'),ew=document.getElementById('exprWrap');
   if (q.type==='word') {
@@ -309,7 +315,13 @@ async function showWordFb(writtenText, q) {
 
 function buildExpl(q){if(q.explanation)return `התשובה: <strong>${q.answer}</strong><br>${q.explanation}`;if(q.cat==='word'){let s=`התשובה: <strong>${q.answer}</strong>`;if(q.steps?.length)s+=`<br><br>${q.steps.map(st=>`→ ${st}`).join('<br>')}`;s+=`<br><br>🌟 "${q.exampleAnswer||q.answer}"`;return s;}if(q.cat==='mul')return`התשובה: ${q.answer}<br>${q.mulA} × ${q.mulB} = ${q.answer}`;if(q.cat==='div')return`התשובה: ${q.answer}<br>${q.mulB} × ${q.answer} = ${q.mulB*q.answer}`;return`התשובה: ${q.answer}`;}
 
-function showFb(type,title,txt){const b=document.getElementById('fbBox');b.className='fb-box on fb-'+type;document.getElementById('fbTitle').textContent=title;document.getElementById('fbText').innerHTML=(txt||'').replace(/\n/g,'<br>');}
+function showFb(type,title,txt){
+  const box = document.getElementById('fbBox');
+  box.className = 'fb-box on fb-'+type;
+  document.getElementById('fbTitle').textContent=title;
+  document.getElementById('fbText').innerHTML=(txt||'').replace(/\n/g,'<br>');
+  localizeSubtree(box);
+}
 
 function endQ(){qs.done=true;const inp=document.getElementById('ansInp');if(inp){inp.disabled=true;inp.blur();}const sb=document.querySelector('.bsubmit');if(sb)sb.disabled=true;document.getElementById('qBtns').style.display='none';document.getElementById('nextBtns').style.display='flex';if(qs.hintInterval){clearInterval(qs.hintInterval);qs.hintInterval=null;}document.getElementById('moreBtn').style.display=qs.idx>=qs.pool.length-1?'inline-flex':'none';}
 
@@ -411,7 +423,7 @@ function loadExamQ(){
       <div style="font-size:.78rem;color:var(--a6);text-align:center;margin-bottom:5px">${q.label||''}</div>
       <div class="qtxt ${q.dir==='ltr'?'is-equation':''}" dir="${q.dir||'auto'}">${questionPrompt(q)}</div>
       <div class="question-visual" id="examVisual" hidden></div>
-      ${q.showMul?'<div id="emv" style="margin-bottom:10px"></div>':''}
+      ${q.showMul&&!arithmeticPictureData(q)?'<div id="emv" style="margin-bottom:10px"></div>':''}
       <div style="background:rgba(255,71,87,.07);border:1.5px solid rgba(255,71,87,.28);border-radius:12px;padding:8px 14px;margin-bottom:16px;font-size:.8rem;color:#ff8090;text-align:center;font-weight:600">
         ⚠️ ניסיון אחד בלבד — חשוב לפני שאתה מגיש!
       </div>
@@ -459,6 +471,7 @@ function submitExamAns(){
     fb.className='fb-box on fb-bad';
     fb.innerHTML=`<div class="fb-title">❌ לא נכון</div><div>הגשת: <strong style="color:#ff8090">${ua}</strong> &nbsp;|&nbsp; נכון: <strong style="color:#68ffaa">${q.answer}</strong></div>`;
   }
+  localizeSubtree(document.getElementById('eFb'));
   document.getElementById('eBtns').style.display='none';
   document.getElementById('eNext').style.display='flex';
 }
