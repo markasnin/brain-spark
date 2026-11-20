@@ -19,27 +19,7 @@ window.DungeonGame = (function () {
   const _rnd  = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
   const _pick = arr  => arr[Math.floor(Math.random()*arr.length)];
 
-  function _gradePool(diff) {
-    const gc = window.GRADE_CONFIG;
-    const avail = (gc && gc.availableCategories) || ['add','sub'];
-    const math = ['add','sub','mul','div'].filter(c => avail.includes(c));
-    let pool;
-    if (diff === 'easy')        pool = math.filter(c => c === 'add' || c === 'sub');
-    else if (diff === 'medium') pool = math.filter(c => c !== 'div');
-    else                        pool = math;
-    return pool.length ? pool : math.length ? math : ['add'];
-  }
-  function makeQ(diff) {
-    const pool = _gradePool(diff);
-    const cat  = pool[Math.floor(Math.random()*pool.length)];
-    if (window.genQ) { try { return window.genQ(cat, diff); } catch(e) {} }
-    const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-    const gr=window._grade||'\u05d1', sm=(gr==='\u05d0'||gr==='\u05d1'), md=(gr==='\u05d2'||gr==='\u05d3');
-    if(cat==='add'){const m=sm?15:md?60:250;const a=r(1,m),b=r(1,m);return{text:`${a} + ${b} = ?`,answer:a+b,diff};}
-    if(cat==='sub'){const m=sm?15:md?60:250;const a=r(3,m),b=r(1,a);return{text:`${a} - ${b} = ?`,answer:a-b,diff};}
-    if(cat==='mul'){const m=sm?5:md?9:12;const a=r(2,m),b=r(2,m);return{text:`${a} × ${b} = ?`,answer:a*b,diff};}
-    const m=md?9:12;const b=r(2,m),q=r(1,m);return{text:`${b*q} ÷ ${b} = ?`,answer:q,diff};
-  }
+  const makeQ = minigameQuestion;
 
   function helpBtn(msg){
     const safe=msg.replace(/'/g,"&#39;").replace(/"/g,"&quot;");
@@ -129,14 +109,14 @@ window.DungeonGame = (function () {
       </div>
       <div style="background:rgba(255,255,255,.06);border-radius:14px;padding:12px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.05rem;font-weight:700;direction:ltr">${q.text}</span>
+          <span style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.05rem;font-weight:700;direction:${q.dir || 'rtl'}">${q.text}</span>
           <span id="qTimer" style="color:${timeColor};font-family:'Fredoka',sans-serif;font-size:1.2rem;font-weight:900;min-width:52px;text-align:center">⏱ ${_fmtTime(st.qTimeLeft)}</span>
         </div>
         <div style="background:rgba(255,255,255,.1);border-radius:4px;height:5px;margin-bottom:10px;overflow:hidden">
           <div id="qTimerBar" style="width:${pct}%;height:100%;background:${timeColor};border-radius:4px;transition:width 1s linear"></div>
         </div>
         <div style="display:flex;gap:8px">
-          <input id="dungAns" type="number" placeholder="?" onkeydown="if(event.key==='Enter')window.DungeonGame.submitAns()" autofocus
+          <input id="dungAns" type="number" step="any" placeholder="?" onkeydown="if(event.key==='Enter')window.DungeonGame.submitAns()" autofocus
             style="flex:1;padding:11px;background:rgba(255,255,255,.1);border:2px solid ${m.color}66;color:#fff;border-radius:12px;font-size:1.2rem;font-family:'Rubik',sans-serif;text-align:center;outline:none">
           <button onclick="window.DungeonGame.submitAns()" style="padding:11px 18px;background:${m.color};border:none;border-radius:12px;font-size:1.2rem;cursor:pointer;font-weight:900">&#x2694;&#xFE0F;</button>
         </div>
@@ -154,9 +134,9 @@ window.DungeonGame = (function () {
       <div style="background:linear-gradient(135deg,#713f12,#92400e);border:2px solid #fbbf24;border-radius:16px;padding:20px;text-align:center;margin-bottom:10px">
         <div style="font-size:3rem;margin-bottom:8px">&#x1F381;</div>
         <div style="font-family:'Fredoka',sans-serif;font-size:1.1rem;color:#fbbf24;margin-bottom:10px">פתח את הארגז! פתור:</div>
-        <div style="font-family:'Rubik',sans-serif;font-size:1.1rem;color:#fff;font-weight:700;margin-bottom:12px;direction:ltr">${st.activeQ.text}</div>
+        <div style="font-family:'Rubik',sans-serif;font-size:1.1rem;color:#fff;font-weight:700;margin-bottom:12px;direction:${st.activeQ.dir || 'rtl'}">${st.activeQ.text}</div>
         <div style="display:flex;gap:8px;justify-content:center">
-          <input id="treasAns" type="number" placeholder="?" onkeydown="if(event.key==='Enter')window.DungeonGame.submitTreasure()" autofocus
+          <input id="treasAns" type="number" step="any" placeholder="?" onkeydown="if(event.key==='Enter')window.DungeonGame.submitTreasure()" autofocus
             style="width:120px;padding:12px;background:rgba(255,255,255,.15);border:2px solid #fbbf2466;color:#fff;border-radius:12px;font-size:1.2rem;font-family:'Rubik',sans-serif;text-align:center;outline:none">
           <button onclick="window.DungeonGame.submitTreasure()" style="padding:12px 20px;background:#fbbf24;border:none;border-radius:12px;font-size:1.2rem;cursor:pointer;font-weight:900">🔓</button>
         </div>
@@ -198,8 +178,8 @@ window.DungeonGame = (function () {
     render();
   }
 
-  function submitAns(){clearTimer();const inp=document.getElementById('dungAns');if(!inp)return;const ua=parseInt(inp.value);if(isNaN(ua)){startTimer();return;}if(ua===st.activeQ.answer)monsterHit();else heroHit();}
-  function submitTreasure(){const inp=document.getElementById('treasAns');if(!inp)return;const ua=parseInt(inp.value);if(isNaN(ua))return;if(ua===st.activeQ.answer){const gold=_rnd(5,20+st.room*4);st.gold+=gold;if(Math.random()<.3)st.inventory.push('potion');window.addPts&&window.addPts(gold);window.showToast&&window.showToast('&#x1F381; מצאת '+gold+'&#x1FA99;!');st.room++;if(st.room>=8)st.phase='victory';else st.phase='map';}else{window.showToast&&window.showToast('🔒 שגוי — הארגז נשאר נעול!');st.phase='map';}render();}
+  function submitAns(){clearTimer();const inp=document.getElementById('dungAns');if(!inp)return;const ua=numericAnswer(inp.value);if(isNaN(ua)){startTimer();return;}if(ua===st.activeQ.answer)monsterHit();else heroHit();}
+  function submitTreasure(){const inp=document.getElementById('treasAns');if(!inp)return;const ua=numericAnswer(inp.value);if(isNaN(ua))return;if(ua===st.activeQ.answer){const gold=_rnd(5,20+st.room*4);st.gold+=gold;if(Math.random()<.3)st.inventory.push('potion');window.addPts&&window.addPts(gold);window.showToast&&window.showToast('&#x1F381; מצאת '+gold+'&#x1FA99;!');st.room++;if(st.room>=8)st.phase='victory';else st.phase='map';}else{window.showToast&&window.showToast('🔒 שגוי — הארגז נשאר נעול!');st.phase='map';}render();}
   function usePotion(){const idx=st.inventory.indexOf('potion');if(idx<0)return;st.inventory.splice(idx,1);st.heroHp=Math.min(HERO_MAX_HP,st.heroHp+1);window.showToast&&window.showToast('&#x1F9EA; +1 &#x2764;&#xFE0F;');render();}
   function restart(){clearTimer();st={phase:'map',room:0,heroHp:HERO_MAX_HP,gold:0,xp:0,heroLv:1,monster:null,monsterHp:0,activeQ:null,qTimer:null,qTimeLeft:0,streak:0,inventory:[],log:[]};render();}
   function exit(){clearTimer();if(window.show)window.show('home');}
