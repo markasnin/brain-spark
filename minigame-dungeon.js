@@ -68,6 +68,7 @@ window.DungeonGame = (function () {
     else if(st.phase==='treasure')renderTreasure(el);
     else if(st.phase==='gameover')renderGameOver(el);
     else if(st.phase==='victory') renderVictory(el);
+    mountMinigameVisual(el, st.activeQ);
   }
 
   function renderMap(el){
@@ -109,7 +110,7 @@ window.DungeonGame = (function () {
       </div>
       <div style="background:rgba(255,255,255,.06);border-radius:14px;padding:12px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.05rem;font-weight:700;direction:${q.dir || 'rtl'}">${q.text}</span>
+          <span style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.05rem;font-weight:700;direction:${q.dir || 'rtl'}" class="minigame-prompt">${questionPrompt(q)}</span>
           <span id="qTimer" style="color:${timeColor};font-family:'Fredoka',sans-serif;font-size:1.2rem;font-weight:900;min-width:52px;text-align:center">⏱ ${_fmtTime(st.qTimeLeft)}</span>
         </div>
         <div style="background:rgba(255,255,255,.1);border-radius:4px;height:5px;margin-bottom:10px;overflow:hidden">
@@ -134,7 +135,7 @@ window.DungeonGame = (function () {
       <div style="background:linear-gradient(135deg,#713f12,#92400e);border:2px solid #fbbf24;border-radius:16px;padding:20px;text-align:center;margin-bottom:10px">
         <div style="font-size:3rem;margin-bottom:8px">&#x1F381;</div>
         <div style="font-family:'Fredoka',sans-serif;font-size:1.1rem;color:#fbbf24;margin-bottom:10px">פתח את הארגז! פתור:</div>
-        <div style="font-family:'Rubik',sans-serif;font-size:1.1rem;color:#fff;font-weight:700;margin-bottom:12px;direction:${st.activeQ.dir || 'rtl'}">${st.activeQ.text}</div>
+        <div style="font-family:'Rubik',sans-serif;font-size:1.1rem;color:#fff;font-weight:700;margin-bottom:12px;direction:${st.activeQ.dir || 'rtl'}" class="minigame-prompt">${questionPrompt(st.activeQ)}</div>
         <div style="display:flex;gap:8px;justify-content:center">
           <input id="treasAns" type="number" step="any" placeholder="?" onkeydown="if(event.key==='Enter')window.DungeonGame.submitTreasure()" autofocus
             style="width:120px;padding:12px;background:rgba(255,255,255,.15);border:2px solid #fbbf2466;color:#fff;border-radius:12px;font-size:1.2rem;font-family:'Rubik',sans-serif;text-align:center;outline:none">
