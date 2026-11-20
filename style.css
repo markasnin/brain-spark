@@ -356,3 +356,184 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
 .grade-btn.g7, .reg-grade-card.rg7 { border-color: #7dd3fc60; }
 .grade-btn.g7 .gn, .reg-grade-card.rg7 .rgc-name { color: #7dd3fc; }
 .reg-grade-card.rg7.selected { border-color: #7dd3fc; background: #7dd3fc20; }
+
+/* Practice and topic navigation */
+#home > div:first-child, #hcr, #home .sec-label, #home .daily-banner, #home .recommend, #mainGrid {
+  width:100%;
+  max-width:920px !important;
+}
+#mainGrid {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:16px;
+  align-items:start;
+}
+.cg-section {
+  min-width:0;
+  padding:16px;
+  border:1px solid rgba(var(--gcr),.25);
+  border-radius:20px;
+  background:linear-gradient(145deg, rgba(var(--gcr),.10), transparent 66%), #16142a;
+}
+.cg-head {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin-bottom:12px;
+  color:var(--gc);
+}
+.cg-label { font:600 1.05rem Rubik,sans-serif; }
+.cg-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.cg-pill {
+  min-width:0;
+  min-height:61px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:9px;
+  color:#f8fafc;
+  border:1px solid #a7a4ce25;
+  border-radius:12px;
+  background:#0f1024;
+  text-align:start;
+  font:500 .87rem Rubik,sans-serif;
+  cursor:pointer;
+  transition:border-color .18s, background .18s;
+}
+.cg-pill:hover { border-color:var(--gc); background:rgba(var(--gcr),.13); }
+.cg-pill:focus-visible, .visual-controls button:focus-visible, .algebra-board button:focus-visible,
+.shape-explore:focus-visible { outline:3px solid #81e6d9; outline-offset:2px; }
+.cg-pill.cg-locked { opacity:.55; }
+.cg-picon {
+  display:grid;
+  place-items:center;
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  flex:none;
+  background:rgba(var(--gcr),.14);
+  color:var(--pc,var(--gc));
+  font-size:1.1rem;
+}
+.cg-copy { display:grid; gap:3px; overflow-wrap:anywhere; }
+.cg-description { color:#bdc4db; line-height:1.3; font-size:.72rem; }
+.cg-plock { margin-inline-start:auto; }
+.cg-section[data-group="minigames"] .cg-pill { grid-column:1/-1; background:#2e1c2c; }
+.cg-section[data-group="social"], .cg-section[data-group="account"] { background:#151626; }
+@media(min-width:820px) {
+  #mainGrid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #hcr { flex-direction:row !important; gap:18px !important; align-items:stretch !important; }
+  #hcr .pcard, #hcr .lb-card { flex:1 !important; margin-bottom:0 !important; }
+}
+@media(max-width:380px) {
+  .cg-section { padding:11px; }
+  .cg-pill { padding:7px; gap:6px; }
+  .cg-picon { width:29px; height:29px; }
+}
+
+#qCard, .exam-question {
+  --question-color:#a5b4fc;
+  border:1px solid #a7a4ce3b;
+  background:#19172d;
+  border-block-start:4px solid var(--question-color);
+  padding:clamp(14px,4vw,26px);
+  box-shadow:0 12px 36px #03041465;
+}
+.gcard[data-topic="graphs"], .gcard[data-topic="data"], .gcard[data-topic="probability"] { --question-color:#fcd477; }
+.gcard[data-topic="algebra"], .gcard[data-topic="equations"] { --question-color:#94ebd5; }
+.gcard[data-topic="area"], .gcard[data-topic="angles"], .gcard[data-topic="shapes"],
+.gcard[data-topic="circle"], .gcard[data-topic="pythagoras"], .gcard[data-topic="volume"],
+.gcard[data-topic="coordinates"], .gcard[data-topic="transforms"] { --question-color:#edb5fe; }
+.gcard[data-topic="word"] { --question-color:#fdc68e; }
+.question-progress { font-size:.79rem; margin:0 0 10px; color:#c5c4df; }
+.q-game-label:empty, #dailyQLbl:empty { display:none !important; }
+.gcard .qtxt {
+  min-height:0;
+  border-radius:13px;
+  background:#252340;
+  padding:clamp(12px,3vw,22px);
+  font-size:clamp(1.04rem,3.4vw,1.35rem);
+  line-height:1.8;
+  text-wrap:pretty;
+}
+.gcard .qtxt.is-equation { font-size:clamp(1.2rem,4.6vw,2rem); font-variant-numeric:tabular-nums; }
+.math-token { color:var(--question-color,#c0e9ff); font-weight:750; }
+.minigame-prompt { line-height:1.55; unicode-bidi:isolate; }
+.question-visual:not([hidden]) {
+  display:grid;
+  gap:10px;
+  margin:0 0 18px;
+  padding:12px;
+  border:1px solid #c2cbff26;
+  border-radius:16px;
+  background:#101229;
+  overflow:hidden;
+}
+.question-visual svg { max-width:100%; }
+.practice-plot, .shape-diagram {
+  width:100%;
+  max-width:400px;
+  margin-inline:auto;
+  background:#f1f5ff;
+  border-radius:11px;
+  direction:ltr;
+  font:500 11px Rubik,sans-serif;
+  fill:#21304c;
+}
+.plot-grid { fill:none; stroke:#899abb; stroke-opacity:.37; }
+.plot-axis, .diagram-guide { fill:none; stroke:#425475; stroke-width:1.7; }
+.plot-series { fill:none; stroke:#4a4bd5; stroke-width:3.2; }
+.plot-guide { fill:none; stroke:#007468; stroke-width:1.8; stroke-dasharray:4 3; }
+.plot-dot { cursor:pointer; fill:#4a4bd5; stroke:white; stroke-width:2; }
+.plot-dot.is-selected { fill:#007468; r:8; }
+.diagram-outline { fill:#aaa6f657; stroke:#4a4bd5; stroke-width:3; stroke-linejoin:round; }
+.diagram-cut { fill:#fac27e; stroke:#a74c17; stroke-width:1.5; }
+.diagram-label { fill:#17283c; font-size:14px; font-weight:700; }
+.diagram-point { fill:#4a4bd5; }
+.shape-selected { stroke:#d56815 !important; stroke-width:4px !important; }
+.visual-controls, .algebra-board { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:6px; }
+.visual-controls button, .algebra-board button, .shape-explore {
+  min-height:42px;
+  padding:6px 12px;
+  border-radius:9px;
+  border:1px solid #aab8fa5c;
+  background:#242848;
+  color:#f7f9ff;
+  font:500 .85rem Rubik,sans-serif;
+  cursor:pointer;
+}
+.visual-controls [aria-pressed="true"], .algebra-board [aria-pressed="true"], .shape-explore[aria-pressed="true"] {
+  background:#adebe0;
+  border-color:#adebe0;
+  color:#102930;
+}
+.algebra-board { margin:5px 0; }
+.algebra-board button { font-size:clamp(1.05rem,4vw,1.6rem); font-weight:600; }
+.visual-feedback { min-height:2.2em; text-align:center; color:#d3dcf8; font-size:.85rem; line-height:1.5; }
+.shape-explore { justify-self:center; }
+.fraction-tiles { display:flex; width:min(100%,300px); margin:auto; gap:3px; }
+.fraction-tiles i { flex:1; height:32px; border-radius:4px; background:#252c53; border:1px solid #b9c7ff80; }
+.fraction-tiles .is-filled { background:#a8b7ff; }
+#qCard .ans-inp, .exam-question .ans-inp { width:clamp(110px,30vw,155px); }
+#qCard .bsubmit, .exam-question .bsubmit { color:#082519; background:#96eabb; box-shadow:none; }
+.scr { min-height:calc(100dvh - 62px); }
+.site-credit {
+  position:relative;
+  width:min(920px,calc(100% - 40px));
+  margin:0 auto;
+  padding:18px 0 20px;
+  border-top:1px solid #bec3e42f;
+  color:#acb3cc;
+  text-align:center;
+  font-size:.78rem;
+  letter-spacing:.04em;
+}
+.site-credit strong { color:#e6e9ff; font-weight:700; }
+
+.counter-groups { display:grid; grid-template-columns:repeat(5,minmax(24px,34px)); justify-content:center; gap:7px; }
+.counter { display:block; aspect-ratio:1; width:100%; border:1px solid #bce9f8; border-radius:50%; background:#7acedf; }
+.counter.second { background:#c0a6fe; border-color:#eadcff; }
+button.counter { cursor:pointer; min-width:0; }
+.counter.is-removed { background:#1a1d37; border-style:dashed; }
+.minigame-visual:not([hidden]) { margin:10px 0; }
+.minigame-visual svg { max-height:160px; }
