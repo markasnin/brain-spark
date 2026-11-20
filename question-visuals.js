@@ -32,12 +32,12 @@ function mountQuestionVisual(container, q) {
   } else if (q.visual?.kind === 'algebra') {
     mountAlgebra(container, q.visual);
   } else if (q.visual?.kind === 'shape') {
-    mountShape(container, q.visual);
+    mountShape(container, q.visual, q.cat !== 'angles');
   } else if (q.shapeHtml) {
     container.innerHTML = q.shapeHtml;
     if (['shapes','area','angles','measurement','volume','circle'].includes(q.cat)) {
       const svg = container.querySelector('svg');
-      if (svg) addShapeExplorer(container, svg);
+      if (svg && q.cat !== 'angles') addShapeExplorer(container, svg);
     }
   } else {
     const picture = arithmeticPictureData(q);
@@ -98,9 +98,13 @@ function mountGraph(container, {values, unit, axis, xStart = 0, label = 'שעה'
   points.forEach((point,i) => point.addEventListener('click', () => select(i)));
 }
 
-function mountAlgebra(container, {terms, note, choiceLabel = 'בדקו איבר', joiner = ''}) {
+function mountAlgebra(container, {terms, note, choiceLabel = 'בדקו איבר', joiner = '', grouped = false}) {
+  const buttonsMarkup = terms.map(([label],i) => `<button type="button" data-term="${i}" aria-pressed="false">${label}</button>`);
+  const expression = grouped
+    ? `${buttonsMarkup[0]}<span class="algebra-group"><span>(</span>${buttonsMarkup.slice(1,3).join('')}<span>)</span></span>${buttonsMarkup[3]}`
+    : buttonsMarkup.join(joiner);
   container.innerHTML = `<div class="algebra-board" dir="ltr" role="group" aria-label="${choiceLabel}">
-    ${terms.map(([label],i)=>`<button type="button" data-term="${i}" aria-pressed="false">${label}</button>`).join(joiner)}
+    ${expression}
   </div><output class="visual-feedback" aria-live="polite">${note}</output>`;
   const buttons = [...container.querySelectorAll('[data-term]')];
   const output = container.querySelector('output');
@@ -110,10 +114,10 @@ function mountAlgebra(container, {terms, note, choiceLabel = 'בדקו איבר'
   }));
 }
 
-function mountShape(container, {body, label, interactiveGrid}) {
+function mountShape(container, {body, label, interactiveGrid}, highlightShape) {
   container.innerHTML = `<svg class="shape-diagram${interactiveGrid?' coordinate-plot':''}" viewBox="0 0 320 ${interactiveGrid?250:210}" role="img" aria-label="${label}">${body}</svg>`;
   const svg = container.firstElementChild;
-  addShapeExplorer(container, svg);
+  if (highlightShape) addShapeExplorer(container, svg);
   const legs = svg.querySelector('[data-pythagoras-legs]');
   if (legs) {
     const button = document.createElement('button');
@@ -188,9 +192,9 @@ function curriculumVisual(grade, cat, level, n) {
         [`${n+4}x`,`איבר עם x. המקדם שלו הוא ${n+4}.`],['− 2x','איבר עם x ומקדם שלילי.'],
         ['+ 3x','איבר עם x ומקדם חיובי.'],['+ 5','זה איבר קבוע. הוא נשאר בנפרד.'],
       ]},
-      {kind:'algebra', note:'לחצו כדי לראות על איזה איבר חוק הפילוג פועל.', terms:[
-        [`${n}(`,`הגורם ${n} כופל את שני האיברים שבתוך הסוגריים.`],['2x','כפלו את המקדם 2 בגורם שמחוץ לסוגריים.'],
-        ['+ 3)','גם את 3 כופלים באותו גורם. התוצאה כאן היא קבועה.'],['− 4x','האיבר מחוץ לסוגריים. מפחיתים אותו אחרי פתיחת הסוגריים.'],
+      {kind:'algebra', grouped:true, note:'לחצו כדי לראות על איזה איבר חוק הפילוג פועל.', terms:[
+        [`${n}`,`הגורם ${n} כופל את שני האיברים שבתוך הסוגריים.`],['2x','כפלו את המקדם 2 בגורם שמחוץ לסוגריים.'],
+        ['+ 3','גם את 3 כופלים באותו גורם. התוצאה כאן היא קבועה.'],['− 4x','האיבר מחוץ לסוגריים. מפחיתים אותו אחרי פתיחת הסוגריים.'],
       ]},
     ][level];
     if (cat === 'equations') return [

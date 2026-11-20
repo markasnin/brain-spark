@@ -817,3 +817,5 @@ body.theme-boy .ans-inp:focus,body.theme-girl .ans-inp:focus {
 }
 #settingsTopTabs,.exam-hdr,.exam-timer { border-color:var(--spark-line); color:var(--spark-violet); }
 #setGradeCards .rgc-sub,.reg-grade-card .rgc-sub,.hist-meta { color:var(--spark-muted); }
+.algebra-group { display:inline-flex; align-items:center; gap:4px; }
+.algebra-group > span { color:var(--spark-violet); font-size:1.7rem; line-height:1; }
