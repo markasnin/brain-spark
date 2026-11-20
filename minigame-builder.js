@@ -52,6 +52,7 @@ window.BuilderGame = (function () {
     else if (st.phase === 'build')    renderBuild(el);
     else if (st.phase === 'question') renderQuestion(el);
     else if (st.phase === 'win')      renderWin(el);
+    mountMinigameVisual(el, st.activeQ);
   }
 
   function renderCity(el) {
@@ -128,7 +129,7 @@ window.BuilderGame = (function () {
       <div style="background:${isBuild?b.color+'22':'rgba(255,211,42,.1)'};border:2px solid ${isBuild?b.color+'66':'#ffd43b66'};border-radius:18px;padding:18px;text-align:center;margin-bottom:12px">
         <div style="font-size:3rem;margin-bottom:8px">${isBuild ? b.emoji : '&#x1F9F1;'}</div>
         ${isBuild ? `<div style="color:#adb5bd;font-size:.85rem;font-family:Rubik,sans-serif;margin-bottom:10px">\u05e2\u05dc\u05d5\u05ea: ${b.cost}&#x1F9F1; | \u05ea\u05e8\u05d5\u05d5\u05d9\u05d7: ${b.reward}&#x2B50;</div>` : `<div style="color:#adb5bd;font-size:.85rem;font-family:Rubik,sans-serif;margin-bottom:10px">\u05e4\u05ea\u05d5\u05e8 \u05e0\u05db\u05d5\u05df &#x2192; +\u05d7\u05d5\u05de\u05e8\u05d9\u05dd!</div>`}
-        <div style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.4rem;font-weight:900;direction:${q.dir || 'rtl'};margin-bottom:14px">${q.text}</div>
+        <div style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.4rem;font-weight:900;direction:${q.dir || 'rtl'};margin-bottom:14px" class="minigame-prompt">${questionPrompt(q)}</div>
         <div style="display:flex;gap:8px">
           <input id="bldAns" type="number" step="any" placeholder="?" onkeydown="if(event.key==='Enter')window.BuilderGame.submit()" autofocus
             style="flex:1;padding:13px;background:rgba(255,255,255,.12);border:2px solid ${isBuild?b.color+'88':'#ffd43b88'};color:#fff;border-radius:12px;font-size:1.3rem;font-family:'Rubik',sans-serif;text-align:center;outline:none">
