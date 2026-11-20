@@ -712,7 +712,9 @@ html,body { background:var(--spark-bg); color:var(--spark-text); }
              radial-gradient(ellipse at 91% 12%,#15435d 0%,transparent 52%),var(--spark-bg);
 }
 .star { opacity:.2; }
-.app-header { border-color:#c8a6ff38; }
+.app-header { direction:ltr; border-color:#c8a6ff38; }
+html[dir="rtl"] .header-actions { direction:rtl; }
+.app-header .language-options { inset-inline-end:auto; right:0; }
 .logo,.app-brand,body:has(#home.on) .app-brand {
   color:var(--spark-text); background:none; -webkit-text-fill-color:currentColor;
   animation:none; letter-spacing:.01em;
