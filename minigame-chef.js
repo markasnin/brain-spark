@@ -20,28 +20,8 @@ window.ChefGame = (function () {
   const _rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
   const _pick = arr => arr[Math.floor(Math.random()*arr.length)];
 
-  function _gradePool(diff) {
-    const gc = window.GRADE_CONFIG;
-    const avail = (gc && gc.availableCategories) || ['add','sub'];
-    const math = ['add','sub','mul','div'].filter(c => avail.includes(c));
-    let pool;
-    if (diff === 'easy')        pool = math.filter(c => c === 'add' || c === 'sub');
-    else if (diff === 'medium') pool = math.filter(c => c !== 'div');
-    else                        pool = math;
-    return pool.length ? pool : math.length ? math : ['add'];
-  }
-  function makeQ(diff) {
-    const pool = _gradePool(diff);
-    const cat  = pool[Math.floor(Math.random() * pool.length)];
-    if (window.genQ) { try { return window.genQ(cat, diff); } catch(e) {} }
-    const r = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
-    const gr = window._grade || '\u05d1';
-    const sm = (gr==='\u05d0'||gr==='\u05d1'), md = (gr==='\u05d2'||gr==='\u05d3');
-    if (cat==='add') { const m=sm?15:md?60:250; const a=r(1,m),b=r(1,m); return {text:a+' + '+b+' = ?', answer:a+b}; }
-    if (cat==='sub') { const m=sm?15:md?60:250; const a=r(3,m),b=r(1,a); return {text:a+' - '+b+' = ?', answer:a-b}; }
-    if (cat==='mul') { const m=sm?5:md?9:12;    const a=r(2,m),b=r(2,m); return {text:a+' \xd7 '+b+' = ?', answer:a*b}; }
-    const m=md?9:12; const b=r(2,m),q=r(1,m); return {text:(b*q)+' \xf7 '+b+' = ?', answer:q};
-  }
+  const makeQ = minigameQuestion;
+
   function helpBtn(msg) {
     return '<div style="text-align:center;margin-bottom:10px"><button onclick="window._showHelp(this.dataset.msg)" data-msg="' + msg.replace(/"/g,'&quot;') + '" style="padding:6px 18px;background:rgba(255,211,42,.15);border:1px solid #ffd43b88;color:#ffd43b;border-radius:20px;font-family:Rubik,sans-serif;font-size:.8rem;cursor:pointer;font-weight:700">&#x1F4A1; \u05d0\u05d9\u05da \u05de\u05e9\u05d7\u05e7\u05d9\u05dd?</button></div>';
   }
@@ -129,9 +109,9 @@ window.ChefGame = (function () {
         <div style="color:#fff;font-family:'Rubik',sans-serif;font-size:.95rem;margin-bottom:14px">${c.amount} \u05d9\u05d7\u05d9\u05d3\u05d5\u05ea \u05e9\u05dc ${c.recipe.name}</div>
         <div style="background:rgba(255,255,255,.08);border-radius:14px;padding:14px;margin-bottom:4px">
           <div style="color:#ffd43b;font-family:'Fredoka',sans-serif;font-size:.9rem;margin-bottom:8px">&#x1F9EE; \u05e4\u05ea\u05d5\u05e8 \u05d0\u05ea \u05d4\u05ea\u05e8\u05d2\u05d9\u05dc:</div>
-          <div style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.4rem;font-weight:900;direction:ltr;margin-bottom:12px">${q.text}</div>
+          <div style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.4rem;font-weight:900;direction:${q.dir || 'rtl'};margin-bottom:12px">${q.text}</div>
           <div style="display:flex;gap:8px">
-            <input id="chefAns" type="number" placeholder="?" onkeydown="if(event.key==='Enter')window.ChefGame.submit()" autofocus
+            <input id="chefAns" type="number" step="any" placeholder="?" onkeydown="if(event.key==='Enter')window.ChefGame.submit()" autofocus
               style="flex:1;padding:13px;background:rgba(255,255,255,.12);border:2px solid ${c.color}88;color:#fff;border-radius:12px;font-size:1.3rem;font-family:'Rubik',sans-serif;text-align:center;outline:none">
             <button onclick="window.ChefGame.submit()" style="padding:13px 22px;background:${c.color};border:none;border-radius:12px;font-size:1.4rem;cursor:pointer;font-weight:900">&#x1F373;</button>
           </div>
@@ -212,7 +192,7 @@ window.ChefGame = (function () {
 
   function submit() {
     const inp = document.getElementById('chefAns'); if (!inp) return;
-    const ua = parseInt(inp.value), c = st.activeOrder;
+    const ua = numericAnswer(inp.value), c = st.activeOrder;
     if (isNaN(ua)) { inp.style.borderColor='#ff6b6b'; setTimeout(()=>inp.style.borderColor=c.color+'88',500); return; }
     if (ua === st.activeQ.answer) {
       st.customers = st.customers.filter(x=>x.id!==c.id);
