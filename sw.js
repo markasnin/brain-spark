@@ -1,4 +1,4 @@
-const RELEASE = '11';
+const RELEASE = '12';
 const CACHE_PREFIX = 'brainspark-v';
 const CACHE = CACHE_PREFIX + RELEASE;
 const OFFLINE_PAGE = './index.html';
@@ -8,7 +8,12 @@ const ASSETS = [
   'special-users.js',
   'i18n.js',
   'translations.js',
-  'flags.svg',
+  'Flags/il.svg',
+  'Flags/us.svg',
+  'Flags/sa.svg',
+  'Flags/ru.svg',
+  'Flags/fr.svg',
+  'Flags/ua.svg',
   'config.js',
   'question-visuals.js',
   'curriculum.js',

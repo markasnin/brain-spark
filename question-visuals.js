@@ -1,27 +1,27 @@
 /* Shared presentation for practice, exams and minigames. */
 function questionPrompt(q) {
-  const escape = text => text.replace(/[&<>"']/g, char =>
-    ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'})[char]);
-  const translated = Object.keys(supportedLanguages).map(language => {
+  return Object.keys(supportedLanguages).map(language => {
     const index = ['en','ru','ar'].indexOf(language);
     const text = (index >= 0 && q.localized?.[index]) || interfaceText(q.text,language);
-    const tokens = /\u2066([^\u2069]+)\u2069|([−-]?\d+(?:[.,]\d+)*)(?:\s*([÷/])\s*([−-]?\d+(?:[.,]\d+)*))?[%°]?/g;
-    let format = '';
-    let cursor = 0;
-    for (const match of text.matchAll(tokens)) {
-      const [token, expression, numerator, operator, denominator] = match;
-      format += escape(text.slice(cursor, match.index));
-      if (operator && q.cat === 'div') {
-        format += fractionMarkup(numerator, denominator);
-      } else {
-        format += `<bdi dir="ltr" class="math-token">${escape(expression ?? token)}</bdi>`;
-      }
-      cursor = match.index + token.length;
-    }
-    format += escape(text.slice(cursor));
-    return `<span class="question-language" data-language="${language}" dir="auto"${language===activeLanguage?'':' hidden'}>${format}</span>`;
-  });
-  return translated.join('');
+    return `<span class="question-language" data-language="${language}" dir="auto"${language===activeLanguage?'':' hidden'}>${formatQuestionMath(text)}</span>`;
+  }).join('');
+}
+
+function formatQuestionMath(text) {
+  const escape = text => text.replace(/[&<>"']/g, char =>
+    ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'})[char]);
+  const tokens = /\u2066([^\u2069]+)\u2069|([−-]?\d+(?:[.,]\d+)*)(?:\s*([÷/⁄])\s*([−-]?\d+(?:[.,]\d+)*))?[%°]?/g;
+  let result = '';
+  let cursor = 0;
+  for (const match of text.matchAll(tokens)) {
+    const [token, expression, numerator, operator, denominator] = match;
+    result += escape(text.slice(cursor, match.index));
+    if (operator) result += fractionMarkup(numerator,denominator);
+    else if (expression) result += `<bdi dir="ltr" class="math-token">${formatQuestionMath(expression)}</bdi>`;
+    else result += `<bdi dir="ltr" class="math-token">${escape(token)}</bdi>`;
+    cursor = match.index + token.length;
+  }
+  return result + escape(text.slice(cursor));
 }
 
 function mountQuestionVisual(container, q) {
@@ -45,12 +45,14 @@ function mountQuestionVisual(container, q) {
       mountArithmeticPicture(container,q,picture);
       return;
     }
-    const fraction = q.text.match(/(?:^|\s)([1-9])\/([2-9])(?=\s|$)/);
-    if (fraction && ['fractions','fractions_unit'].includes(q.cat) && +fraction[1] < +fraction[2]) {
-      mountFraction(container, +fraction[1], +fraction[2]);
-    } else {
-      container.hidden = true;
-    }
+    const fractions = ['fractions','fractions_unit'].includes(q.cat)
+      ? [...q.text.matchAll(/(?<![\d/])(\d+)\s*\/\s*(\d+)(?![\d/])/g)]
+        .map(([,n,d])=>[Number(n),Number(d)])
+        .filter(([n,d])=>n>0 && n<d && d<=12)
+        .filter(([n,d],i,all)=>all.findIndex(([a,b])=>a===n && b===d)===i)
+      : [];
+    if (fractions.length) mountFraction(container,fractions);
+    else container.hidden = true;
   }
 }
 
@@ -141,10 +143,14 @@ function addShapeExplorer(container, svg) {
   container.append(controls);
 }
 
-function mountFraction(container, numerator, denominator) {
-  container.innerHTML = `<div class="fraction-tiles" dir="ltr" role="img" aria-label="${numerator} חלקים צבועים מתוך ${denominator}">
-    ${Array.from({length:denominator},(_,i)=>`<i class="${i<numerator?'is-filled':''}"></i>`).join('')}
-  </div>`;
+function mountFraction(container, fractions) {
+  container.innerHTML = '<div class="fraction-models">' + fractions.map(([n,d]) =>
+    `<div class="fraction-model" dir="ltr">
+      ${fractionMarkup(n,d)}
+      <div class="fraction-tiles" style="--parts:${d}" role="img" aria-label="${n} חלקים צבועים מתוך ${d}">
+        ${Array.from({length:d},(_,i)=>`<i aria-hidden="true" class="${i<n?'is-filled':''}"></i>`).join('')}
+      </div>
+    </div>`).join('') + '</div>';
 }
 
 function curriculumVisual(grade, cat, level, n) {

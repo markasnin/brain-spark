@@ -2,13 +2,13 @@
 <html lang="he" dir="rtl">
 <head>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
-<link rel="manifest" href="manifest.json?v=11">
+<link rel="manifest" href="manifest.json?v=12">
 <meta name="theme-color" content="#07050f">
 <meta charset="UTF-8">
-<meta name="brainspark-release" content="11">
+<meta name="brainspark-release" content="12">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Brain Spark ⚡</title>
-<link rel="stylesheet" href="style.css?v=11">
+<link rel="stylesheet" href="style.css?v=12">
 <!-- Grade config loader slot -->
 <script id="gradeScript"></script>
 <!-- ══ LOAD ORDER ══
@@ -20,33 +20,36 @@
   6. ui.js             — show, updateHome, buildGrid, settings, friends UI
   7. firebase.js       — Firebase init + all async Firebase functions (module)
 -->
-<script src="special-users.js?v=11"></script>
-<script src="translations.js?v=11"></script>
-<script src="i18n.js?v=11"></script>
-<script src="config.js?v=11"></script>
-<script src="question-visuals.js?v=11"></script>
-<script src="curriculum.js?v=11"></script>
-<script src="questions.js?v=11"></script>
-<script src="game.js?v=11"></script>
-<script src="lessons.js?v=11"></script>
-<script src="ui.js?v=11"></script>
-<script type="module" src="firebase.js?v=11"></script>
+<script src="special-users.js?v=12"></script>
+<script src="translations.js?v=12"></script>
+<script src="i18n.js?v=12"></script>
+<script src="config.js?v=12"></script>
+<script src="question-visuals.js?v=12"></script>
+<script src="curriculum.js?v=12"></script>
+<script src="questions.js?v=12"></script>
+<script src="game.js?v=12"></script>
+<script src="lessons.js?v=12"></script>
+<script src="ui.js?v=12"></script>
+<script type="module" src="firebase.js?v=12"></script>
 </head>
 <body>
   <header class="app-header">
     <div class="logo app-brand"><span aria-hidden="true">⚡</span> Brain Spark</div>
     <div class="header-actions">
-      <div class="language-control">
-        <svg class="language-flag" viewBox="0 0 36 24" aria-hidden="true"><use id="appLanguageFlag" href="flags.svg?v=11#flag-he"></use></svg>
-        <select id="appLanguage" aria-label="שפה">
-          <option value="he" lang="he">🇮🇱 עברית</option>
-          <option value="en" lang="en">🇺🇸 English</option>
-          <option value="ar" lang="ar">🇸🇦 العربية</option>
-          <option value="ru" lang="ru">🇷🇺 Русский</option>
-          <option value="fr" lang="fr">🇫🇷 Français</option>
-          <option value="uk" lang="uk">🇺🇦 Українська</option>
-        </select>
-      </div>
+      <details class="language-control" id="appLanguage">
+        <summary class="language-trigger" aria-label="שפה">
+          <img class="language-flag" id="appLanguageFlag" src="Flags/il.svg?v=12" alt="">
+          <bdi class="language-current" id="appLanguageName" lang="he" data-no-translate>עברית</bdi>
+        </summary>
+        <div class="language-options">
+          <button type="button" data-language="he" aria-pressed="false"><img class="language-flag" src="Flags/il.svg?v=12" alt=""><bdi lang="he" data-no-translate>עברית</bdi></button>
+          <button type="button" data-language="en" aria-pressed="false"><img class="language-flag" src="Flags/us.svg?v=12" alt=""><bdi lang="en" data-no-translate>English</bdi></button>
+          <button type="button" data-language="ar" aria-pressed="false"><img class="language-flag" src="Flags/sa.svg?v=12" alt=""><bdi lang="ar" data-no-translate>العربية</bdi></button>
+          <button type="button" data-language="ru" aria-pressed="false"><img class="language-flag" src="Flags/ru.svg?v=12" alt=""><bdi lang="ru" data-no-translate>Русский</bdi></button>
+          <button type="button" data-language="fr" aria-pressed="false"><img class="language-flag" src="Flags/fr.svg?v=12" alt=""><bdi lang="fr" data-no-translate>Français</bdi></button>
+          <button type="button" data-language="uk" aria-pressed="false"><img class="language-flag" src="Flags/ua.svg?v=12" alt=""><bdi lang="uk" data-no-translate>Українська</bdi></button>
+        </div>
+      </details>
       <button class="logout-btn app-logout" onclick="fbLogout()">התנתק</button>
     </div>
   </header>
@@ -564,14 +567,14 @@
   load();
   createStars();
 </script>
-<script src="profile-fields.js?v=11"></script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=11');}</script>
-  <script src="minigame-fishing.js?v=11"></script>
-  <script src="minigame-dungeon.js?v=11"></script>
-  <script src="minigame-rocket.js?v=11"></script>
-  <script src="minigame-chef.js?v=11"></script>
-  <script src="minigame-builder.js?v=11"></script>
-  <script src="minigames.js?v=11"></script>
+<script src="profile-fields.js?v=12"></script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=12');}</script>
+  <script src="minigame-fishing.js?v=12"></script>
+  <script src="minigame-dungeon.js?v=12"></script>
+  <script src="minigame-rocket.js?v=12"></script>
+  <script src="minigame-chef.js?v=12"></script>
+  <script src="minigame-builder.js?v=12"></script>
+  <script src="minigames.js?v=12"></script>
 <script>
 // ── PATCH: fix minigames tile onclick and export helpers to window ──
 window.show = function(id) {
@@ -600,7 +603,7 @@ function _patchUpdateHome() {
 }
 _patchUpdateHome();
 </script>
-  <script src="geometry.js?v=11"></script>
+  <script src="geometry.js?v=12"></script>
   <footer class="site-credit" lang="en" dir="ltr">Made by <strong>MindUp™</strong></footer>
 </body>
 </html>

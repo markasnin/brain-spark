@@ -428,11 +428,19 @@ function setAppLanguage(language) {
   document.documentElement.dir = supportedLanguages[activeLanguage];
   try { localStorage.setItem('brainspark-language',activeLanguage); } catch {}
   const picker = document.getElementById('appLanguage');
-  if (picker) picker.value = activeLanguage;
   const flag = document.getElementById('appLanguageFlag');
-  if (flag) {
-    const version = document.querySelector('meta[name="brainspark-release"]')?.content;
-    flag.setAttribute('href', `flags.svg?v=${version}#flag-${activeLanguage}`);
+  const name = document.getElementById('appLanguageName');
+  if (picker && flag && name) {
+    const options = picker.querySelectorAll('button[data-language]');
+    for (const option of options) {
+      const selected = option.dataset.language === activeLanguage;
+      option.setAttribute('aria-pressed', String(selected));
+      if (selected) {
+        flag.src = option.querySelector('img').src;
+        name.textContent = option.querySelector('bdi').textContent;
+        name.lang = activeLanguage;
+      }
+    }
   }
   document.querySelectorAll('.question-language').forEach(node => {
     node.hidden = node.dataset.language !== activeLanguage;
@@ -445,7 +453,24 @@ try { setAppLanguage(localStorage.getItem('brainspark-language')); } catch { set
 document.addEventListener('DOMContentLoaded', () => {
   const picker = document.getElementById('appLanguage');
   setAppLanguage(activeLanguage);
-  picker.addEventListener('change', () => setAppLanguage(picker.value));
+  const trigger = picker.querySelector('summary');
+  picker.addEventListener('click', event => {
+    const option = event.target.closest('button[data-language]');
+    if (!option) return;
+    setAppLanguage(option.dataset.language);
+    picker.open = false;
+    trigger.focus();
+  });
+  picker.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && picker.open) {
+      event.preventDefault();
+      picker.open = false;
+      trigger.focus();
+    }
+  });
+  document.addEventListener('click', event => {
+    if (!picker.contains(event.target)) picker.open = false;
+  });
   const observer = new MutationObserver(records => {
     for (const record of records) {
       if (record.type === 'characterData') localizeTextNode(record.target);
