@@ -10,7 +10,7 @@ function questionPrompt(q) {
 function formatQuestionMath(text) {
   const escape = text => text.replace(/[&<>"']/g, char =>
     ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'})[char]);
-  const tokens = /\u2066([^\u2069]+)\u2069|([−-]?\d+(?:[.,]\d+)*)(?:\s*([÷/⁄])\s*([−-]?\d+(?:[.,]\d+)*))?[%°]?/g;
+  const tokens = /\u2066([^\u2069]+)\u2069|(__|[−-]?\d+(?:[.,]\d+)*)(?:\s*([÷/⁄])\s*([−-]?\d+(?:[.,]\d+)*))?[%°]?/g;
   let result = '';
   let cursor = 0;
   for (const match of text.matchAll(tokens)) {

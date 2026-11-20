@@ -61,7 +61,7 @@ function loadQ(q) {
   db.className='lbadge '+(q.diff==='easy'?'easy':q.diff==='medium'?'med':'hard');
   db.textContent=q.diff==='easy'?'🌱 קל':q.diff==='medium'?'⚡ בינוני':'🔥 קשה';
   document.getElementById('qPtsPreview').textContent = q.pts;
-  document.getElementById('qGameLabel').textContent  = (q.label||'')+(q.gameLabel?' — '+q.gameLabel:'');
+  document.getElementById('qGameLabel').textContent  = q.label || '';
   const dl=document.getElementById('dailyQLbl');
   if (qs.isDaily) { dl.style.display='block'; dl.textContent=`📅 שאלה יומית ${qs.isDailyIdx+1}/2`; } else dl.style.display='none';
   const qt = document.getElementById('qTxt');

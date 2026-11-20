@@ -509,22 +509,10 @@ function questionTranslations(grade, category, level, n) {
       'بين الساعة 2 والساعة 5، كم كيلومترًا في الساعة زادت المسافة في المتوسط؟',
     ],
   ][level];
-  if (category === 'algebra') return [
-    [
+  if (category === 'algebra' && level === 0) return [
       `Workshop materials cost ₪3 each and entry costs ₪8. Using ⁦8 + 3x⁩, find the total cost of ${n} materials in shekels.`,
       `Вход в мастерскую стоит 8 шекелей, каждый материал — 3 шекеля. Найди по формуле ⁦8 + 3x⁩ стоимость входа и ${n} материалов.`,
       `تكلفة دخول الورشة 8 شواكل وسعر كل مادة 3 شواكل. احسب التكلفة الكلية لشراء ${n} مواد باستخدام ⁦8 + 3x⁩.`,
-    ],
-    [
-      `Combine like terms in ⁦${n+4}x − 2x + 3x + 5⁩. What is the coefficient of x?`,
-      `Приведи подобные слагаемые в ⁦${n+4}x − 2x + 3x + 5⁩. Каков коэффициент при x?`,
-      `اجمع الحدود المتشابهة في ⁦${n+4}x − 2x + 3x + 5⁩. ما معامل x؟`,
-    ],
-    [
-      `Expand ⁦${n}(2x + 3) − 4x⁩ and combine like terms. What is the coefficient of x?`,
-      `Раскрой скобки в ⁦${n}(2x + 3) − 4x⁩ и приведи подобные слагаемые. Каков коэффициент при x?`,
-      `فكّ الأقواس في ⁦${n}(2x + 3) − 4x⁩ واجمع الحدود المتشابهة. ما معامل x؟`,
-    ],
-  ][level];
+    ];
   return null;
 }
