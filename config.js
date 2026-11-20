@@ -27,7 +27,7 @@ const LEVELS=[
   {n:'אלוף חשבון',xp:700,e:'🏆'},{n:'מייסטרו מתמטיקה',xp:1000,e:'🌟'},
   {n:'אגדת המספרים',xp:1400,e:'💫'},{n:'לאינסוף ומעבר!',xp:Infinity,e:'🚀'}
 ];
-const GRADE_FILES={'א':'grade1.js','ב':'grade2.js','ג':'grade3.js','ד':'grade4.js','ה':'grade5.js','ו':'grade6.js'};
+const GRADE_FILES={'א':'grade1.js','ב':'grade2.js','ג':'grade3.js','ד':'grade4.js','ה':'grade5.js','ו':'grade6.js','ז':'grade7.js'};
 
 // ══ CATEGORY DEFINITIONS ══
 const ALL_CATS = [
@@ -69,6 +69,18 @@ const ALL_CATS = [
   { id:'shapes3d',        cls:'',         icon:'🧊', name:'גופים',               sub:'פנים, קצוות, קודקודים', borderColor:'#74b9ff' },
   { id:'measurement',     cls:'',         icon:'📏', name:'מדידה',               sub:'אורך, משקל, זמן, נפח',  borderColor:'#fab1a0' },
   { id:'data',            cls:'',         icon:'📊', name:'חקר נתונים',          sub:'ממוצע, גרף, טווח',      borderColor:'#6c5ce7' },
+  {id:'place', icon:'🔢', name:'מבנה המספר'},
+  {id:'order', icon:'🧮', name:'סדר פעולות'},
+  {id:'percent', icon:'💯', name:'אחוזים'},
+  {id:'negatives', icon:'➖', name:'מספרים מכוונים'},
+  {id:'coordinates', icon:'🧭', name:'מערכת צירים'},
+  {id:'powers', icon:'²', name:'חזקות ושורשים'},
+  {id:'algebra', icon:'𝑥', name:'ביטויים אלגבריים'},
+  {id:'equations', icon:'⚖️', name:'משוואות'},
+  {id:'transforms', icon:'🔄', name:'שיקוף, הזזה וסיבוב'},
+  {id:'pythagoras', icon:'📐', name:'משפט פיתגורס'},
+  {id:'probability', icon:'🎲', name:'שכיחות והסתברות'},
+  {id:'graphs', icon:'📈', name:'קריאת גרפים'},
   // ── מיוחד ──
   { id:'minigames', cls:'mul',     icon:'🎮', name:'מיני-משחקים',  sub:'דיג, מבוך, חלל',  borderColor:'#ffd43b',special:'minigames' },
   { id:'learn',     cls:'learn',   icon:'📚', name:'תזכורת',        sub:'חוקים ונוסחאות',   special:'learn' },
@@ -93,6 +105,8 @@ const CAT_NAMES = {
   ratio:'⚖️ יחס',integers_intro:'➖ מספרים שלמים',
   volume:'🧊 נפח',circle:'⭕ מעגל',scale:'🗺️ קנה מידה',
 };
+
+for (const {id, icon, name} of ALL_CATS) CAT_NAMES[id] ??= icon + " " + name;
 
 const LOCKED_TOPICS={div:'division',shapes:'shapes',fractions:'fractions'};
 
