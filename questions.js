@@ -128,7 +128,21 @@ function genPool(cat, diff, n) {
 
 function genQ(cat, diff) {
   const gc = window.GRADE_CONFIG;
+  const aligned = curriculumQuestion(gc?.gradeId, cat, diff);
+  if (aligned) return aligned;
   if (gc?.generators?.[cat]) return gc.generators[cat](diff);
+  if (gc?.ranges?.[cat]?.[diff] && ['add','sub','mul'].includes(cat)) {
+    const range = gc.ranges[cat][diff];
+    const a = rnd(range.aMin, range.aMax);
+    const b = cat === 'sub' ? rnd(0, a) : rnd(range.bMin, range.bMax);
+    const [symbol, answer, explanation] = {
+      add: ['+', a + b, 'אפשר לפרק את המספרים לפי ערך המקום ולחבר חלקים מתאימים.'],
+      sub: ['−', a - b, 'אפשר לבדוק את התוצאה בעזרת חיבור: ההפרש ועוד המספר שחיסרנו.'],
+      mul: ['×', a * b, 'אפשר לפרק את אחד הגורמים לסכום ולכפול כל חלק בנפרד.'],
+    }[cat];
+    return {type:'num', cat, diff, text:`${a} ${symbol} ${b} = ?`, answer, explanation,
+      dir:'ltr', pts:ptsForQ(cat,diff), hint:{type:'text', msg:explanation}};
+  }
   const theme = pick(GAME_THEMES);
   switch(cat) {
     case 'add':       return genAdd(diff, theme);
