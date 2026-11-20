@@ -1,4 +1,4 @@
-const RELEASE = '15';
+const RELEASE = '16';
 const CACHE_PREFIX = 'brainspark-v';
 const CACHE = CACHE_PREFIX + RELEASE;
 const OFFLINE_PAGE = './index.html';

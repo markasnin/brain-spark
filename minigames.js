@@ -7,10 +7,10 @@ window._showHelp = function(elOrMsg) {
   d.id = '_hp';
   d.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.78)';
   const clean = (msg||'').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
-  d.innerHTML = '<div style="max-width:320px;width:90%;background:linear-gradient(135deg,#1e1b4b,#312e81);border:2px solid #ffd43b;border-radius:22px;padding:22px;text-align:right;font-family:Rubik,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.9)">'
+  d.innerHTML = '<div class="game-help-panel">'
     + '<div style="font-family:Fredoka,sans-serif;font-size:1.4rem;color:#ffd43b;margin-bottom:10px;text-align:center">💡 איך משחקים?</div>'
     + '<div style="color:#e2e8f0;font-size:.93rem;line-height:1.8;white-space:pre-line">' + clean + '</div>'
-    + '<button onclick="document.getElementById(\'_hp\').remove()" style="margin-top:16px;width:100%;padding:11px;background:linear-gradient(135deg,#ffd43b,#fab005);border:none;border-radius:12px;font-family:Fredoka,sans-serif;font-size:1.1rem;cursor:pointer;font-weight:700;color:#000">הבנתי! ✅</button>'
+    + '<button onclick="document.getElementById(\'_hp\').remove()" class="game-help-dismiss">הבנתי! ✅</button>'
     + '</div>';
   d.onclick = e => { if(e.target===d) d.remove(); };
   document.body.appendChild(d);
@@ -74,7 +74,7 @@ window.openMinigames = function () {
     + '<div style="color:#adb5bd;text-align:center;font-size:.8rem;font-family:Rubik,sans-serif;margin-bottom:16px">בחר משחק ותאמן מתמטיקה תוך כדי משחק!</div>'
     + GAMES.map(g => ''
       + '<div onclick="window._launchGame(\'' + g.id + '\')"'
-      + ' style="background:' + g.bg + ';border:2px solid ' + g.color + '44;border-radius:20px;padding:16px;margin-bottom:12px;cursor:pointer;transition:transform .15s,border-color .15s;position:relative"'
+      + ' class="minigame-menu-card"'
       + ' onmouseover="this.style.transform=\'scale(1.02)\';this.style.borderColor=\'' + g.color + '\'"'
       + ' onmouseout="this.style.transform=\'scale(1)\';this.style.borderColor=\'' + g.color + '44\'">'
       + '  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">'
