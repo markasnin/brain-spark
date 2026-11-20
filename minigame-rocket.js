@@ -43,27 +43,7 @@ window.RocketGame = (function () {
   };
 
   // ── Grade-aware question generator ──
-  function _gradePool(diff) {
-    const gc = window.GRADE_CONFIG;
-    const avail = (gc && gc.availableCategories) || ['add','sub'];
-    const math = ['add','sub','mul','div'].filter(c => avail.includes(c));
-    let pool;
-    if (diff === 'easy')        pool = math.filter(c => c==='add'||c==='sub');
-    else if (diff === 'medium') pool = math.filter(c => c!=='div');
-    else                        pool = math;
-    return pool.length ? pool : math.length ? math : ['add'];
-  }
-  function makeQ(diff) {
-    const pool = _gradePool(diff);
-    const cat  = pool[Math.floor(Math.random()*pool.length)];
-    if (window.genQ) { try { return window.genQ(cat, diff); } catch(e) {} }
-    const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-    const gr=window._grade||'\u05d1', sm=(gr==='\u05d0'||gr==='\u05d1'), md=(gr==='\u05d2'||gr==='\u05d3');
-    if(cat==='add'){const m=sm?15:md?60:250;const a=r(1,m),b=r(1,m);return{text:`${a} + ${b} = ?`,answer:a+b};}
-    if(cat==='sub'){const m=sm?15:md?60:250;const a=r(3,m),b=r(1,a);return{text:`${a} - ${b} = ?`,answer:a-b};}
-    if(cat==='mul'){const m=sm?5:md?9:12;const a=r(2,m),b=r(2,m);return{text:`${a} × ${b} = ?`,answer:a*b};}
-    const m=md?9:12;const b=r(2,m),q=r(1,m);return{text:`${b*q} ÷ ${b} = ?`,answer:q};
-  }
+  const makeQ = minigameQuestion;
 
   function helpBtn(msg) {
     const safe = msg.replace(/'/g,"&#39;").replace(/"/g,"&quot;");
@@ -188,11 +168,11 @@ window.RocketGame = (function () {
       <div style="font-family:'Fredoka',sans-serif;font-size:1.4rem;color:${color};text-align:center;margin-bottom:8px">${title}</div>
       ${spaceCard(`
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <span style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.15rem;font-weight:700;direction:ltr">${q.text}</span>
+          <span style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.15rem;font-weight:700;direction:${q.dir || 'rtl'}">${q.text}</span>
           <span id="rqTimer" style="color:#ffd43b;font-family:'Fredoka',sans-serif;font-size:1.4rem;font-weight:900">⏱ ${st.qTimeLeft}</span>
         </div>
         <div style="display:flex;gap:8px">
-          <input id="rktAns" type="number" placeholder="?" onkeydown="if(event.key==='Enter')window.RocketGame.submit()" autofocus
+          <input id="rktAns" type="number" step="any" placeholder="?" onkeydown="if(event.key==='Enter')window.RocketGame.submit()" autofocus
             style="flex:1;padding:12px;background:rgba(255,255,255,.1);border:2px solid ${color}66;color:#fff;border-radius:12px;font-size:1.2rem;font-family:'Rubik',sans-serif;text-align:center;outline:none">
           <button onclick="window.RocketGame.submit()" style="padding:12px 18px;background:${color};border:none;border-radius:12px;font-size:1.2rem;cursor:pointer;font-weight:900">✅</button>
         </div>
@@ -337,7 +317,7 @@ window.RocketGame = (function () {
   function submit(){
     clearTimer();
     const inp=document.getElementById('rktAns'); if(!inp)return;
-    const ua=parseInt(inp.value);
+    const ua=numericAnswer(inp.value);
     const ctx=st.questionCtx;
     if(isNaN(ua)){startTimer();return;}
     const correct=ua===st.activeQ.answer;
