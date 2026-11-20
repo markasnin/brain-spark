@@ -225,7 +225,7 @@ const curriculum = {
     ],
     graphs: [
       n => [`מחיר השכרת אופניים הוא 5 ₪ ועוד ${n} ₪ לשעה. בגרף, מהו מחיר ההשכרה בנקודה שמתאימה ל-3 שעות?`, 5+3*n, 'מחברים את דמי ההתחלה למחיר של שלוש שעות.'],
-      n => [`בגרף גובה המים, בכמה סנטימטרים ירד הגובה משעה 1 לשעה 2?`, 3, 'קוראים את שני הגבהים לפי ציר y ומחסרים.', waterLevelGraph([n+2, n+8, n+5])],
+      n => [`בגרף גובה המים, בכמה סנטימטרים ירד הגובה משעה 1 לשעה 2?`, 3, 'קוראים את שני הגבהים לפי ציר y ומחסרים.'],
       n => [`בגרף מרחק מול זמן, אחרי 2 שעות נרשמו ${2*n+8} ק״מ ואחרי 5 שעות ${5*n+8} ק״מ. בכמה ק״מ לשעה גדל המרחק בממוצע בין המדידות?`, n, 'מחלקים את השינוי במרחק בשינוי בזמן.'],
     ],
   },
@@ -236,9 +236,12 @@ const curriculumDifficulties = ['easy', 'medium', 'hard'];
 function curriculumQuestion(grade, cat, diff, n = rnd(2, 9)) {
   const templates = curriculum[grade]?.[cat];
   if (!templates) return null;
-  const [text, answer, explanation, shapeHtml] = templates[curriculumDifficulties.indexOf(diff)](n);
+  const level = curriculumDifficulties.indexOf(diff);
+  const [text, answer, explanation, shapeHtml] = templates[level](n);
+  const visual = curriculumVisual(grade, cat, level, n);
   const question = { type:'num', cat, diff, text, answer, explanation, pts:ptsForQ(cat, diff), hint:{ type:'text', msg:explanation } };
   if (shapeHtml) question.shapeHtml = shapeHtml;
+  if (visual) question.visual = visual;
   return question;
 }
 
@@ -247,7 +250,7 @@ function minigameQuestion(diff) {
   const categories = Object.keys(curriculum[grade] || curriculum['ב']);
   const actualGrade = curriculum[grade] ? grade : 'ב';
   const questions = categories.map(cat => curriculumQuestion(actualGrade, cat, diff));
-  const textQuestions = questions.filter(q => !q.shapeHtml);
+  const textQuestions = questions.filter(q => !q.shapeHtml && q.visual?.kind !== 'graph');
   const quickQuestions = textQuestions.filter(q => q.text.length <= 115);
   const available = window.GRADE_CONFIG?.availableCategories || [];
   const arithmetic = ['add','sub','mul','div'].filter(cat => available.includes(cat) && !categories.includes(cat));
@@ -284,20 +287,3 @@ function coordinateGrid(x, y) {
   </svg>`;
 }
 
-function waterLevelGraph(heights) {
-  const y = height => 135 - 6*height;
-  const grid = [0, 5, 10, 15, 20].map(height =>
-    `<path d="M34 ${y(height)}H230" stroke="#64748b" opacity=".5"/>
-    <text x="28" y="${y(height)+4}" text-anchor="end">${height}</text>`).join('');
-  const points = heights.map((height, time) =>
-    `<circle cx="${45+time*80}" cy="${y(height)}" r="4" fill="#38bdf8"/>
-    <text x="${45+time*80}" y="${y(height)-8}" text-anchor="middle">${height}</text>
-    <text x="${45+time*80}" y="153" text-anchor="middle">${time}</text>`).join('');
-  const line = heights.map((height, time) => `${45+time*80},${y(height)}`).join(' ');
-  return `<svg viewBox="0 0 245 180" role="img" aria-label="גובה בסנטימטרים בשעות 0, 1 ו-2: ${heights.join(', ')}"
-    style="display:block;width:100%;max-width:300px;margin:auto;font-size:11px" fill="#e2e8f0">
-    ${grid}<path d="M34 15V135H230" fill="none" stroke="#e2e8f0" stroke-width="2"/>
-    <polyline points="${line}" fill="none" stroke="#38bdf8" stroke-width="2"/>${points}
-    <text x="140" y="172" text-anchor="middle">שעות</text><text x="18" y="13">ס״מ</text>
-  </svg>`;
-}
