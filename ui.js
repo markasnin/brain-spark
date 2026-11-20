@@ -15,6 +15,28 @@ function show(id) {
   if (qs.examTimer)     { clearInterval(qs.examTimer);     qs.examTimer     = null; }
 }
 
+function goToMainScreen() {
+  const current = document.querySelector('.scr.on');
+  if (!window._fbUser || current?.id === 'auth-scr') {
+    if (current?.id !== 'auth-scr') show('auth-scr');
+    return;
+  }
+  if (!window._username) { show('username-setup-scr'); return; }
+  if (!window._grade) { show('grade-select-scr'); return; }
+  if (current?.id === 'home') return;
+  if (current?.id === 'minigameScreen') {
+    const games = {builderWrap:'BuilderGame', chefWrap:'ChefGame', dungeonWrap:'DungeonGame',
+      rocketWrap:'RocketGame', fishingGameWrap:'FishingGame'};
+    for (const [id,game] of Object.entries(games)) {
+      if (current.querySelector('#'+id) && window[game]?.exit) {
+        window[game].exit();
+        return;
+      }
+    }
+  }
+  show('home');
+}
+
 function showToast(msg) {
   const t = document.createElement('div');
   t.className   = 'toast';
