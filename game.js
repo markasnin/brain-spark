@@ -63,7 +63,14 @@ function loadQ(q) {
   document.getElementById('qGameLabel').textContent  = (q.label||'')+(q.gameLabel?' — '+q.gameLabel:'');
   const dl=document.getElementById('dailyQLbl');
   if (qs.isDaily) { dl.style.display='block'; dl.textContent=`📅 שאלה יומית ${qs.isDailyIdx+1}/2`; } else dl.style.display='none';
-  const qt=document.getElementById('qTxt'); qt.textContent=q.text; qt.style.direction=q.dir||'rtl';
+  const qt = document.getElementById('qTxt');
+  qt.innerHTML = questionPrompt(q);
+  qt.dir = q.dir || 'rtl';
+  qt.classList.toggle('is-equation', q.dir === 'ltr');
+  document.getElementById('qCard').dataset.topic = q.cat;
+  const progress = document.getElementById('questionProgress');
+  progress.textContent = `שאלה ${qs.idx+1} מתוך ${qs.pool.length}`;
+  mountQuestionVisual(document.getElementById('shapeCanvas'), q);
   for(let i=0;i<3;i++) document.getElementById('ad'+i).className='adot';
   document.getElementById('hintBox').classList.remove('on');
   document.getElementById('fbBox').classList.remove('on');
@@ -72,10 +79,6 @@ function loadQ(q) {
   document.getElementById('moreBtn').style.display='none';
   const mv=document.getElementById('mulVis');
   if (q.showMul) { mv.style.display='block'; buildMulGroups(q.mulA,q.mulB,q.mulEmoji); buildMulTable(q.mulA,q.mulB); } else mv.style.display='none';
-  // ── Shape canvas ──
-  let sc=document.getElementById('shapeCanvas');
-  if (!sc) { sc=document.createElement('div'); sc.id='shapeCanvas'; sc.style.cssText='margin:8px 0;border-radius:14px;overflow:hidden;'; mv.insertAdjacentElement('afterend',sc); }
-  if (q.shapeHtml) { sc.innerHTML=q.shapeHtml; sc.style.display='block'; } else { sc.innerHTML=''; sc.style.display='none'; }
   window._shapeAnswer = function(v) { const el=document.getElementById('ansInp'); if(el&&!qs.done){el.value=Math.round(v);} };
   const na=document.getElementById('numAnsWrap'),wa=document.getElementById('wordAnsWrap'),ew=document.getElementById('exprWrap');
   if (q.type==='word') {
@@ -399,14 +402,14 @@ function loadExamQ(){
   const diffCls=q.diff==='easy'?'easy':q.diff==='medium'?'med':'hard';
   const area=document.getElementById('examQArea');
   area.innerHTML=`
-    <div class="gcard">
+    <div class="gcard exam-question" data-topic="${q.cat}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
         <span class="lbadge ${diffCls}">${diffLabel}</span>
         <span style="color:var(--txt2);font-size:.78rem">${qs.examIdx+1} / 10</span>
       </div>
       <div style="font-size:.78rem;color:var(--a6);text-align:center;margin-bottom:5px">${q.label||''}</div>
-      <div class="qtxt" style="direction:${q.dir||'rtl'}">${q.text}</div>
-      ${q.shapeHtml||''}
+      <div class="qtxt ${q.dir==='ltr'?'is-equation':''}" dir="${q.dir||'rtl'}">${questionPrompt(q)}</div>
+      <div class="question-visual" id="examVisual" hidden></div>
       ${q.showMul?'<div id="emv" style="margin-bottom:10px"></div>':''}
       <div style="background:rgba(255,71,87,.07);border:1.5px solid rgba(255,71,87,.28);border-radius:12px;padding:8px 14px;margin-bottom:16px;font-size:.8rem;color:#ff8090;text-align:center;font-weight:600">
         ⚠️ ניסיון אחד בלבד — חשוב לפני שאתה מגיש!
@@ -423,6 +426,7 @@ function loadExamQ(){
         <button class="qbtn bnext" onclick="nextExamQ()">${isLast?'🏁 סיים וראה תוצאות':'➡️ שאלה הבאה'}</button>
       </div>
     </div>`;
+  mountQuestionVisual(document.getElementById('examVisual'), q);
   if(q.showMul){
     const emv=document.getElementById('emv');
     if(emv){let h='<div class="mulvis-row">';for(let i=0;i<Math.min(q.mulA,6);i++){h+='<div class="mg">';for(let j=0;j<Math.min(q.mulB,8);j++)h+=`<div class="mi">${q.mulEmoji}</div>`;h+='</div>';}h+='</div>';emv.innerHTML=h;}
