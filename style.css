@@ -888,3 +888,38 @@ html[dir="rtl"] .arcade-play > span { display:inline-block; transform:scaleX(-1)
   margin-bottom:13px !important;
 }
 #minigameScreen .arcade-stage :is(button,input) { touch-action:manipulation; }
+
+/* Scenic progress boards for the arcade puzzles. */
+.puzzle-scene {
+  position:relative; display:grid; align-items:center; min-height:138px; margin-block-end:14px;
+  overflow:hidden; border:1px solid var(--spark-line); border-radius:18px;
+  background:radial-gradient(ellipse at 18% 110%,#2e6c5d 0 37%,transparent 38%),
+             radial-gradient(ellipse at 78% 108%,#22534f 0 44%,transparent 45%),
+             linear-gradient(160deg,#203a56,#173b45);
+}
+.puzzle-scene .puzzle-track { position:relative; z-index:1; margin:0; padding:20px 8px; }
+[data-mode="trail"] .puzzle-track::before {
+  content:""; position:absolute; inset-inline:18%; top:50%; border-top:3px dashed #9fe7cf85; z-index:-1;
+}
+[data-mode="trail"] .puzzle-step:nth-child(even) { transform:translateY(9px); }
+[data-mode="trail"] .puzzle-step:nth-child(odd) { transform:translateY(-9px); }
+[data-mode="vault"] .puzzle-scene {
+  background:repeating-linear-gradient(140deg,#24264a 0 15px,#282a52 15px 30px);
+}
+[data-mode="vault"] .puzzle-track {
+  justify-self:center; background:#161a36; border:1px solid #9e85d8; border-radius:15px; padding:13px;
+  box-shadow:0 4px 0 #101328;
+}
+.puzzle-difficulties { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.puzzle-difficulties button {
+  color:var(--spark-text); background:var(--spark-inset); border:1px solid var(--spark-line);
+  border-radius:10px; padding:7px; cursor:pointer; font:700 .95rem Rubik,sans-serif;
+}
+.puzzle-difficulties button:hover { border-color:var(--puzzle-accent); }
+.puzzle-hint summary { color:var(--puzzle-accent); cursor:pointer; }
+.puzzle-hint .question-visual { margin-top:8px; }
+.puzzle-form input[type="text"] {
+  letter-spacing:.35em; direction:ltr; background:var(--spark-inset); color:var(--spark-text);
+  border:1px solid var(--spark-line); border-radius:11px; min-height:44px; font:700 1.3rem Rubik,sans-serif;
+}
+.arcade-puzzle[data-mode="vault"] .puzzle-track { direction:ltr; }

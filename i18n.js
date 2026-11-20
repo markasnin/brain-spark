@@ -286,6 +286,9 @@ uiTranslations.set('פתרו ארבעה תרגילים כדי לפצח את הק
 uiTranslations.set('מצאתם את האוצר!',['You found the treasure!','Ты нашёл клад!','وجدت الكنز!','Tu as trouvé le trésor !','Ти знайшов скарб!']);
 uiTranslations.set('הכספת נפתחה!',['Vault unlocked!','Сейф открыт!','فُتحت الخزنة!','Coffre ouvert !','Сейф відкрито!']);
 uiTranslations.set('שחקו',['Play','Играть','العب','Jouer','Грати']);
+uiTranslations.set('הקלידו את הספרות לפי הסדר',['Enter the digits in order','Введи цифры по порядку','أدخل الأرقام بالترتيب','Saisis les chiffres dans l’ordre','Введи цифри по порядку']);
+uiTranslations.set('קוד הכספת',['Vault code','Код сейфа','رمز الخزنة','Code du coffre','Код сейфа']);
+uiTranslations.set('פתח את הכספת',['Open the vault','Открыть сейф','افتح الخزنة','Ouvrir le coffre','Відкрити сейф']);
 uiTranslations.set('המנהל',['Administrator','Администратор','المسؤول','Administrateur','Адміністратор']);
 uiTranslations.set('ממליץ לתרגל:',['Recommended practice:','Рекомендуем потренировать:','تدريب مقترح:','Entraînement conseillé :','Рекомендована практика:']);
 uiTranslations.set('כיתה',['Grade','Класс','الصف','Classe','Клас']);
