@@ -52,29 +52,7 @@ window.FishingGame = (function () {
     fishTimerLeft: 0,
   };
 
-  function _gradePool(diff) {
-    const gc = window.GRADE_CONFIG;
-    const avail = (gc && gc.availableCategories) || ['add','sub'];
-    const math = ['add','sub','mul','div'].filter(c => avail.includes(c));
-    let pool;
-    if (diff === 'easy')   pool = math.filter(c => c === 'add' || c === 'sub');
-    else if (diff === 'medium') pool = math.filter(c => c !== 'div');
-    else pool = math;
-    return (pool.length ? pool : math.length ? math : ['add']);
-  }
-  function makeQ(diff) {
-    const pool = _gradePool(diff);
-    const cat  = pool[Math.floor(Math.random() * pool.length)];
-    if (window.genQ) { try { return window.genQ(cat, diff); } catch(e) {} }
-    const r = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
-    const gr = window._grade || '\u05d1';
-    const sm = (gr==='\u05d0'||gr==='\u05d1');
-    const md = (gr==='\u05d2'||gr==='\u05d3');
-    if (cat==='add') { const m=sm?15:md?60:250; const a=r(1,m),b=r(1,m); return {text:`${a} + ${b} = ?`, answer:a+b}; }
-    if (cat==='sub') { const m=sm?15:md?60:250; const a=r(3,m),b=r(1,a); return {text:`${a} - ${b} = ?`, answer:a-b}; }
-    if (cat==='mul') { const m=sm?5:md?9:12;    const a=r(2,m),b=r(2,m); return {text:`${a} × ${b} = ?`, answer:a*b}; }
-    const m=md?9:12; const b=r(2,m),q=r(1,m);  return {text:`${b*q} ÷ ${b} = ?`, answer:q};
-  }
+  const makeQ = minigameQuestion;
 
   function helpBtn(msg) {
     const safe = msg.replace(/'/g,"&#39;").replace(/"/g,"&quot;");
@@ -174,11 +152,11 @@ window.FishingGame = (function () {
         <div style="font-family:'Fredoka',sans-serif;font-size:1.1rem;color:${f.color};margin-bottom:2px">${f.name}</div>
         <div style="font-size:.78rem;color:${RARITY_COLORS[f.rarity]};font-weight:700;margin-bottom:8px">${RARITY_NAMES[f.rarity]} • +${f.pts} נק'</div>
         <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.25);border-radius:10px;padding:6px 12px;margin-bottom:10px">
-          <span style="font-family:'Rubik',sans-serif;font-size:1rem;color:#fff;font-weight:700;direction:ltr">${q.text}</span>
+          <span style="font-family:'Rubik',sans-serif;font-size:1rem;color:#fff;font-weight:700;direction:${q.dir || 'rtl'}">${q.text}</span>
           <span id="fishTimer" style="color:#74c0fc;font-family:'Fredoka',sans-serif;font-size:1.1rem;font-weight:900;white-space:nowrap;margin-right:8px">⏱ ${_fFmt(secs)}</span>
         </div>
         <div style="display:flex;gap:8px">
-          <input id="fishAns" type="number" placeholder="?" onkeydown="if(event.key==='Enter')window.FishingGame.submitAns()"
+          <input id="fishAns" type="number" step="any" placeholder="?" onkeydown="if(event.key==='Enter')window.FishingGame.submitAns()"
             style="flex:1;padding:12px;background:rgba(255,255,255,.1);border:2px solid ${f.color}66;color:#fff;border-radius:12px;font-size:1.2rem;font-family:'Rubik',sans-serif;text-align:center;outline:none">
           <button onclick="window.FishingGame.submitAns()" style="padding:12px 20px;background:${f.color};border:none;border-radius:12px;font-size:1.2rem;cursor:pointer;font-weight:900">✅</button>
         </div>
@@ -245,7 +223,7 @@ window.FishingGame = (function () {
     clearFishTimer();
     const inp = document.getElementById('fishAns');
     if (!inp) return;
-    const ua = parseInt(inp.value);
+    const ua = numericAnswer(inp.value);
     const q = state.activeQ, f = state.hookedFish;
     if (isNaN(ua)) { inp.style.borderColor = '#fa5252'; setTimeout(() => inp.style.borderColor = f.color+'66', 600); return; }
     if (ua === q.answer) {
