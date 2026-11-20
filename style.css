@@ -352,3 +352,7 @@ html,body{min-height:100vh;font-family:'Rubik',sans-serif;background:var(--bg);c
     max-width: 860px !important;
   }
 }
+
+.grade-btn.g7, .reg-grade-card.rg7 { border-color: #7dd3fc60; }
+.grade-btn.g7 .gn, .reg-grade-card.rg7 .rgc-name { color: #7dd3fc; }
+.reg-grade-card.rg7.selected { border-color: #7dd3fc; background: #7dd3fc20; }
