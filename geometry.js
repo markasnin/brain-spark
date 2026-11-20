@@ -25,7 +25,7 @@ const cs = i => STROKES[Math.abs(i) % STROKES.length];
 // SVG PRIMITIVES
 // ──────────────────────────────────────────────────────────
 function svgWrap(w, h, body) {
-  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"
+  return `<svg role="img" aria-label="תרשים גאומטרי" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"
     style="width:100%;max-width:${w}px;display:block;margin:4px auto 8px;
     border-radius:20px;background:linear-gradient(135deg,#1a1040,#0d0820);
     border:2px solid rgba(255,255,255,.13);box-shadow:0 8px 32px rgba(0,0,0,.5)">${body}</svg>`;
