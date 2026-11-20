@@ -1,4 +1,4 @@
-const CACHE = 'brainspark-v5';
+const CACHE = 'brainspark-v6';
 const FILES = [
   './index.html',
   './style.css',
@@ -6,7 +6,8 @@ const FILES = [
   './config.js',
   './questions.js',
   './curriculum.js',
-  './geometry.js?v=5',
+  './question-visuals.js',
+  './geometry.js?v=6',
   './game.js',
   './lessons.js',
   './ui.js',
