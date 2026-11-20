@@ -8,7 +8,7 @@ async function loadGradeConfig(grade) {
     const old = document.getElementById('gradeScript'); if (old) old.remove();
     const s   = document.createElement('script');
     s.id      = 'gradeScript';
-    s.src     = file + '?v=' + Date.now();
+    s.src     = file;
     s.onload  = () => { applyGradeConfig(); resolve(); };
     s.onerror = () => { console.warn('Grade file not found, using defaults'); resolve(); };
     document.head.appendChild(s);
@@ -17,6 +17,10 @@ async function loadGradeConfig(grade) {
 
 function applyGradeConfig() {
   const gc = window.GRADE_CONFIG; if (!gc) return;
+  const aligned = Object.keys(curriculum[gc.gradeId] || {});
+  const retired = gc.gradeId === 'ו' ? ['negatives'] : [];
+  gc.availableCategories = [...new Set([...gc.availableCategories, ...aligned])].filter(cat => !retired.includes(cat));
+  gc.availableExamTopics = [...new Set([...gc.availableExamTopics, ...aligned])].filter(cat => !retired.includes(cat));
   (gc.availableLearnTopics||[]).forEach(t => { if(!st.learnedTopics.includes(t)) st.learnedTopics.push(t); });
   st.examTopics = st.examTopics.filter(t => (gc.availableExamTopics||[]).includes(t));
   if (st.examTopics.length===0) st.examTopics = (gc.availableExamTopics||['add']).slice(0,2);
@@ -35,7 +39,6 @@ async function selectGrade(grade) {
 
 // ── Category ──
 function openCat(cat) {
-  if (cat === 'word') { showToast('🔒 מילוליות — בקרוב!'); return; }
   if (LOCKED_TOPICS[cat] && !st.learnedTopics.includes(LOCKED_TOPICS[cat])) { showToast('🔒 קודם למד את הנושא הזה!'); return; }
   const gc = window.GRADE_CONFIG;
   if (gc && !gc.availableCategories.includes(cat)) { showToast('🔒 נושא זה לא זמין בכיתה שלך'); return; }
@@ -132,7 +135,7 @@ function submitAns() {
 
   // ── Word questions: validate equation FIRST ──
   if (q.type === 'word') {
-    const userAns = parseInt(ansInpEl.value);
+    const userAns = numericAnswer(ansInpEl.value);
     if (isNaN(userAns)) { showToast('✏️ הכנס מספר בתשובה הסופית!'); return; }
     const wordInp = document.getElementById('wordInp');
     if (!wordInp?.value?.trim()) { showToast('✏️ כתוב משפט תשובה!'); return; }
@@ -204,7 +207,7 @@ function submitAns() {
   }
 
   // ── All other question types: just check the number ──
-  const userAns = parseInt(ansInpEl.value);
+  const userAns = numericAnswer(ansInpEl.value);
   if (isNaN(userAns)) { showToast('✏️ הכנס מספר!'); return; }
   const ok = userAns === q.answer;
   const inp = ansInpEl;
@@ -213,7 +216,7 @@ function submitAns() {
     document.getElementById('ad'+qs.attempts).classList.add('ok');
     const pts = Math.max(q.pts - (qs.hintUsed ? cfg.ptsHint : 0) - qs.attempts * 2, 1);
     addPts(pts); showPtsPop(pts); handleStreak(true);
-    showFb('ok', `🎉 ${pick(['מדהים!','אלוף!','גאון!','נפלא!','💯'])}`, `${q.answer} — נכון מאוד!`);
+    showFb('ok', `🎉 ${pick(['מדהים!','אלוף!','גאון!','נפלא!','💯'])}`, `${q.answer} — נכון מאוד!${q.explanation ? '<br>' + q.explanation : ''}`);
     recordHistory(q, userAns, true);
     spawnConf();
     endQ();
@@ -300,7 +303,7 @@ async function showWordFb(writtenText, q) {
   }
 }
 
-function buildExpl(q){if(q.cat==='word'){let s=`התשובה: <strong>${q.answer}</strong>`;if(q.steps?.length)s+=`<br><br>${q.steps.map(st=>`→ ${st}`).join('<br>')}`;s+=`<br><br>🌟 "${q.exampleAnswer||q.answer}"`;return s;}if(q.cat==='mul')return`התשובה: ${q.answer}<br>${q.mulA} × ${q.mulB} = ${q.answer}`;if(q.cat==='div')return`התשובה: ${q.answer}<br>${q.mulB} × ${q.answer} = ${q.mulB*q.answer}`;return`התשובה: ${q.answer}`;}
+function buildExpl(q){if(q.explanation)return `התשובה: <strong>${q.answer}</strong><br>${q.explanation}`;if(q.cat==='word'){let s=`התשובה: <strong>${q.answer}</strong>`;if(q.steps?.length)s+=`<br><br>${q.steps.map(st=>`→ ${st}`).join('<br>')}`;s+=`<br><br>🌟 "${q.exampleAnswer||q.answer}"`;return s;}if(q.cat==='mul')return`התשובה: ${q.answer}<br>${q.mulA} × ${q.mulB} = ${q.answer}`;if(q.cat==='div')return`התשובה: ${q.answer}<br>${q.mulB} × ${q.answer} = ${q.mulB*q.answer}`;return`התשובה: ${q.answer}`;}
 
 function showFb(type,title,txt){const b=document.getElementById('fbBox');b.className='fb-box on fb-'+type;document.getElementById('fbTitle').textContent=title;document.getElementById('fbText').innerHTML=(txt||'').replace(/\n/g,'<br>');}
 
@@ -308,7 +311,7 @@ function endQ(){qs.done=true;const inp=document.getElementById('ansInp');if(inp)
 
 function nextQ(){if(qs.isDaily){qs.isDailyIdx++;if(qs.isDailyIdx>=2){finishDaily();return;}qs.idx++;if(qs.idx<qs.pool.length)loadQ(qs.pool[qs.idx]);return;}qs.idx++;if(qs.idx>=qs.pool.length){genMore();return;}loadQ(qs.pool[qs.idx]);}
 function skipQ(){addPts(-1);nextQ();}
-function genMore(){qs.pool=[...qs.pool,...genPool(qs.cat,qs.diff,10)];nextQ();}
+function genMore(){const firstNew = qs.pool.length; qs.pool.push(...genPool(qs.cat,qs.diff,10)); qs.idx=firstNew; loadQ(qs.pool[qs.idx]);}
 function exitToHome(){if(qs.hintInterval)clearInterval(qs.hintInterval);show('home');}
 
 // ── Streak ──
@@ -328,28 +331,27 @@ function openHistory(){show('history-scr');renderHistory('all');const total=st.h
 
 function filterHist(type){['all','ok','bad'].forEach(t=>document.getElementById('hf'+t.charAt(0).toUpperCase()+t.slice(1)).style.background=t===type?'rgba(30,144,255,.2)':'rgba(255,255,255,.06)');renderHistory(type);}
 
-function renderHistory(filter){const list=document.getElementById('histList');list.innerHTML='';const items=[...st.history].reverse().slice(0,50);const filtered=filter==='all'?items:items.filter(h=>filter==='ok'?h.correct:!h.correct);if(filtered.length===0){list.innerHTML='<div style="color:var(--txt2);text-align:center;padding:20px">אין פריטים להציג</div>';return;}const catNames={add:'חיבור',sub:'חיסור',mul:'כפל',div:'חילוק',word:'מילוליות',shapes:'גיאומטריה',fractions:'שברים'};filtered.forEach(h=>{const d=new Date(h.ts);const timeStr=`${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;const el=document.createElement('div');el.className='hist-entry';el.innerHTML=`<div class="hist-icon">${h.correct?'✅':'❌'}</div><div class="hist-info"><div class="hist-q">${h.q}</div><div class="hist-meta">${catNames[h.cat]||h.cat} • ${h.diff==='easy'?'קל':h.diff==='medium'?'בינוני':'קשה'} • ${timeStr}</div>${!h.correct?`<div style="font-size:.78rem;color:var(--a1)">תשובה נכונה: ${h.answer}</div>`:''}</div><span class="hist-status ${h.correct?'hs-ok':'hs-bad'}">${h.correct?'✓':'✗'}</span>`;el.onclick=()=>retryFromHistory(h);list.appendChild(el);});}
+function renderHistory(filter){const list=document.getElementById('histList');list.innerHTML='';const items=[...st.history].reverse().slice(0,50);const filtered=filter==='all'?items:items.filter(h=>filter==='ok'?h.correct:!h.correct);if(filtered.length===0){list.innerHTML='<div style="color:var(--txt2);text-align:center;padding:20px">אין פריטים להציג</div>';return;}const catNames={add:'חיבור',sub:'חיסור',mul:'כפל',div:'חילוק',word:'מילוליות',shapes:'גיאומטריה',fractions:'שברים'};filtered.forEach(h=>{const d=new Date(h.ts);const timeStr=`${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;const el=document.createElement('div');el.className='hist-entry';el.innerHTML=`<div class="hist-icon">${h.correct?'✅':'❌'}</div><div class="hist-info"><div class="hist-q">${h.q}</div><div class="hist-meta">${catNames[h.cat]||CAT_NAMES[h.cat]||h.cat} • ${h.diff==='easy'?'קל':h.diff==='medium'?'בינוני':'קשה'} • ${timeStr}</div>${!h.correct?`<div style="font-size:.78rem;color:var(--a1)">תשובה נכונה: ${h.answer}</div>`:''}</div><span class="hist-status ${h.correct?'hs-ok':'hs-bad'}">${h.correct?'✓':'✗'}</span>`;el.onclick=()=>retryFromHistory(h);list.appendChild(el);});}
 
 function retryFromHistory(h){if(!h.qObj)return;qs.pool=[h.qObj];qs.idx=0;qs.isDaily=false;qs.isMistakes=false;qs.isExam=false;qs.cat=h.cat;qs.diff=h.diff;show('q-scr');loadQ(h.qObj);}
 
 // ── Mistakes ──
-function openMistakes(){show('mistakes-scr');const list=document.getElementById('mistakesList');list.innerHTML='';const mistakes=st.history.filter(h=>!h.correct&&h.qObj).slice(-20).reverse();document.getElementById('practiceMistakesBtn').style.display=mistakes.length>0?'block':'none';if(mistakes.length===0){list.innerHTML='<div style="color:var(--txt2);text-align:center;padding:24px">🌟 אין טעויות! כל הכבוד!</div>';return;}const catNames={add:'חיבור',sub:'חיסור',mul:'כפל',div:'חילוק',word:'מילוליות'};mistakes.forEach(h=>{const el=document.createElement('div');el.className='hist-entry';el.innerHTML=`<div class="hist-icon">🔄</div><div class="hist-info"><div class="hist-q">${h.q}</div><div class="hist-meta">${catNames[h.cat]||h.cat} • תשובה: <strong style="color:var(--a3)">${h.answer}</strong></div></div><button style="padding:6px 12px;background:rgba(255,159,67,.2);border:1px solid var(--streak);color:var(--streak);border-radius:8px;cursor:pointer;font-family:'Rubik',sans-serif;font-size:.8rem;white-space:nowrap;">תרגל</button>`;el.querySelector('button').onclick=(e)=>{e.stopPropagation();retryFromHistory(h);};list.appendChild(el);});}
+function openMistakes(){show('mistakes-scr');const list=document.getElementById('mistakesList');list.innerHTML='';const mistakes=st.history.filter(h=>!h.correct&&h.qObj).slice(-20).reverse();document.getElementById('practiceMistakesBtn').style.display=mistakes.length>0?'block':'none';if(mistakes.length===0){list.innerHTML='<div style="color:var(--txt2);text-align:center;padding:24px">🌟 אין טעויות! כל הכבוד!</div>';return;}const catNames={add:'חיבור',sub:'חיסור',mul:'כפל',div:'חילוק',word:'מילוליות'};mistakes.forEach(h=>{const el=document.createElement('div');el.className='hist-entry';el.innerHTML=`<div class="hist-icon">🔄</div><div class="hist-info"><div class="hist-q">${h.q}</div><div class="hist-meta">${catNames[h.cat]||CAT_NAMES[h.cat]||h.cat} • תשובה: <strong style="color:var(--a3)">${h.answer}</strong></div></div><button style="padding:6px 12px;background:rgba(255,159,67,.2);border:1px solid var(--streak);color:var(--streak);border-radius:8px;cursor:pointer;font-family:'Rubik',sans-serif;font-size:.8rem;white-space:nowrap;">תרגל</button>`;el.querySelector('button').onclick=(e)=>{e.stopPropagation();retryFromHistory(h);};list.appendChild(el);});}
 function startMistakesPractice(){const mistakes=st.history.filter(h=>!h.correct&&h.qObj).slice(-20);if(mistakes.length===0){showToast('אין טעויות לתרגל!');return;}qs.pool=mistakes.map(h=>h.qObj);qs.idx=0;qs.isMistakes=true;qs.isDaily=false;qs.isExam=false;qs.cat=qs.pool[0].cat;qs.diff=qs.pool[0].diff;show('q-scr');loadQ(qs.pool[0]);}
 
 // ── Daily ──
-function startDaily(){if(st.dailyDone){showToast('✅ כבר השלמת את המשימה היומית!');return;}const gc=window.GRADE_CONFIG;const available=(gc?.availableCategories||['add','sub','mul']).filter(c=>['add','sub','mul'].includes(c));const cats=available.length>0?available:['add','sub'];qs.pool=[genQ(pick(cats),'medium'),genQ(pick(cats),'medium')];qs.idx=0;qs.isDaily=true;qs.isDailyIdx=0;qs.isMistakes=false;qs.isExam=false;qs.cat=qs.pool[0].cat;show('q-scr');loadQ(qs.pool[0]);}
+function startDaily(){if(st.dailyDone){showToast('✅ כבר השלמת את המשימה היומית!');return;}const gc=window.GRADE_CONFIG;const available=(gc?.availableCategories||['add','sub','mul']).filter(c=>['add','sub','mul'].includes(c));const cats=available.length>0?available:gc?.availableCategories||['add','sub'];qs.pool=[genQ(pick(cats),'medium'),genQ(pick(cats),'medium')];qs.idx=0;qs.isDaily=true;qs.isDailyIdx=0;qs.isMistakes=false;qs.isExam=false;qs.cat=qs.pool[0].cat;show('q-scr');loadQ(qs.pool[0]);}
 function finishDaily(){st.dailyDone=true;save();addPts(20);showPtsPop(20);spawnConf(25);showToast('🎉 משימה יומית הושלמה! +20 בונוס!');setTimeout(()=>show('home'),2000);}
 
 // ── Exam ──
-const EXAM_CATS=[{id:'add',n:'➕ חיבור'},{id:'sub',n:'➖ חיסור'},{id:'mul',n:'✖️ כפל'},{id:'div',n:'➗ חילוק',needs:'division'},{id:'word',n:'📖 מילוליות'},{id:'shapes',n:'📐 גיאומטריה',needs:'shapes'},{id:'fractions',n:'½ שברים',needs:'fractions'}];
+const EXAM_CATS = ALL_CATS.filter(cat => !cat.special).map(({id}) => ({id, n:CAT_NAMES[id], needs:LOCKED_TOPICS[id]}));
 
 function openExamPre(){
   const gc=window.GRADE_CONFIG;
   const available=gc?.availableExamTopics||['add','sub','mul','word'];
   const g=document.getElementById('examTopicsGrid');
   g.innerHTML='';
-  EXAM_CATS.forEach(cat=>{
-    if(!available.includes(cat.id))return;
+  available.map(id => EXAM_CATS.find(cat => cat.id === id)).filter(Boolean).forEach(cat=>{
     const locked=cat.needs&&!st.learnedTopics.includes(cat.needs);
     const sel=st.examTopics.includes(cat.id);
     const b=document.createElement('button');
@@ -404,12 +406,13 @@ function loadExamQ(){
       </div>
       <div style="font-size:.78rem;color:var(--a6);text-align:center;margin-bottom:5px">${q.label||''}</div>
       <div class="qtxt" style="direction:${q.dir||'rtl'}">${q.text}</div>
+      ${q.shapeHtml||''}
       ${q.showMul?'<div id="emv" style="margin-bottom:10px"></div>':''}
       <div style="background:rgba(255,71,87,.07);border:1.5px solid rgba(255,71,87,.28);border-radius:12px;padding:8px 14px;margin-bottom:16px;font-size:.8rem;color:#ff8090;text-align:center;font-weight:600">
         ⚠️ ניסיון אחד בלבד — חשוב לפני שאתה מגיש!
       </div>
       <div class="ans-row">
-        <input type="number" id="eInp" class="ans-inp" placeholder="?" onkeydown="if(event.key==='Enter')submitExamAns()">
+        <input type="number" step="any" id="eInp" class="ans-inp" placeholder="?" onkeydown="if(event.key==='Enter')submitExamAns()">
         <div class="ans-eq">=</div>
       </div>
       <div class="fb-box" id="eFb"></div>
@@ -432,7 +435,7 @@ function submitExamAns(){
   if(!q||qs.done)return;
   const inp=document.getElementById('eInp');
   if(inp?.disabled)return;
-  const ua=parseInt(inp.value);
+  const ua=numericAnswer(inp.value);
   if(isNaN(ua)){showToast('✏️ הכנס מספר!');return;}
   const ok=ua===q.answer;
   qs.done=true;
