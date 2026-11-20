@@ -149,11 +149,12 @@ function buildGrid() {
 
     const section = document.createElement('div');
     section.className = 'cg-section';
+    section.dataset.group = group.id;
     section.style.cssText = `--gc:${group.color};--gcr:${group.colorRgb};`;
 
     const head = document.createElement('div');
     head.className = 'cg-head';
-    head.innerHTML = `<span class="cg-emoji">${group.emoji}</span><span class="cg-label">${group.label}</span><span class="cg-count">${cats.length}</span>`;
+    head.innerHTML = `<span class="cg-emoji">${group.emoji}</span><h2 class="cg-label">${group.label}</h2>`;
     section.appendChild(head);
 
     const row = document.createElement('div');
@@ -166,7 +167,7 @@ function buildGrid() {
       pill.id = cat.id + 'Btn';
       if (cat.borderColor) pill.style.setProperty('--pc', cat.borderColor);
       pill.setAttribute('onclick', _catOnclick(cat));
-      pill.innerHTML = `<span class="cg-picon">${cat.icon}</span><span class="cg-pname">${cat.name}</span>${isLocked ? '<span class="cg-plock">🔒</span>' : ''}`;
+      pill.innerHTML = `<span class="cg-picon">${cat.icon}</span><span class="cg-copy"><span class="cg-pname">${cat.name}</span>${cat.sub ? `<small class="cg-description">${cat.sub}</small>` : ''}</span>${isLocked ? '<span class="cg-plock">🔒</span>' : ''}`;
       row.appendChild(pill);
     });
 
