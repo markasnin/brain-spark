@@ -65,13 +65,15 @@ function mountGraph(container, {values, unit, axis, xStart = 0, label = 'שעה'
   ticks[5] = top;
   const guides = [...new Set(ticks)].map(value =>
     `<path d="M42 ${y(value)}H304" class="plot-grid"/><text x="32" y="${y(value)+4}" text-anchor="end">${value}</text>`).join('');
+  const columns = values.map((_,i) => `<path d="M${x(i)} 22V169" class="plot-grid"/>`).join('');
   const dots = values.map((value,i) =>
     `<circle data-point="${i}" cx="${x(i)}" cy="${y(value)}" r="5" class="plot-dot" />
       <text x="${x(i)}" y="190" text-anchor="middle">${i+xStart}</text>`).join('');
   container.innerHTML = `<svg class="practice-plot" viewBox="0 0 322 215" role="img" aria-label="גרף ${axis} לפי זמן">
-    ${guides}<path d="M42 22V169H304" class="plot-axis"/>
+    ${columns}${guides}<path d="M42 22V169H304" class="plot-axis"/>
     <polyline points="${values.map((value,i)=>x(i)+','+y(value)).join(' ')}" class="plot-series"/>
     <path class="plot-guide" data-guide/>${dots}
+    <text class="plot-coordinate" data-coordinate text-anchor="middle"></text>
     <text x="52" y="15" text-anchor="start">${axis} (${unit})</text>
     <text x="175" y="209" text-anchor="middle">זמן (שעות)</text>
   </svg>
@@ -82,10 +84,14 @@ function mountGraph(container, {values, unit, axis, xStart = 0, label = 'שעה'
   const points = [...container.querySelectorAll('[data-point]')];
   const guide = container.querySelector('[data-guide]');
   const output = container.querySelector('output');
+  const coordinate = container.querySelector('[data-coordinate]');
   function select(index) {
     buttons.forEach((button,i) => button.setAttribute('aria-pressed', String(i===index)));
     points.forEach((point,i) => point.classList.toggle('is-selected', i===index));
     guide.setAttribute('d', `M42 ${y(values[index])}H${x(index)}V169`);
+    coordinate.setAttribute('x',Math.max(68,Math.min(274,x(index))));
+    coordinate.setAttribute('y',y(values[index])<45 ? y(values[index])+19 : y(values[index])-10);
+    coordinate.textContent = `(${index+xStart}, ${values[index]})`;
     output.textContent = `שעה ${index+xStart} · ${values[index]} ${unit}`;
   }
   buttons.forEach((button,i) => button.addEventListener('click', () => select(i)));
@@ -104,9 +110,23 @@ function mountAlgebra(container, {terms, note, choiceLabel = 'בדקו איבר'
   }));
 }
 
-function mountShape(container, {body, label}) {
-  container.innerHTML = `<svg class="shape-diagram" viewBox="0 0 320 210" role="img" aria-label="${label}">${body}</svg>`;
-  addShapeExplorer(container, container.firstElementChild);
+function mountShape(container, {body, label, interactiveGrid}) {
+  container.innerHTML = `<svg class="shape-diagram${interactiveGrid?' coordinate-plot':''}" viewBox="0 0 320 210" role="img" aria-label="${label}">${body}</svg>`;
+  const svg = container.firstElementChild;
+  addShapeExplorer(container, svg);
+  const legs = svg.querySelector('[data-pythagoras-legs]');
+  if (legs) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'shape-explore';
+    button.textContent = 'רמז: הצגת הניצבים';
+    button.setAttribute('aria-pressed','false');
+    button.addEventListener('click', () => {
+      const visible = legs.classList.toggle('is-visible');
+      button.setAttribute('aria-pressed',String(visible));
+    });
+    container.append(button);
+  }
 }
 
 function addShapeExplorer(container, svg) {
@@ -185,16 +205,18 @@ function curriculumVisual(grade, cat, level, n) {
       ]},
     ][level];
     if (cat === 'angles') return anglePicture(level, n);
-    if (cat === 'coordinates' && level > 0) return coordinatePicture(level === 1 ? [[-n,3]] : [[-n,-2],[5,-2]]);
+    if (cat === 'coordinates') return level === 0
+      ? coordinatePicture([[n,4]], {firstQuadrant:true, hideLabels:true})
+      : coordinatePicture(level === 1 ? [[-n,3]] : [[-n,-2],[5,-2]]);
     if (cat === 'transforms') return [
-      coordinatePicture([[n,3]], true),
+      coordinatePicture([[n,3]], {markOrigin:true}),
       diagram('מלבן לפני הזזה', outline('M42 65H194V148H42Z') + dimension(118,166,n+6) + '<path d="M208 106h64m-13-12 13 12-13 12" class="diagram-guide"/>'),
-      coordinatePicture([[4,-n]], true),
+      coordinatePicture([[4,-n]], {markOrigin:true}),
     ][level];
     if (cat === 'pythagoras') return [
-      diagram('שני שבילים ניצבים והשביל האלכסוני', outline('M58 39V164H248Z') + corner(58,164) + dimension(34,107,3*n) + dimension(150,182,4*n) + dimension(167,93,'?')),
-      diagram('מלבן עם אלכסון', outline('M48 42H263V166H48Z') + '<path d="M48 166L263 42" class="diagram-guide"/>' + dimension(155,192,5*n) + dimension(178,86,13*n) + dimension(280,107,'?')),
-      coordinatePicture([[-n,-n],[5*n,7*n]]),
+      diagram('שני שבילים ניצבים והשביל האלכסוני', outline('M58 39V164H248Z') + corner(58,164) + dimension(34,107,3*n) + dimension(150,182,4*n) + dimension(167,93,'?') + pythagorasLegs(58,39,58,164,248,164)),
+      diagram('מלבן עם אלכסון', outline('M48 42H263V166H48Z') + '<path d="M48 166L263 42" class="diagram-guide"/>' + dimension(155,192,5*n) + dimension(178,86,13*n) + dimension(280,107,'?') + pythagorasLegs(48,166,263,166,263,42)),
+      coordinatePicture([[-n,-n],[5*n,7*n]], {pythagoras:true}),
     ][level];
   }
   if (cat === 'area') {
@@ -260,18 +282,53 @@ function anglePicture(level,n) {
     dimension(160,76,`x + ${3*n}°`) + dimension(90,156,'x') + dimension(232,156,'x'));
 }
 
-function coordinatePicture(points, hasGuide=false) {
+function pythagorasLegs(ax, ay, cx, cy, bx, by) {
+  const size = 8;
+  const horizontal = ay === cy;
+  const dx = Math.sign((horizontal ? ax : bx)-cx)*size;
+  const dy = Math.sign((horizontal ? by : ay)-cy)*size;
+  return `<g class="pythagoras-legs" data-pythagoras-legs aria-hidden="true">
+    <path d="M${ax} ${ay} L${cx} ${cy} L${bx} ${by}"/>
+    <path d="M${cx+dx} ${cy} V${cy+dy} H${cx}"/>
+  </g>`;
+}
+
+function coordinatePicture(points, {firstQuadrant=false, hideLabels=false, markOrigin=false, pythagoras=false} = {}) {
   const max = Math.max(5,...points.flat().map(Math.abs));
-  const projectX = x => 160 + x/max*120;
-  const projectY = y => 103 - y/max*80;
-  const markers = points.map(([x,y],i) =>
-    `<circle ${i===0?'data-outline':''} class="diagram-point" cx="${projectX(x)}" cy="${projectY(y)}" r="6"/>`+
-    dimension(projectX(x)+(x<0?30:-24),projectY(y)-10,`(${x}, ${y})`)).join('');
-  const line = points.length===2
-    ? `<path class="diagram-guide" d="M${projectX(points[0][0])} ${projectY(points[0][1])}L${projectX(points[1][0])} ${projectY(points[1][1])}"/>` : '';
-  const guide = hasGuide ? '<circle cx="160" cy="103" r="4" class="diagram-point"/>' : '';
-  return diagram('מערכת צירים עם הנקודות הנתונות', '<path class="plot-axis" d="M32 103H288M160 16V189"/>' +
-    dimension(296,108,'x') + dimension(160,14,'y') + line + guide + markers);
+  const step = firstQuadrant || max<=10 ? 1 : max<=35 ? 5 : 10;
+  const limit = firstQuadrant ? 10 : Math.ceil(max/step)*step + step;
+  const origin = firstQuadrant ? [63,178] : [160,104];
+  const scale = (firstQuadrant?144:76)/limit;
+  const x = value => origin[0]+value*scale;
+  const y = value => origin[1]-value*scale;
+  const min = firstQuadrant ? 0 : -limit;
+  const ticks = Array.from({length:(limit-min)/step+1},(_,i)=>min+i*step);
+  const grid = ticks.map(value =>
+    `<path class="plot-grid" d="M${x(value)} ${y(limit)}V${y(min)} M${x(min)} ${y(value)}H${x(limit)}"/>`).join('');
+  const showTick = value => value!==0 && (!firstQuadrant && step===1 ? value%2===0 : true);
+  const tickLabels = ticks.filter(showTick).map(value =>
+    `<text class="coordinate-tick" x="${x(value)}" y="${origin[1]+13}" text-anchor="middle">${value}</text>
+     <text class="coordinate-tick" x="${origin[0]-5}" y="${y(value)+3}" text-anchor="end">${value}</text>`).join('');
+  const markers = points.map(([a,b],i) => {
+    const anchor = firstQuadrant ? 'start' : a<0 ? 'end' : 'start';
+    const labelX = x(a)+(anchor==='end'?-8:8);
+    const labelY = y(b)+(b<0 && y(b)<184 ? 15 : -8);
+    return `<circle ${i===0?'data-outline':''} class="diagram-point" cx="${x(a)}" cy="${y(b)}" r="4.8"/>`+
+      (hideLabels?'':`<text class="plot-coordinate" x="${labelX}" y="${labelY}" text-anchor="${anchor}">(${a}, ${b})</text>`);
+  }).join('');
+  let line = '';
+  let hint = '';
+  if (points.length===2) {
+    const [[ax,ay],[bx,by]]=points;
+    line = `<path class="coordinate-segment" d="M${x(ax)} ${y(ay)}L${x(bx)} ${y(by)}"/>`;
+    if (pythagoras) hint = pythagorasLegs(x(ax),y(ay),x(bx),y(ay),x(bx),y(by));
+  }
+  const axis = `<path class="plot-axis" d="M${x(min)-4} ${origin[1]}H${x(limit)+6} M${origin[0]} ${y(min)+5}V${y(limit)-7}"/>
+    <text class="coordinate-tick" x="${x(limit)+12}" y="${origin[1]+4}">x</text>
+    <text class="coordinate-tick" x="${origin[0]+5}" y="${y(limit)-8}">y</text>
+    <text class="coordinate-tick" x="${origin[0]-5}" y="${origin[1]+12}" text-anchor="end">0</text>`;
+  const marker = markOrigin ? `<circle cx="${origin[0]}" cy="${origin[1]}" r="3.5" class="diagram-point"/>` : '';
+  return {...diagram('מערכת צירים עם הנקודות הנתונות',grid+axis+tickLabels+hint+line+marker+markers), interactiveGrid:true};
 }
 
 function mountMinigameVisual(root, question) {

@@ -278,6 +278,7 @@ const skippedTranslation = 'script, style, .site-credit, .lb-name, .friend-name,
 let activeLanguage = 'he';
 
 uiTranslations.set('אלוהי המספרים',['God of Numbers','Бог чисел','إله الأعداد','Dieu des nombres','Бог чисел']);
+uiTranslations.set('רמז: הצגת הניצבים',['Hint: Show the legs','Подсказка: показать катеты','تلميح: إظهار الضلعين القائمين','Indice : afficher les côtés perpendiculaires','Підказка: показати катети']);
 uiTranslations.set('המנהל',['Administrator','Администратор','المسؤول','Administrateur','Адміністратор']);
 uiTranslations.set('ממליץ לתרגל:',['Recommended practice:','Рекомендуем потренировать:','تدريب مقترح:','Entraînement conseillé :','Рекомендована практика:']);
 uiTranslations.set('כיתה',['Grade','Класс','الصف','Classe','Клас']);

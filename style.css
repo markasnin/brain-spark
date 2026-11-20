@@ -610,3 +610,21 @@ html[lang="ar"] body { font-family:Tahoma,Rubik,sans-serif; }
 .qtxt.is-equation .math-fraction { font-size:.92em; }
 .pizza-pile { display:block; max-width:15ch; font-size:1rem; line-height:1.35; overflow-wrap:anywhere; }
 .pizza-pile:empty { display:none; }
+
+.practice-plot, .shape-diagram.coordinate-plot {
+  background:#17233c;
+  fill:#d9e6ff;
+  border:1px solid #5971986b;
+}
+.practice-plot .plot-grid, .coordinate-plot .plot-grid { stroke:#a4bceb; stroke-opacity:.21; stroke-width:.8; }
+.practice-plot .plot-axis, .coordinate-plot .plot-axis { stroke:#c6d7f8; stroke-opacity:.76; stroke-width:1.25; }
+.practice-plot .plot-series, .coordinate-segment { stroke:#92b6ff; stroke-width:2.5; fill:none; }
+.practice-plot .plot-guide { stroke:#8ee0cc; }
+.practice-plot .plot-dot, .coordinate-plot .diagram-point { fill:#a8c1ff; stroke:#182543; stroke-width:1.5; }
+.practice-plot .plot-dot.is-selected { fill:#8ee0cc; }
+.plot-coordinate, .coordinate-tick { paint-order:stroke; stroke:#17233c; stroke-width:2.8px; stroke-linejoin:round; }
+.plot-coordinate { fill:#f1f5ff; font-size:11px; font-weight:700; }
+.coordinate-tick { fill:#c6d7f8; font-size:8px; }
+.pythagoras-legs { visibility:hidden; fill:none; stroke:#7a808e; stroke-opacity:.45; stroke-width:3; stroke-dasharray:6 4; }
+.coordinate-plot .pythagoras-legs { stroke:#c3c8d1; stroke-opacity:.56; }
+.pythagoras-legs.is-visible { visibility:visible; }

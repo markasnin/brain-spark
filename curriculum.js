@@ -184,7 +184,7 @@ const curriculum = {
       n => [`מה המרחק מנקודה ⁦(−${n}, −${n})⁩ לנקודה ⁦(${5*n}, ${7*n})⁩ ביחידות רשת?`, 10*n, 'הפרש שיעורי x הוא 6n והפרש שיעורי y הוא 8n, כאשר n הוא הערך המוחלט של שיעורי הנקודה הראשונה. אלה שני ניצבים.'],
     ],
     coordinates: [
-      n => ['מה שיעור ה-x של הנקודה המסומנת במפה?', n, 'יורדים אנכית מהנקודה אל ציר x וקוראים את המספר.', coordinateGrid(n, 4)],
+      n => ['מה שיעור ה-x של הנקודה המסומנת במפה?', n, 'יורדים אנכית מהנקודה אל ציר x וקוראים את המספר.'],
       n => [`רובוט מתחיל בנקודה ⁦(−${n}, 3)⁩ ונע 5 יחידות ימינה. מה שיעור ה-x החדש?`, 5-n, 'ימינה מוסיפים לשיעור ה-x.'],
       n => [`הנקודות ⁦(−${n}, −2)⁩ ו-⁦(5, −2)⁩ הן קצות מסלול ישר. מה אורכו ביחידות רשת?`, n+5, 'לנקודות אותו שיעור y, ולכן מחסרים את שיעורי ה-x.'],
     ],
@@ -277,19 +277,3 @@ function fruitVotes(apples, pears) {
     <div aria-label="אגס: ${pears} ילדים">🍐 ${'● '.repeat(pears)}</div>
   </figure>`;
 }
-
-function coordinateGrid(x, y) {
-  const ticks = Array.from({length:10}, (_, i) => {
-    const xPos = 25 + i*22, yPos = 150 - i*13;
-    return `<path d="M${xPos} 20V150 M25 ${yPos}H223" stroke="#64748b" opacity=".5"/>
-      <text x="${xPos}" y="166" text-anchor="middle">${i}</text>
-      <text x="18" y="${yPos+4}" text-anchor="end">${i || ''}</text>`;
-  }).join('');
-  return `<svg viewBox="0 0 250 178" role="img" aria-label="נקודה בשיעור x של ${x} ובשיעור y של ${y}"
-    style="display:block;width:100%;max-width:300px;margin:auto;direction:ltr;font-size:11px" fill="#e2e8f0">
-    ${ticks}<path d="M25 20V150H230" fill="none" stroke="#e2e8f0" stroke-width="2"/>
-    <text x="234" y="155">x</text><text x="22" y="15">y</text>
-    <circle cx="${25+x*22}" cy="${150-y*13}" r="5" fill="#38bdf8"/>
-  </svg>`;
-}
-
