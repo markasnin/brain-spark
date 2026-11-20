@@ -620,7 +620,7 @@ function g5_shapes(diff){
     hard:[
       ()=>{const r=rnd(3,9);return Q('shapes',diff,`היקף עיגול≈${Math.round(2*3.14*r)} ס"מ. מה הרדיוס?`,r,drawCircle(r,ci,'radius'),`💡 ÷(2×3.14)≈${r} ס"מ`,'⭕ עיגול')},
       ()=>{const l=rnd(3,9),w=rnd(3,9),h=rnd(3,9);const sa=2*(l*w+l*h+w*h);return Q('shapes',diff,`שטח פנים ארגז ${l}×${w}×${h}?`,sa,drawBox3D('cube',ci),`💡 2(${l*w}+${l*h}+${w*h})=${sa} ס"מ²`,'📦 שטח פנים')},
-      ()=>{const px=rnd(-4,4),py=rnd(-4,4);while(px===0||py===0){}const q=px>0&&py>0?1:px<0&&py>0?2:px<0&&py<0?3:4;return Q('shapes',diff,`(${px},${py}) — ברביע כמה? (1=ימין-מעלה 2=שמאל-מעלה 3=שמאל-מטה 4=ימין-מטה)`,q,drawCoordPlane(px,py,5,ci),`💡 רביע ${q}`,'🗺️ קואורדינטות')},
+      ()=>{const px=rnd(1,4)*(rnd(0,1)?1:-1),py=rnd(1,4)*(rnd(0,1)?1:-1);const q=px>0&&py>0?1:px<0&&py>0?2:px<0&&py<0?3:4;return Q('shapes',diff,`(${px},${py}) — ברביע כמה? (1=ימין-מעלה 2=שמאל-מעלה 3=שמאל-מטה 4=ימין-מטה)`,q,drawCoordPlane(px,py,5,ci),`💡 רביע ${q}`,'🗺️ קואורדינטות')},
       ()=>{const r=rnd(2,7);return Q('shapes',diff,`שטח עיגול≈${Math.round(3.14*r*r)} ס"מ². מה הרדיוס?`,r,drawCircle(r,ci,'radius'),`💡 √(${Math.round(3.14*r*r)}÷3.14)≈${r}`,'⭕ עיגול')},
       ()=>{const n=rnd(4,8);return Q('shapes',diff,`סכום זוויות פנימיות ${n}–צלע?`,(n-2)*180,drawRegularPoly(n,ci,''),`💡 (${n}-2)×180°=${(n-2)*180}°`,'📐 זוויות')},
     ],
