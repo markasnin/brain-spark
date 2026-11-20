@@ -1,11 +1,27 @@
 /* Shared presentation for practice, exams and minigames. */
 function questionPrompt(q) {
-  const escape = text => text.replace(/[&<>]/g, char => ({'&':'&amp;', '<':'&lt;', '>':'&gt;'})[char]);
-  const format = text => escape(text).replace(/\u2066([^\u2069]+)\u2069|(-?\d+(?:[.,/]\d+)*[%°]?)/g,
-    (_, expression, number) => `<bdi dir="ltr" class="math-token">${expression ?? number}</bdi>`);
-  if (!q.localized) return format(q.text);
-  return [q.text,...q.localized].map((text,i) =>
-    `<span class="question-language" data-language="${['he','en','ru','ar'][i]}" dir="auto">${format(text)}</span>`).join('');
+  const escape = text => text.replace(/[&<>"']/g, char =>
+    ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'})[char]);
+  const translated = Object.keys(supportedLanguages).map(language => {
+    const index = ['en','ru','ar'].indexOf(language);
+    const text = (index >= 0 && q.localized?.[index]) || interfaceText(q.text,language);
+    const tokens = /\u2066([^\u2069]+)\u2069|([−-]?\d+(?:[.,]\d+)*)(?:\s*([÷/])\s*([−-]?\d+(?:[.,]\d+)*))?[%°]?/g;
+    let format = '';
+    let cursor = 0;
+    for (const match of text.matchAll(tokens)) {
+      const [token, expression, numerator, operator, denominator] = match;
+      format += escape(text.slice(cursor, match.index));
+      if (operator && q.cat === 'div') {
+        format += `<bdi dir="ltr" class="math-token math-fraction" aria-label="${numerator} ÷ ${denominator}"><span aria-hidden="true">${numerator}</span><span aria-hidden="true">${denominator}</span></bdi>`;
+      } else {
+        format += `<bdi dir="ltr" class="math-token">${escape(expression ?? token)}</bdi>`;
+      }
+      cursor = match.index + token.length;
+    }
+    format += escape(text.slice(cursor));
+    return `<span class="question-language" data-language="${language}" dir="auto"${language===activeLanguage?'':' hidden'}>${format}</span>`;
+  });
+  return translated.join('');
 }
 
 function mountQuestionVisual(container, q) {

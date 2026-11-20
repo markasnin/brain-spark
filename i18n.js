@@ -255,41 +255,90 @@ const uiTranslations = new Map(`
   return [he,translations];
 }));
 
-const supportedLanguages = {he:'rtl', ar:'rtl', en:'ltr', ru:'ltr'};
+const supportedLanguages = {he:'rtl', ar:'rtl', en:'ltr', ru:'ltr', fr:'ltr', uk:'ltr'};
+const translationLanguages = ['en','ru','ar','fr','uk'];
+const normalizeTranslation = text => text.trim().replace(/\s+/g,' ');
+const escapeTranslationPattern = text => text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const translationPatterns = Object.entries(appTranslations)
+  .filter(([key]) => /QZ\d+ZQ/.test(key))
+  .map(([key,translations]) => {
+    const parts = key.split(/(QZ\d+ZQ)/);
+    const tokens = parts.filter((_,i)=>i%2===1);
+    const literals = parts.filter((_,i)=>i%2===0);
+    const hint = [...literals].sort((a,b)=>b.length-a.length)[0];
+    const weight = literals.reduce((sum,part)=>sum+part.length,0);
+    const regex = new RegExp('^'+parts.map((part,i)=>i%2?'(.+?)':escapeTranslationPattern(part)).join('')+'$','u');
+    return {regex,tokens,translations,hint,weight};
+  }).filter(entry=>entry.weight>=5)
+  .sort((a,b)=>b.weight-a.weight);
+
 const translatedNodes = new WeakMap();
 const translatedAttributes = new WeakMap();
-const skippedTranslation = 'script, style, .site-credit, #playerName, .lb-name, .friend-name, .profile-avatar, [data-no-translate]';
+const skippedTranslation = 'script, style, .site-credit, .lb-name, .friend-name, .profile-avatar, .question-language, [data-no-translate]';
 let activeLanguage = 'he';
 
-function interfaceText(source) {
-  if (activeLanguage === 'he' || !/[\u05d0-\u05ea]/.test(source)) return source;
-  const index = ['en','ru','ar'].indexOf(activeLanguage);
+uiTranslations.set('אלוהי המספרים',['God of Numbers','Бог чисел','إله الأعداد','Dieu des nombres','Бог чисел']);
+uiTranslations.set('המנהל',['Administrator','Администратор','المسؤول','Administrateur','Адміністратор']);
+uiTranslations.set('ממליץ לתרגל:',['Recommended practice:','Рекомендуем потренировать:','تدريب مقترح:','Entraînement conseillé :','Рекомендована практика:']);
+uiTranslations.set('כיתה',['Grade','Класс','الصف','Classe','Клас']);
+uiTranslations.set('נקודות',['points','баллов','نقاط','points','балів']);
+uiTranslations.set('רמה',['Level','Уровень','المستوى','Niveau','Рівень']);
+uiTranslations.set('שעה',['Hour','Час','الساعة','Heure','Година']);
+uiTranslations.set('ביטויים אלגבריים',['Algebraic expressions','Алгебраические выражения','التعابير الجبرية','Expressions algébriques','Алгебраїчні вирази']);
+
+function generatedTranslation(core,index) {
+  const normalized = normalizeTranslation(core);
+  const exact = Object.hasOwn(appTranslations,normalized) && appTranslations[normalized][index];
+  if (exact) return exact;
+  for (const {regex,tokens,translations,hint} of translationPatterns) {
+    if (!translations[index] || !normalized.includes(hint)) continue;
+    const match = normalized.match(regex);
+    if (match) {
+      const values = Object.fromEntries(tokens.map((token,i)=>[token,match[i+1]]));
+      return translations[index].replace(/QZ\d+ZQ/g,token=>values[token]);
+    }
+  }
+  return '';
+}
+
+function interfaceText(source, language = activeLanguage) {
+  if (language === 'he' || !/[\u05d0-\u05ea]/.test(source)) return source;
+  const index = translationLanguages.indexOf(language);
   const core = source.trim();
   const direct = uiTranslations.get(core)?.[index];
-  const level = core.match(/^רמה (\d+)$/);
-  if (level) return source.replace(core, uiTranslations.get('רמה')[index]+' '+level[1]);
-  const points = core.match(/^([\d,.]+) נקודות(.*)$/);
-  if (points) return source.replace(core, points[1]+' '+uiTranslations.get('נקודות')[index]+points[2]);
-  if (direct) return source.replace(core,direct);
+  if (direct) return source.replace(core,()=>direct);
   const grade = core.match(/^כיתה ([אבגדהוז])['׳]?$/);
-  if (grade) return source.replace(core, uiTranslations.get('כיתה')[index] + ' ' + ('אבגדהוז'.indexOf(grade[1])+1));
+  if (grade) return source.replace(core, () => uiTranslations.get('כיתה')[index]+' '+('אבגדהוז'.indexOf(grade[1])+1));
+  const recommendation = core.match(/^— טועה (\d+)% מהפעמים!$/);
+  if (recommendation) {
+    const percentage = recommendation[1]+'%';
+    return source.replace(core, () => [
+      `— ${percentage} of attempts were incorrect`, `— ошибок в ${percentage} попыток`,
+      `— نسبة الأخطاء ${percentage}`, `— ${percentage} de réponses incorrectes`, `— ${percentage} неправильних відповідей`,
+    ][index]);
+  }
   const progress = core.match(/^שאלה (\d+)\s*(מתוך|\/)\s*(\d+)$/);
   if (progress) {
-    const [,current,,total] = progress;
-    return source.replace(core, [`Question ${current} of ${total}`,`Задание ${current} из ${total}`,`السؤال ${current} من ${total}`][index]);
+    const [,n,,total] = progress;
+    return source.replace(core, () => [
+      `Question ${n} of ${total}`,`Задание ${n} из ${total}`,`السؤال ${n} من ${total}`,
+      `Question ${n} sur ${total}`,`Завдання ${n} з ${total}`,
+    ][index]);
   }
-  const hour = core.match(/^שעה (\d+)(.*)$/);
-  if (hour) return source.replace(core, uiTranslations.get('שעה')[index] + ' ' + hour[1] + hour[2]);
-  const decorated = core.match(/^([^\p{L}\p{N}]*)([\u05d0-\u05ea][\s\S]*?[\u05d0-\u05ea\d!?.:)])([^\p{L}\p{N}]*)$/u);
-  if (!decorated) return source;
-  const [,prefix,label,suffix] = decorated;
-  if (!prefix && !suffix) return source;
-  const translated = interfaceText(label.trim());
-  if (translated === label.trim()) return source;
-  const arrow = supportedLanguages[activeLanguage] === 'ltr'
-    ? mark => mark.replace(/[←→]/g, value => value === '←' ? '→' : '←')
-    : mark => mark;
-  return source.replace(core, arrow(prefix) + translated + arrow(suffix));
+  const decorated = core.match(/^([^\u05d0-\u05ea]*)([\u05d0-\u05ea][\s\S]*?[\u05d0-\u05ea\d!?.:)])([^\p{L}\p{N}]*)$/u);
+  if (decorated) {
+    const [,prefix,label,suffix] = decorated;
+    if ((prefix || suffix) && !/\p{N}/u.test(prefix.replace(/[½¼⅓²]/g,''))) {
+      const text = interfaceText(label.trim(),language);
+      if (text !== label.trim()) {
+        const arrow = mark => supportedLanguages[language] === 'ltr'
+          ? mark.replace(/[←→]/g,value=>value==='←'?'→':'←') : mark;
+        return source.replace(core, () => arrow(prefix) + text + arrow(suffix));
+      }
+    }
+  }
+  const generated = generatedTranslation(core,index);
+  return generated ? source.replace(core,()=>generated) : source;
 }
 
 function localizeTextNode(node) {
@@ -340,6 +389,14 @@ function setAppLanguage(language) {
   try { localStorage.setItem('brainspark-language',activeLanguage); } catch {}
   const picker = document.getElementById('appLanguage');
   if (picker) picker.value = activeLanguage;
+  const flag = document.getElementById('appLanguageFlag');
+  if (flag) {
+    const version = document.querySelector('meta[name="brainspark-release"]')?.content;
+    flag.setAttribute('href', `flags.svg?v=${version}#flag-${activeLanguage}`);
+  }
+  document.querySelectorAll('.question-language').forEach(node => {
+    node.hidden = node.dataset.language !== activeLanguage;
+  });
   if (document.body) localizeSubtree(document.body);
 }
 
@@ -357,7 +414,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   observer.observe(document.body,{subtree:true, childList:true, characterData:true});
 });
-
 function questionTranslations(grade, category, level, n) {
   if (grade !== 'ז') return null;
   if (category === 'graphs') return [

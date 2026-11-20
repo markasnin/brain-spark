@@ -64,10 +64,10 @@ function updateHome() {
   if (special) {
     const glowColor  = st.specialGlowColor  || special.glowColor  || '#00d362';
     const badgeColor = st.specialBadgeColor || special.badgeColor || special.color;
-    document.getElementById('playerName').innerHTML = `<span class="name-glow-blue" style="color:${glowColor};animation:none;text-shadow:0 0 8px ${glowColor},0 0 20px ${glowColor}99,0 0 40px ${glowColor}66">${playerDisplayName}</span><span class="special-badge" style="--sc:${badgeColor}">${special.badge} ${special.title}</span>`;
+    document.getElementById('playerName').innerHTML = `<span class="name-glow-blue" data-no-translate dir="auto" style="color:${glowColor};animation:none;text-shadow:0 0 8px ${glowColor},0 0 20px ${glowColor}99,0 0 40px ${glowColor}66">${playerDisplayName}</span><span class="special-badge" style="--sc:${badgeColor}">${special.badge} ${special.title}</span>`;
     document.getElementById('levelDisplay').textContent = `${special.badge} ${special.title}`;
   } else {
-    document.getElementById('playerName').innerHTML = `⭐ ${playerDisplayName}${st.level>0?`<span class="nickname-badge">${lv.n}</span>`:''}`;
+    document.getElementById('playerName').innerHTML = `⭐ <bdi data-no-translate>${playerDisplayName}</bdi>${st.level>0?`<span class="nickname-badge">${lv.n}</span>`:''}`;
     document.getElementById('levelDisplay').textContent = `${lv.e} רמה ${st.level+1} — ${lv.n}`;
   }
 
@@ -206,7 +206,7 @@ function buildRecommendation() {
     negatives:'שליליים', ratio:'יחס', measurement:'מדידה',
     shapes:'גיאומטריה', data:'נתונים'
   };
-  const hebrewName = catNames[worstCat] || worstCat;
+  const hebrewName = ALL_CATS.find(cat => cat.id === worstCat)?.name || catNames[worstCat] || worstCat;
   box.style.display='flex';
   txt.innerHTML = `ממליץ לתרגל: <strong>${hebrewName}</strong> — טועה ${Math.round(worstRatio*100)}% מהפעמים!`;
 }
