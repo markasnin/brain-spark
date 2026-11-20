@@ -1,10 +1,12 @@
-const CACHE = 'brainspark-v4';
+const CACHE = 'brainspark-v5';
 const FILES = [
   './index.html',
   './style.css',
   './special-users.js',
   './config.js',
   './questions.js',
+  './curriculum.js',
+  './geometry.js?v=5',
   './game.js',
   './lessons.js',
   './ui.js',
@@ -23,6 +25,7 @@ const FILES = [
   './grade4.js',
   './grade5.js',
   './grade6.js',
+  './grade7.js',
 ];
 
 self.addEventListener('install', e => {
