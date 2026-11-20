@@ -2,12 +2,13 @@
 <html lang="he" dir="rtl">
 <head>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest.json?v=7">
 <meta name="theme-color" content="#07050f">
 <meta charset="UTF-8">
+<meta name="brainspark-release" content="7">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Brain Spark ⚡</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=7">
 <!-- Grade config loader slot -->
 <script id="gradeScript"></script>
 <!-- ══ LOAD ORDER ══
@@ -19,15 +20,15 @@
   6. ui.js             — show, updateHome, buildGrid, settings, friends UI
   7. firebase.js       — Firebase init + all async Firebase functions (module)
 -->
-<script src="special-users.js"></script>
-<script src="config.js"></script>
-<script src="question-visuals.js"></script>
-<script src="curriculum.js"></script>
-<script src="questions.js"></script>
-<script src="game.js"></script>
-<script src="lessons.js"></script>
-<script src="ui.js"></script>
-<script type="module" src="firebase.js"></script>
+<script src="special-users.js?v=7"></script>
+<script src="config.js?v=7"></script>
+<script src="question-visuals.js?v=7"></script>
+<script src="curriculum.js?v=7"></script>
+<script src="questions.js?v=7"></script>
+<script src="game.js?v=7"></script>
+<script src="lessons.js?v=7"></script>
+<script src="ui.js?v=7"></script>
+<script type="module" src="firebase.js?v=7"></script>
 </head>
 <body>
 <div id="bg"></div>
@@ -545,14 +546,14 @@
   load();
   createStars();
 </script>
-<script src="profile-fields.js"></script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=6');}</script>
-  <script src="minigame-fishing.js"></script>
-  <script src="minigame-dungeon.js"></script>
-  <script src="minigame-rocket.js"></script>
-  <script src="minigame-chef.js"></script>
-  <script src="minigame-builder.js"></script>
-  <script src="minigames.js"></script>
+<script src="profile-fields.js?v=7"></script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=7');}</script>
+  <script src="minigame-fishing.js?v=7"></script>
+  <script src="minigame-dungeon.js?v=7"></script>
+  <script src="minigame-rocket.js?v=7"></script>
+  <script src="minigame-chef.js?v=7"></script>
+  <script src="minigame-builder.js?v=7"></script>
+  <script src="minigames.js?v=7"></script>
 <script>
 // ── PATCH: fix minigames tile onclick and export helpers to window ──
 window.show = function(id) {
@@ -581,7 +582,7 @@ function _patchUpdateHome() {
 }
 _patchUpdateHome();
 </script>
-  <script src="geometry.js?v=6"></script>
+  <script src="geometry.js?v=7"></script>
   <footer class="site-credit" lang="en" dir="ltr">Made by <strong>MindUp™</strong></footer>
 </body>
 </html>

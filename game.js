@@ -8,7 +8,8 @@ async function loadGradeConfig(grade) {
     const old = document.getElementById('gradeScript'); if (old) old.remove();
     const s   = document.createElement('script');
     s.id      = 'gradeScript';
-    s.src     = file;
+    const release = document.querySelector('meta[name="brainspark-release"]')?.content;
+    s.src = release ? file + '?v=' + encodeURIComponent(release) : file;
     s.onload  = () => { applyGradeConfig(); resolve(); };
     s.onerror = () => { console.warn('Grade file not found, using defaults'); resolve(); };
     document.head.appendChild(s);
