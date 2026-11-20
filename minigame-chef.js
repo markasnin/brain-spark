@@ -58,6 +58,7 @@ window.ChefGame = (function () {
     if (st.phase === 'bakery')        renderBakery(el);
     else if (st.phase === 'question') renderQuestion(el);
     else if (st.phase === 'dayend')   renderDayEnd(el);
+    mountMinigameVisual(el, st.activeQ);
   }
 
   function renderBakery(el) {
@@ -109,7 +110,7 @@ window.ChefGame = (function () {
         <div style="color:#fff;font-family:'Rubik',sans-serif;font-size:.95rem;margin-bottom:14px">${c.amount} \u05d9\u05d7\u05d9\u05d3\u05d5\u05ea \u05e9\u05dc ${c.recipe.name}</div>
         <div style="background:rgba(255,255,255,.08);border-radius:14px;padding:14px;margin-bottom:4px">
           <div style="color:#ffd43b;font-family:'Fredoka',sans-serif;font-size:.9rem;margin-bottom:8px">&#x1F9EE; \u05e4\u05ea\u05d5\u05e8 \u05d0\u05ea \u05d4\u05ea\u05e8\u05d2\u05d9\u05dc:</div>
-          <div style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.4rem;font-weight:900;direction:${q.dir || 'rtl'};margin-bottom:12px">${q.text}</div>
+          <div style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.4rem;font-weight:900;direction:${q.dir || 'rtl'};margin-bottom:12px" class="minigame-prompt">${questionPrompt(q)}</div>
           <div style="display:flex;gap:8px">
             <input id="chefAns" type="number" step="any" placeholder="?" onkeydown="if(event.key==='Enter')window.ChefGame.submit()" autofocus
               style="flex:1;padding:13px;background:rgba(255,255,255,.12);border:2px solid ${c.color}88;color:#fff;border-radius:12px;font-size:1.3rem;font-family:'Rubik',sans-serif;text-align:center;outline:none">
