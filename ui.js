@@ -122,7 +122,6 @@ const CAT_GROUPS = [
   { id:'minigames', label:'מיני משחקים',   emoji:'🎮', color:'#ff6348', colorRgb:'255,99,72',   cats:['minigames'] },
   { id:'social',    label:'חברים',         emoji:'👥', color:'#fd79a8', colorRgb:'253,121,168', cats:['friends'] },
   { id:'exam',      label:'מבחן ותרגול',   emoji:'📝', color:'#00d2d3', colorRgb:'0,210,211',   cats:['exam','mistakes','learn'] },
-  { id:'account',   label:'היסטוריה',      emoji:'📊', color:'#a29bfe', colorRgb:'162,155,254', cats:['history','settings'] }
 ];
 
 function _catOnclick(cat) {
@@ -150,7 +149,6 @@ function buildGrid() {
     const section = document.createElement('div');
     section.className = 'cg-section';
     section.dataset.group = group.id;
-    section.style.cssText = `--gc:${group.color};--gcr:${group.colorRgb};`;
 
     const head = document.createElement('div');
     head.className = 'cg-head';

@@ -628,3 +628,40 @@ html[lang="ar"] body { font-family:Tahoma,Rubik,sans-serif; }
 .pythagoras-legs { visibility:hidden; fill:none; stroke:#7a808e; stroke-opacity:.45; stroke-width:3; stroke-dasharray:6 4; }
 .coordinate-plot .pythagoras-legs { stroke:#c3c8d1; stroke-opacity:.56; }
 .pythagoras-legs.is-visible { visibility:visible; }
+
+/* Dashboard palette: slate surfaces, mint actions and restrained indigo details. */
+body:has(#home.on) #bg { background:linear-gradient(155deg,#141f35,#101827 65%); }
+body:has(#home.on) .star { display:none; }
+body:has(#home.on) .app-brand { background:none; -webkit-text-fill-color:#f4f7fc; color:#f4f7fc; }
+body:has(#home.on) .app-brand span { -webkit-text-fill-color:#a2e0d2; }
+#home { --home-panel:#1b273a; --home-border:#34445b; --home-text:#f2f6fb; --home-muted:#bccadd; --home-accent:#a3e1d2; }
+.home-practice h1 { color:var(--home-text); margin-bottom:12px; }
+#home .pcard,#home .lb-card,#home .recommend,.sidebar-links {
+  background:var(--home-panel); border:1px solid var(--home-border); border-radius:14px; color:var(--home-text);
+}
+#home .pcard::before { display:none; }
+#home .lb-title,#home .recommend-text strong { color:var(--home-accent); }
+#home .xp-inner { background:#86cfc0; }
+#home .recommend-text,#home .xp-txt { color:var(--home-muted); }
+#home .daily-banner { min-height:82px; margin-bottom:18px; padding:12px 16px; text-align:start; background:#213b40; color:var(--home-text); border:1px solid #6ca99d; font:inherit; }
+.daily-icon { display:grid; place-items:center; width:42px; height:42px; flex:none; background:#a3e1d2; color:#152f34; border-radius:12px; font-size:1.45rem; }
+.daily-title { font-weight:700; font-size:1.1rem; color:#e6fff9; }
+.daily-description { margin-top:4px; color:#c6ddd9; font-size:.83rem; }
+.sidebar-links { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); padding:5px; gap:5px; }
+.sidebar-links button { border:0; background:transparent; color:var(--home-text); font:500 .84rem Rubik,sans-serif; cursor:pointer; min-height:40px; border-radius:8px; text-align:start; padding-inline:8px; overflow-wrap:anywhere; }
+.sidebar-links button:hover { background:#293951; }
+.sidebar-links span { color:var(--home-accent); margin-inline-end:4px; }
+#mainGrid { grid-template-columns:minmax(0,1fr); gap:12px; }
+#home .cg-section { background:var(--home-panel); border:1px solid var(--home-border); border-radius:14px; padding:12px; }
+#home .cg-head { color:var(--home-text); margin-bottom:9px; }
+#home .cg-emoji { font-size:.9rem; filter:saturate(.5); }
+#home .cg-row { grid-template-columns:repeat(auto-fit,minmax(min(100%,175px),1fr)); gap:7px; }
+#home .cg-pill { background:#172235; border-color:#35445a; color:var(--home-text); min-height:52px; }
+#home .cg-pill:hover { border-color:#9ed9ce; background:#24384a; }
+#home .cg-picon { background:#293951; color:#c2dedb; filter:saturate(.65); width:30px; height:30px; }
+#home .cg-description { color:var(--home-muted); }
+
+#qCard:is([data-topic="graphs"],[data-topic="coordinates"],[data-topic="pythagoras"]),
+.exam-question:is([data-topic="graphs"],[data-topic="coordinates"],[data-topic="pythagoras"]) { max-width:740px; }
+.question-visual .practice-plot, .question-visual .coordinate-plot { display:block; width:100%; max-width:600px; }
+.coordinate-tick { font-size:9px; }

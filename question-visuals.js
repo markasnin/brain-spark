@@ -111,7 +111,7 @@ function mountAlgebra(container, {terms, note, choiceLabel = 'בדקו איבר'
 }
 
 function mountShape(container, {body, label, interactiveGrid}) {
-  container.innerHTML = `<svg class="shape-diagram${interactiveGrid?' coordinate-plot':''}" viewBox="0 0 320 210" role="img" aria-label="${label}">${body}</svg>`;
+  container.innerHTML = `<svg class="shape-diagram${interactiveGrid?' coordinate-plot':''}" viewBox="0 0 320 ${interactiveGrid?250:210}" role="img" aria-label="${label}">${body}</svg>`;
   const svg = container.firstElementChild;
   addShapeExplorer(container, svg);
   const legs = svg.querySelector('[data-pythagoras-legs]');
@@ -297,22 +297,23 @@ function coordinatePicture(points, {firstQuadrant=false, hideLabels=false, markO
   const max = Math.max(5,...points.flat().map(Math.abs));
   const step = firstQuadrant || max<=10 ? 1 : max<=35 ? 5 : 10;
   const limit = firstQuadrant ? 10 : Math.ceil(max/step)*step + step;
-  const origin = firstQuadrant ? [63,178] : [160,104];
-  const scale = (firstQuadrant?144:76)/limit;
+  const origin = firstQuadrant ? [65,205] : [160,120];
+  const scale = (firstQuadrant?175:96)/limit;
   const x = value => origin[0]+value*scale;
   const y = value => origin[1]-value*scale;
   const min = firstQuadrant ? 0 : -limit;
   const ticks = Array.from({length:(limit-min)/step+1},(_,i)=>min+i*step);
   const grid = ticks.map(value =>
     `<path class="plot-grid" d="M${x(value)} ${y(limit)}V${y(min)} M${x(min)} ${y(value)}H${x(limit)}"/>`).join('');
-  const showTick = value => value!==0 && (!firstQuadrant && step===1 ? value%2===0 : true);
+  const labelEvery = firstQuadrant ? 1 : Math.max(2,Math.ceil(limit/(step*4)));
+  const showTick = value => value!==0 && (value/step)%labelEvery===0;
   const tickLabels = ticks.filter(showTick).map(value =>
-    `<text class="coordinate-tick" x="${x(value)}" y="${origin[1]+13}" text-anchor="middle">${value}</text>
-     <text class="coordinate-tick" x="${origin[0]-5}" y="${y(value)+3}" text-anchor="end">${value}</text>`).join('');
+    `<text class="coordinate-tick" x="${x(value)}" y="${y(min)+16}" text-anchor="middle">${value}</text>
+     <text class="coordinate-tick" x="${x(min)-8}" y="${y(value)+3}" text-anchor="end">${value}</text>`).join('');
   const markers = points.map(([a,b],i) => {
     const anchor = firstQuadrant ? 'start' : a<0 ? 'end' : 'start';
     const labelX = x(a)+(anchor==='end'?-8:8);
-    const labelY = y(b)+(b<0 && y(b)<184 ? 15 : -8);
+    const labelY = y(b)+(b<0 && y(b)<214 ? 15 : -8);
     return `<circle ${i===0?'data-outline':''} class="diagram-point" cx="${x(a)}" cy="${y(b)}" r="4.8"/>`+
       (hideLabels?'':`<text class="plot-coordinate" x="${labelX}" y="${labelY}" text-anchor="${anchor}">(${a}, ${b})</text>`);
   }).join('');
@@ -326,7 +327,7 @@ function coordinatePicture(points, {firstQuadrant=false, hideLabels=false, markO
   const axis = `<path class="plot-axis" d="M${x(min)-4} ${origin[1]}H${x(limit)+6} M${origin[0]} ${y(min)+5}V${y(limit)-7}"/>
     <text class="coordinate-tick" x="${x(limit)+12}" y="${origin[1]+4}">x</text>
     <text class="coordinate-tick" x="${origin[0]+5}" y="${y(limit)-8}">y</text>
-    <text class="coordinate-tick" x="${origin[0]-5}" y="${origin[1]+12}" text-anchor="end">0</text>`;
+    <text class="coordinate-tick" x="${x(0)}" y="${y(min)+16}" text-anchor="middle">0</text>`;
   const marker = markOrigin ? `<circle cx="${origin[0]}" cy="${origin[1]}" r="3.5" class="diagram-point"/>` : '';
   return {...diagram('מערכת צירים עם הנקודות הנתונות',grid+axis+tickLabels+hint+line+marker+markers), interactiveGrid:true};
 }
