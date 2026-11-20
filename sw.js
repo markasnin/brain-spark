@@ -1,4 +1,4 @@
-const RELEASE = '19';
+const RELEASE = '20';
 const CACHE_PREFIX = 'brainspark-v';
 const CACHE = CACHE_PREFIX + RELEASE;
 const OFFLINE_PAGE = './index.html';
@@ -29,6 +29,7 @@ const ASSETS = [
   'minigame-chef.js',
   'minigame-builder.js',
   'minigames.js',
+  'minigame-puzzles.js',
   'geometry.js',
   'grade1.js',
   'grade2.js',

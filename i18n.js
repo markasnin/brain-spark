@@ -279,6 +279,13 @@ let activeLanguage = 'he';
 
 uiTranslations.set('אלוהי המספרים',['God of Numbers','Бог чисел','إله الأعداد','Dieu des nombres','Бог чисел']);
 uiTranslations.set('רמז: הצגת הניצבים',['Hint: Show the legs','Подсказка: показать катеты','تلميح: إظهار الضلعين القائمين','Indice : afficher les côtés perpendiculaires','Підказка: показати катети']);
+uiTranslations.set('שביל המספרים',['Number Trail','Числовая тропа','درب الأعداد','Sentier des nombres','Стежка чисел']);
+uiTranslations.set('כספת המספרים',['Number Vault','Числовой сейф','خزنة الأعداد','Coffre des nombres','Числовий сейф']);
+uiTranslations.set('בחרו תשובות והתקדמו לאורך השביל עד האוצר.',['Pick answers to follow the trail to the treasure.','Выбирай ответы и двигайся по тропе к кладу.','اختر الإجابات وتقدّم على الدرب حتى الكنز.','Choisis les réponses pour avancer jusqu’au trésor.','Обирай відповіді й рухайся стежкою до скарбу.']);
+uiTranslations.set('פתרו ארבעה תרגילים כדי לפצח את הקוד ולפתוח את הכספת.',['Solve four problems to crack the code and open the vault.','Реши четыре задачи, чтобы взломать код и открыть сейф.','حلّ أربع مسائل لفك الرمز وفتح الخزنة.','Résous quatre problèmes pour trouver le code et ouvrir le coffre.','Розв’яжи чотири задачі, щоб знайти код і відкрити сейф.']);
+uiTranslations.set('מצאתם את האוצר!',['You found the treasure!','Ты нашёл клад!','وجدت الكنز!','Tu as trouvé le trésor !','Ти знайшов скарб!']);
+uiTranslations.set('הכספת נפתחה!',['Vault unlocked!','Сейф открыт!','فُتحت الخزنة!','Coffre ouvert !','Сейф відкрито!']);
+uiTranslations.set('שחקו',['Play','Играть','العب','Jouer','Грати']);
 uiTranslations.set('המנהל',['Administrator','Администратор','المسؤول','Administrateur','Адміністратор']);
 uiTranslations.set('ממליץ לתרגל:',['Recommended practice:','Рекомендуем потренировать:','تدريب مقترح:','Entraînement conseillé :','Рекомендована практика:']);
 uiTranslations.set('כיתה',['Grade','Класс','الصف','Classe','Клас']);

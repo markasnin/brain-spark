@@ -379,7 +379,7 @@ window.RocketGame = (function () {
     wrap.style.padding='16px 12px 40px';
     wrap.style.alignItems='center';
     // Build container
-    wrap.innerHTML='<div id="rocketWrap" style="width:100%;max-width:420px;margin:0 auto;font-family:Rubik,sans-serif"></div>';
+    wrap.innerHTML='<div id="rocketWrap" class="arcade-stage"></div>';
     // Reset and render
     restart();
   }

@@ -26,7 +26,7 @@ function goToMainScreen() {
   if (current?.id === 'home') return;
   if (current?.id === 'minigameScreen') {
     const games = {builderWrap:'BuilderGame', chefWrap:'ChefGame', dungeonWrap:'DungeonGame',
-      rocketWrap:'RocketGame', fishingGameWrap:'FishingGame'};
+      rocketWrap:'RocketGame', fishingGameWrap:'FishingGame', trailWrap:'TrailGame', vaultWrap:'VaultGame'};
     for (const [id,game] of Object.entries(games)) {
       if (current.querySelector('#'+id) && window[game]?.exit) {
         window[game].exit();

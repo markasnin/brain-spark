@@ -824,3 +824,67 @@ body.theme-boy .ans-inp:focus,body.theme-girl .ans-inp:focus {
 
 button.app-brand { border:0; padding:0; cursor:pointer; background:transparent; }
 button.app-brand:hover { text-decoration:underline; text-decoration-color:var(--spark-gold); text-underline-offset:5px; }
+
+/* Arcade layout and shared play controls */
+.arcade { width:min(100%,1240px); margin-inline:auto; }
+.arcade-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-block-end:16px; }
+.arcade-heading h1 { font:700 clamp(1.55rem,3.3vw,2.6rem) Fredoka,Rubik,sans-serif; color:var(--spark-text); }
+.arcade-heading .back { margin:0; }
+.arcade-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,255px),1fr)); gap:16px; }
+#minigameScreen .minigame-menu-card {
+  display:grid; grid-template-rows:auto auto 1fr auto; gap:9px; margin:0; padding:12px; min-width:0;
+  text-align:start; color:var(--spark-text); font-family:Rubik,sans-serif;
+  transition:transform .18s,border-color .18s;
+}
+#minigameScreen .minigame-menu-card:hover { transform:translateY(-3px); border-color:var(--arcade-accent); }
+.arcade-art {
+  display:grid; place-items:center; overflow:hidden; min-height:108px; border-radius:13px;
+  background:radial-gradient(circle at 50% 100%,var(--arcade-accent),transparent 86%),#2d2556;
+  border:1px solid #ffffff2d;
+}
+.arcade-art > span { font-size:clamp(2.8rem,5vw,4rem); filter:drop-shadow(0 6px 7px #181027a8); }
+.arcade-title { font:700 1.26rem Fredoka,Rubik,sans-serif; color:var(--arcade-accent); padding-inline:3px; }
+.arcade-description { font-size:.9rem; line-height:1.55; color:var(--spark-muted); padding-inline:3px; }
+.arcade-play { justify-self:start; color:var(--spark-ink); padding:6px 13px; border-radius:10px; background:var(--arcade-accent); font:700 .9rem Rubik,sans-serif; }
+html[dir="rtl"] .arcade-play > span { display:inline-block; transform:scaleX(-1); }
+.arcade-stage { width:min(100%,780px); min-width:0; margin-inline:auto; padding:clamp(2px,1.2vw,12px); font-family:Rubik,sans-serif; }
+#minigameScreen .arcade-stage button { min-height:42px; }
+#minigameScreen .arcade-stage input[type="number"] { min-height:44px; font-size:1.1rem; max-width:100%; }
+#minigameScreen .arcade-stage .minigame-prompt { line-height:1.55; }
+#fishOcean { height:clamp(200px,34vw,350px) !important; }
+.arcade-puzzle { --puzzle-accent:#7ce7be; }
+.arcade-puzzle[data-mode="vault"] { --puzzle-accent:#c5a1ff; }
+.puzzle-track { display:flex; flex-wrap:wrap; justify-content:center; gap:clamp(6px,2vw,16px); margin-block:12px 18px; }
+.puzzle-step,.puzzle-finish {
+  display:grid; place-items:center; width:clamp(31px,8vw,54px); aspect-ratio:1; border-radius:12px;
+  color:var(--spark-muted); background:var(--spark-panel); border:1px dashed var(--spark-line); font-size:1.2rem;
+}
+.puzzle-step.is-current { border:2px solid var(--puzzle-accent); }
+.puzzle-step.is-cleared { background:var(--puzzle-accent); color:var(--spark-ink); border-style:solid; }
+.puzzle-card { display:grid; gap:13px; padding:clamp(12px,4vw,25px); background:var(--spark-panel); border:1px solid var(--spark-line); border-radius:20px; }
+.puzzle-prompt { text-align:center; color:var(--spark-text); font-size:clamp(1.05rem,3vw,1.6rem); line-height:1.6; }
+.puzzle-choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.puzzle-choices button,.puzzle-form input { min-width:0; padding:8px; border:1px solid var(--spark-line); border-radius:11px; background:var(--spark-inset); color:var(--spark-text); font:700 1.25rem Fredoka,Rubik,sans-serif; }
+.puzzle-choices button { cursor:pointer; }
+.puzzle-choices button:hover { border-color:var(--puzzle-accent); }
+.puzzle-form { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px; }
+.puzzle-form input { width:145px; text-align:center; }
+.puzzle-form button { width:auto; margin:0; }
+.puzzle-message { min-height:1.3em; text-align:center; color:var(--spark-gold); font-size:.92rem; }
+.puzzle-win { text-align:center; }
+@media(prefers-reduced-motion:reduce) {
+  #minigameScreen .minigame-menu-card { transition:none; }
+  #minigameScreen .minigame-menu-card:hover { transform:none; }
+}
+.arcade-stage:is(#fishingGameWrap,#dungeonWrap,#rocketWrap,#chefWrap,#builderWrap) {
+  padding:clamp(10px,2.2vw,24px);
+  background:linear-gradient(150deg,var(--spark-panel-top),var(--spark-inset));
+  border:1px solid var(--spark-line);
+  border-radius:22px;
+  box-shadow:0 8px 26px #0c091e64;
+}
+.arcade-stage:is(#fishingGameWrap,#dungeonWrap,#rocketWrap,#chefWrap,#builderWrap) > div:first-child {
+  font-size:clamp(1.5rem,3vw,2.2rem) !important;
+  margin-bottom:13px !important;
+}
+#minigameScreen .arcade-stage :is(button,input) { touch-action:manipulation; }

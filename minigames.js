@@ -16,81 +16,68 @@ window._showHelp = function(elOrMsg) {
   document.body.appendChild(d);
 };
 
-window._launchGame = function(id) {
-  if (id==='fishing') window.FishingGame && window.FishingGame.open();
-  if (id==='dungeon') window.DungeonGame && window.DungeonGame.open();
-  if (id==='rocket')  window.RocketGame  && window.RocketGame.open();
-  if (id==='chef')    window.ChefGame    && window.ChefGame.open();
-  if (id==='builder') window.BuilderGame && window.BuilderGame.open();
-};
-
-window.openMinigames = function () {
-  const wrap = document.getElementById('minigameScreen');
-  if (!wrap) return;
-  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
-  wrap.classList.add('on');
-  wrap.style.cssText = 'overflow-y:auto;padding:16px 12px 40px;align-items:center;';
-
-  const GAMES = [
+const arcadeGames = [
     {
       id:'fishing', name:'דיג מתמטי', emoji:'🎣',
-      color:'#74c0fc', bg:'linear-gradient(135deg,#0d3b6e,#1e6091)',
+      color:'#74c0fc',
       desc:'הטל חכה, פתור תרגיל, תפוס דגים נדירים!',
-      collectibles:'🐠 דג זהב  ·  🐢 צב ים  ·  🦈 כריש  ·  🐳 לווייתן  ·  🧜 בת ים',
-      collectLabel:'🏆 האקווריום שלך',
+
     },
     {
       id:'dungeon', name:'מבוך המתמטיקה', emoji:'⚔️',
-      color:'#ff8c42', bg:'linear-gradient(135deg,#1a0a0a,#3d1515)',
+      color:'#ff8c42',
       desc:'לחם במפלצות, פתח ארגזי אוצר, צבור זהב!',
-      collectibles:'🪙 זהב  ·  ✨ ניסיון  ·  🧪 כוסות מרפא  ·  🏆 ניצחון',
-      collectLabel:'💰 הכנסות הגיבור',
+
     },
     {
       id:'rocket', name:'מרוץ החלל', emoji:'🚀',
-      color:'#a5d8ff', bg:'linear-gradient(135deg,#020817,#0d1b2a)',
+      color:'#a5d8ff',
       desc:'עוף לכוכבות, התחמק מאסטרואידים, נצח בוס!',
-      collectibles:'🔴 כוכב אש  ·  🪐 שבת הטבעות  ·  ⭐ כוכב הנוגה  ·  🌟 השמש הסגולה',
-      collectLabel:'🌌 כוכבים שכבשת',
+
     },
     {
       id:'chef', name:'מאפיית המתמטיקה', emoji:'🍪',
-      color:'#ffa94d', bg:'linear-gradient(135deg,#3d1a00,#7c3500)',
+      color:'#ffa94d',
       desc:'נהל מאפייה — פתור תרגיל, אפה, הגש ללקוחות!',
-      collectibles:'🍪 עוגיות  ·  🧁 קאפקייק  ·  🎂 עוגת שוקולד  ·  🍫 פרלינים',
-      collectLabel:'🍽️ מה שאפית ומכרת',
+
     },
     {
       id:'builder', name:'בנאי העיר', emoji:'🏗️',
-      color:'#69db7c', bg:'linear-gradient(135deg,#0a1a0a,#1a3a1a)',
+      color:'#69db7c',
       desc:'פתור תרגילים, אסוף חומרים, בנה עיר שלמה!',
-      collectibles:'🛖 בקתה  ·  🏠 בית  ·  🏢 בנין  ·  🏗️ מגדל  ·  🏰 ארמון',
-      collectLabel:'🌆 העיר שלך',
+
     },
+    {id:'trail',name:'שביל המספרים',emoji:'🧭',color:'#7ce7be',desc:'בחרו תשובות והתקדמו לאורך השביל עד האוצר.'},
+    {id:'vault',name:'כספת המספרים',emoji:'🔐',color:'#c5a1ff',desc:'פתרו ארבעה תרגילים כדי לפצח את הקוד ולפתוח את הכספת.'},
   ];
 
-  wrap.innerHTML = '<div style="width:100%;max-width:420px;margin:0 auto">'
-    + '<div style="font-family:Fredoka,sans-serif;font-size:2rem;color:#ffd43b;text-align:center;margin-bottom:2px">🎮 מיני-משחקים</div>'
-    + '<div style="color:#adb5bd;text-align:center;font-size:.8rem;font-family:Rubik,sans-serif;margin-bottom:16px">בחר משחק ותאמן מתמטיקה תוך כדי משחק!</div>'
-    + GAMES.map(g => ''
-      + '<div onclick="window._launchGame(\'' + g.id + '\')"'
-      + ' class="minigame-menu-card"'
-      + ' onmouseover="this.style.transform=\'scale(1.02)\';this.style.borderColor=\'' + g.color + '\'"'
-      + ' onmouseout="this.style.transform=\'scale(1)\';this.style.borderColor=\'' + g.color + '44\'">'
-      + '  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">'
-      + '    <div style="font-size:2.8rem;min-width:52px;text-align:center;filter:drop-shadow(0 0 8px ' + g.color + '88)">' + g.emoji + '</div>'
-      + '    <div style="flex:1">'
-      + '      <div style="font-family:Fredoka,sans-serif;font-size:1.25rem;color:' + g.color + ';margin-bottom:3px">' + g.name + '</div>'
-      + '      <div style="color:#9ca3af;font-size:.78rem;font-family:Rubik,sans-serif">' + g.desc + '</div>'
-      + '    </div>'
-      + '    <div style="color:' + g.color + ';font-size:1.4rem;opacity:.6">›</div>'
-      + '  </div>'
-      + '  <div style="background:rgba(0,0,0,.35);border-radius:12px;padding:8px 12px;border:1px solid ' + g.color + '22">'
-      + '    <div style="font-size:.67rem;color:' + g.color + ';font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;opacity:.85">' + g.collectLabel + '</div>'
-      + '    <div style="font-size:.8rem;color:rgba(255,255,255,.6);font-family:Rubik,sans-serif;line-height:1.7">' + g.collectibles + '</div>'
-      + '  </div>'
-      + '</div>'
-    ).join('')
-    + '<button onclick="window.show&&window.show(\'home\')" style="width:100%;padding:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#6b7280;border-radius:12px;font-family:Rubik,sans-serif;font-size:.85rem;cursor:pointer;margin-top:4px">← חזרה לבית</button>'
-    + '</div>';
+
+const arcadeLaunchers = {
+  fishing:'FishingGame', dungeon:'DungeonGame', rocket:'RocketGame', chef:'ChefGame',
+  builder:'BuilderGame', trail:'TrailGame', vault:'VaultGame',
+};
+
+window._launchGame = id => window[arcadeLaunchers[id]]?.open();
+
+window.openMinigames = function () {
+  show('minigameScreen');
+  const screen = document.getElementById('minigameScreen');
+  screen.innerHTML = `<section class="arcade" aria-labelledby="arcade-title">
+    <header class="arcade-heading">
+      <h1 id="arcade-title">🎮 מיני-משחקים</h1>
+      <button type="button" class="back" data-arcade-home>← חזרה לבית</button>
+    </header>
+    <div class="arcade-grid">
+      ${arcadeGames.map(game=>`<button type="button" class="minigame-menu-card" data-game="${game.id}" style="--arcade-accent:${game.color}">
+        <span class="arcade-art" aria-hidden="true"><span>${game.emoji}</span></span>
+        <span class="arcade-title">${game.name}</span>
+        <span class="arcade-description">${game.desc}</span>
+        <span class="arcade-play">שחקו <span aria-hidden="true">›</span></span>
+      </button>`).join('')}
+    </div>
+  </section>`;
+  for (const card of screen.querySelectorAll('[data-game]')) {
+    card.addEventListener('click',()=>window._launchGame(card.dataset.game));
+  }
+  screen.querySelector('[data-arcade-home]').addEventListener('click',()=>show('home'));
 };

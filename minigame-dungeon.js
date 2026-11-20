@@ -184,7 +184,7 @@ window.DungeonGame = (function () {
   function usePotion(){const idx=st.inventory.indexOf('potion');if(idx<0)return;st.inventory.splice(idx,1);st.heroHp=Math.min(HERO_MAX_HP,st.heroHp+1);window.showToast&&window.showToast('&#x1F9EA; +1 &#x2764;&#xFE0F;');render();}
   function restart(){clearTimer();st={phase:'map',room:0,heroHp:HERO_MAX_HP,gold:0,xp:0,heroLv:1,monster:null,monsterHp:0,activeQ:null,qTimer:null,qTimeLeft:0,streak:0,inventory:[],log:[]};render();}
   function exit(){clearTimer();if(window.show)window.show('home');}
-  function open(){const wrap=document.getElementById('minigameScreen');if(!wrap)return;wrap.innerHTML=`<div id="dungeonWrap" style="max-width:420px;margin:0 auto;padding:12px"></div>`;document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));wrap.classList.add('on');const saved=mgLoad();if(saved&&saved.room>0){st.room=saved.room||0;st.gold=saved.gold||0;st.xp=saved.xp||0;st.heroHp=saved.heroHp||5;st.inventory=saved.inventory||[];}else{restart();return;}render();}
+  function open(){const wrap=document.getElementById('minigameScreen');if(!wrap)return;wrap.innerHTML=`<div id="dungeonWrap" class="arcade-stage"></div>`;document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));wrap.classList.add('on');const saved=mgLoad();if(saved&&saved.room>0){st.room=saved.room||0;st.gold=saved.gold||0;st.xp=saved.xp||0;st.heroHp=saved.heroHp||5;st.inventory=saved.inventory||[];}else{restart();return;}render();}
 
   return {open,enterRoom,submitAns,submitTreasure,usePotion,restart,exit};
 })();

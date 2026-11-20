@@ -268,7 +268,7 @@ window.FishingGame = (function () {
   function open() {
     const wrap = document.getElementById('minigameScreen');
     if (!wrap) return;
-    wrap.innerHTML = `<div id="fishingGameWrap" style="max-width:420px;margin:0 auto;padding:12px"></div>`;
+    wrap.innerHTML = `<div id="fishingGameWrap" class="arcade-stage"></div>`;
     document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
     wrap.classList.add('on');
     const saved = mgLoad();
