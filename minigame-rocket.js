@@ -131,10 +131,10 @@ window.RocketGame = (function () {
     if (!el) { console.warn('[Rocket] rocketWrap not found'); return; }
     const p = st.phase;
     if (p==='cockpit')  { renderCockpit(el);  return; }
-    if (p==='question') { renderQuestion(el); return; }
+    if (p==='question') { renderQuestion(el); mountMinigameVisual(el, st.activeQ); return; }
     if (p==='planet')   { renderPlanet(el);   return; }
-    if (p==='asteroid') { renderAsteroid(el); return; }
-    if (p==='boss')     { renderBoss(el);     return; }
+    if (p==='asteroid') { renderAsteroid(el); mountMinigameVisual(el, st.activeQ); return; }
+    if (p==='boss')     { renderBoss(el); mountMinigameVisual(el, st.activeQ);     return; }
     if (p==='gameover') { renderGameOver(el); return; }
     if (p==='win')      { renderWin(el);      return; }
     // fallback — go to cockpit
@@ -168,7 +168,7 @@ window.RocketGame = (function () {
       <div style="font-family:'Fredoka',sans-serif;font-size:1.4rem;color:${color};text-align:center;margin-bottom:8px">${title}</div>
       ${spaceCard(`
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <span style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.15rem;font-weight:700;direction:${q.dir || 'rtl'}">${q.text}</span>
+          <span style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.15rem;font-weight:700;direction:${q.dir || 'rtl'}" class="minigame-prompt">${questionPrompt(q)}</span>
           <span id="rqTimer" style="color:#ffd43b;font-family:'Fredoka',sans-serif;font-size:1.4rem;font-weight:900">⏱ ${st.qTimeLeft}</span>
         </div>
         <div style="display:flex;gap:8px">
