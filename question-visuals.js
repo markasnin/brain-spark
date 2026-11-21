@@ -287,10 +287,10 @@ function curriculumVisual(grade, cat, level, n) {
       dimension(level===1?118:210,91,level===1?2*n:n));
   }
   if (cat === 'volume') {
-    if (level===2) return diagram('מנסרה משולשת', outline('M55 144V70L152 144Z') +
+    if (level===2 && grade!=='ד') return diagram('מנסרה משולשת', outline('M55 144V70L152 144Z') +
       '<path d="M55 70L145 35 242 109 152 144M242 109L145 109 55 144M145 35V109" class="diagram-guide"/>' +
       (grade==='ז'?dimension(34,110,5)+dimension(103,163,2*n):dimension(91,126,`${n+6} סמ״ר`)) + dimension(225,143,8));
-    const cube = grade==='ו' && level===1;
+    const cube = (grade==='ו' || grade==='ד') && level===1;
     return diagram(cube?'קובייה':'תיבה', outline('M56 74H207V163H56Z') +
       '<path d="M56 74L104 34H255L207 74M255 34V123L207 163" class="diagram-guide"/>' +
       dimension(132,186,n) + dimension(37,123,cube?n:5) + dimension(249,153,cube?n:4));

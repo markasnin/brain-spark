@@ -453,32 +453,21 @@ function g1_shapes(diff){
   const pools={
     easy:[
       ()=>Q('shapes',diff,'כמה צלעות יש למשולש?',3,drawTriangle(5,4,3,ci,0,false),'💡 ספור את 3 הקווים!','🔺 צורות'),
-      ()=>Q('shapes',diff,'כמה פינות יש למשולש?',3,drawTriangle(5,4,3,ci,0,false),'💡 3 צלעות = 3 פינות!','🔺 צורות'),
+      ()=>Q('shapes',diff,'כמה קודקודים יש למשולש?',3,drawTriangle(5,4,3,ci,0,false),'💡 3 צלעות = 3 פינות!','🔺 צורות'),
       ()=>Q('shapes',diff,'כמה צלעות יש לריבוע?',4,drawSquare(5,ci,''),'💡 4 צלעות שוות!','🟦 צורות'),
-      ()=>Q('shapes',diff,'כמה פינות יש לריבוע?',4,drawSquare(5,ci,''),'💡 4 פינות ישרות!','🟦 צורות'),
+      ()=>Q('shapes',diff,'כמה קודקודים יש לריבוע?',4,drawSquare(5,ci,''),'💡 4 פינות ישרות!','🟦 צורות'),
       ()=>Q('shapes',diff,'כמה צלעות יש למלבן?',4,drawRect(7,4,ci,''),'💡 2 ארוכות + 2 קצרות = 4!','📐 צורות'),
       ()=>Q('shapes',diff,'לעיגול יש כמה צלעות?',0,drawCircle(5,ci,null),'💡 לעיגול אין צלעות — הוא עגול!','⭕ צורות'),
-      ()=>{const n=rnd(1,9);return Q('shapes',diff,`האם ${n*2} זוגי? (כן=1 לא=0)`,1,drawNumberLine(n*2,0,20,ci,[n*2]),'💡 זוגי = מתחלק ב-2!','🔢 זוגי')},
-      ()=>{const n=rnd(0,8);return Q('shapes',diff,`האם ${n*2+1} זוגי? (כן=1 לא=0)`,0,drawNumberLine(n*2+1,0,20,ci,[n*2+1]),'💡 אי-זוגי!','🔢 זוגי')},
     ],
     medium:[
+      ()=>{const sides=rnd(3,8); return Q('shapes',diff,'כמה קודקודים יש למצולע שבסרטוט?',sides,drawRegularPoly(sides,ci,''),'עברו על היקף המצולע ומנו כל קודקוד פעם אחת.')},
       ()=>Q('shapes',diff,'כמה צלעות יש למחומש?',5,drawRegularPoly(5,ci,'מחומש'),'💡 חמש = 5 צלעות!','⭐ צורות'),
       ()=>Q('shapes',diff,'כמה צלעות יש למשושה?',6,drawRegularPoly(6,ci,'משושה'),'💡 שש = 6 צלעות!','🔷 צורות'),
-      ()=>{const v=rnd(11,29);return Q('shapes',diff,`כמה עשרות יש ב-${v}?`,Math.floor(v/10),drawNumberLine(v,0,30,ci,[v]),`💡 ${v}=${Math.floor(v/10)} עשרות+${v%10}`,'🔢 ספרות')},
-      ()=>{const v=rnd(11,29);return Q('shapes',diff,`כמה יחידות יש ב-${v}?`,v%10,drawNumberLine(v,0,30,ci,[v]),`💡 ${v}=${Math.floor(v/10)} עשרות+${v%10}`,'🔢 ספרות')},
-      ()=>{const a=rnd(2,5);return Q('shapes',diff,`🔺 + 🔺 = ${a*2}. כמה שווה 🔺?`,a,drawNumberLine(a*2,0,12,ci,[a]),`💡 ${a*2}÷2=${a}!`,'❓ אתגר')},
-      ()=>{const a=rnd(2,5);return Q('shapes',diff,`⬜ + ⬜ = ${a*2}. כמה שווה ⬜?`,a,drawNumberLine(a*2,0,12,ci,[a]),`💡 ${a*2}÷2=${a}!`,'❓ אתגר')},
-      ()=>{const v=rnd(10,50);return Q('shapes',diff,`המספר שאחרי ${v} הוא?`,v+1,drawNumberLine(v,v-2,v+4,ci,[v+1]),`💡 ${v}+1=${v+1}!`,'🔢 סרגל')},
-      ()=>{const v=rnd(5,49);return Q('shapes',diff,`המספר שלפני ${v} הוא?`,v-1,drawNumberLine(v,v-3,v+2,ci,[v-1]),`💡 ${v}-1=${v-1}!`,'🔢 סרגל')},
     ],
     hard:[
-      ()=>{const a=rnd(3,6),b=rnd(1,3);return Q('shapes',diff,`🔺 + ${b} = ${a+b}. כמה שווה 🔺?`,a,drawNumberLine(a+b,0,12,ci,[a]),`💡 ${a+b}-${b}=${a}!`,'❓ אתגר')},
-      ()=>{const a=rnd(3,8);return Q('shapes',diff,`⬜ - 2 = ${a}. כמה שווה ⬜?`,a+2,drawNumberLine(a+2,0,14,ci,[a,a+2]),`💡 ${a}+2=${a+2}!`,'❓ אתגר')},
-      ()=>{const a=rnd(2,4);return Q('shapes',diff,`🔵+🔵+🔵=${a*3}. כמה שווה 🔵?`,a,drawNumberLine(a*3,0,Math.max(a*3+2,12),ci,[a]),`💡 ${a*3}÷3=${a}!`,'❓ אתגר')},
-      ()=>{const t=rnd(20,50),s=rnd(10,t-10);return Q('shapes',diff,`${t}+?=${t+s}. מה החסר?`,s,drawNumberLine(s,0,Math.ceil((t+s)/10)*10,ci,[s]),`💡 ${t+s}-${t}=${s}!`,'➕ חיבור')},
-      ()=>Q('shapes',diff,'כמה פינות ישרות לריבוע?',4,drawSquare(5,ci,''),'💡 כל 4 פינות הריבוע הן ישרות!','🟦 זוויות'),
-      ()=>Q('shapes',diff,'כמה פינות יש למחומש?',5,drawRegularPoly(5,ci,'מחומש'),'💡 מחומש = 5 פינות!','⭐ צורות'),
-      ()=>{const n=rnd(30,90);return Q('shapes',diff,`כמה עשרות יש ב-${n}?`,Math.floor(n/10),drawNumberLine(n,0,100,ci,[n]),`💡 ${n}=${Math.floor(n/10)} עשרות!`,'🔢 ספרות')},
+      ()=>{const sides=rnd(3,8); return Q('shapes',diff,'כמה קודקודים יש למצולע שבסרטוט?',sides,drawRegularPoly(sides,ci,''),'עברו על היקף המצולע ומנו כל קודקוד פעם אחת.')},
+      ()=>Q('shapes',diff,'כמה זוויות ישרות יש לריבוע?',4,drawSquare(5,ci,''),'💡 כל 4 פינות הריבוע הן ישרות!','🟦 זוויות'),
+      ()=>Q('shapes',diff,'כמה קודקודים יש למחומש?',5,drawRegularPoly(5,ci,'מחומש'),'💡 מחומש = 5 פינות!','⭐ צורות'),
     ],
   };
   return pick(pools[diff])();
@@ -494,20 +483,15 @@ function g2_shapes(diff){
     easy:[
       ()=>Q('shapes',diff,'כמה צלעות יש למשולש?',3,drawTriangle(5,4,3,ci,0,false),'💡 3 קווים!','🔺 צורות'),
       ()=>Q('shapes',diff,'כמה צלעות יש לריבוע?',4,drawSquare(4,ci,''),'💡 4 צלעות שוות!','🟦 צורות'),
-      ()=>Q('shapes',diff,'כמה פינות יש למלבן?',4,drawRect(6,3,ci,''),'💡 4 פינות ישרות!','📐 צורות'),
+      ()=>Q('shapes',diff,'כמה קודקודים יש למלבן?',4,drawRect(6,3,ci,''),'💡 4 פינות ישרות!','📐 צורות'),
       ()=>Q('shapes',diff,'כמה צלעות יש למחומש?',5,drawRegularPoly(5,ci,''),'💡 חמש = 5!','⭐ צורות'),
       ()=>Q('shapes',diff,'לעיגול יש כמה פינות?',0,drawCircle(4,ci,null),'💡 לעיגול אין פינות!','⭕ צורות'),
       ()=>Q('shapes',diff,'כמה צלעות יש למשושה?',6,drawRegularPoly(6,ci,''),'💡 שש = 6!','🔷 צורות'),
-      ()=>Q('shapes',diff,'🍕 חולקה ל-2 חלקים שווים. מה שם כל חלק? (חצי=2 רבע=4)',2,drawPie(1,2,ci),'💡 2 חלקים שווים = חצי!','🍕 שברים'),
-      ()=>Q('shapes',diff,'🍕 חולקה ל-4 חלקים שווים. מה שם כל חלק? (חצי=2 רבע=4)',4,drawPie(1,4,ci),'💡 4 חלקים שווים = רבע!','🍕 שברים'),
     ],
     medium:[
       ()=>{const s=rnd(3,8);return Q('shapes',diff,`ריבוע שכל צלע ${s} ס"מ. היקף=?`,4*s,drawSquare(s,ci,''),`💡 4×${s}=${4*s} ס"מ`,'📏 היקף')},
       ()=>{const w=rnd(4,9),h=rnd(2,w-1);return Q('shapes',diff,`מלבן ${w}×${h} ס"מ. היקף=?`,2*(w+h),drawRect(w,h,ci,''),`💡 ${w}+${h}+${w}+${h}=${2*(w+h)} ס"מ`,'📏 היקף')},
       ()=>{const s=rnd(2,7);return Q('shapes',diff,`משולש שווה-צלעות, צלע=${s} ס"מ. היקף=?`,3*s,drawTriangle(s,s,s,ci,0,false),`💡 ${s}×3=${3*s} ס"מ`,'📏 היקף')},
-      ()=>{const a=rnd(3,7),b=rnd(1,a-1);return Q('shapes',diff,`⬜+${b}=${a+b}. כמה שווה ⬜?`,a,drawNumberLine(a+b,0,14,ci,[a]),`💡 ${a+b}-${b}=${a}!`,'❓ אתגר')},
-      ()=>{const a=rnd(4,9);return Q('shapes',diff,`⬜-3=${a}. כמה שווה ⬜?`,a+3,drawNumberLine(a+3,0,16,ci,[a,a+3]),`💡 ${a}+3=${a+3}!`,'❓ אתגר')},
-      ()=>{const a=rnd(2,5);return Q('shapes',diff,`🔺+🔺=${a*2}. כמה שווה 🔺?`,a,drawNumberLine(a*2,0,12,ci,[a]),`💡 ${a*2}÷2=${a}!`,'❓ אתגר')},
     ],
     hard:[
       ()=>{const c=rnd(3,7),r=rnd(2,5);return Q('shapes',diff,`ספור ריבועים בגריד ${c}×${r}. שטח=?`,c*r,drawGrid(c,r,ci),`💡 ${c}×${r}=${c*r} ס"מ²`,'📐 שטח')},
@@ -532,27 +516,19 @@ function g3_shapes(diff){
       ()=>Q('shapes',diff,'זווית < 90° נקראת: (חדה=1 ישרה=2 קהה=3)',1,drawAngle(45,ci,true),'💡 חדה < 90°!','📐 זוויות'),
       ()=>Q('shapes',diff,'זווית > 90° נקראת: (חדה=1 ישרה=2 קהה=3)',3,drawAngle(120,ci,true),'💡 קהה > 90°!','📐 זוויות'),
       ()=>Q('shapes',diff,'כמה זוויות ישרות בריבוע?',4,drawSquare(5,ci,''),'💡 4 פינות = 4 זוויות ישרות!','🟦 זוויות'),
-      ()=>{const n=rnd(2,6);return Q('shapes',diff,`שליש מ-${n*3} = ?`,n,drawFracBar(1,3,ci),`💡 ${n*3}÷3=${n}!`,'🍕 שברים')},
-      ()=>{const n=rnd(2,7);return Q('shapes',diff,`חצי מ-${n*2} = ?`,n,drawFracBar(1,2,ci),`💡 ${n*2}÷2=${n}!`,'🍕 שברים')},
-      ()=>{const n=rnd(2,5);return Q('shapes',diff,`רבע מ-${n*4} = ?`,n,drawFracBar(1,4,ci),`💡 ${n*4}÷4=${n}!`,'🍕 שברים')},
       ()=>{const c=rnd(2,5),r=rnd(2,4);return Q('shapes',diff,`ספור ריבועים בגריד: ${c}×${r}=?`,c*r,drawGrid(c,r,ci),`💡 שורות×עמודות=${c*r}!`,'📐 שטח')},
     ],
     medium:[
       ()=>{const s=rnd(3,10);return Q('shapes',diff,`היקף ריבוע (צלע ${s} ס"מ)?`,4*s,drawSquare(s,ci,''),`💡 4×${s}=${4*s} ס"מ`,'📏 היקף')},
       ()=>{const w=rnd(4,12),h=rnd(2,w-1);return Q('shapes',diff,`היקף מלבן ${w}×${h}?`,2*(w+h),drawRect(w,h,ci,''),`💡 2×(${w}+${h})=${2*(w+h)} ס"מ`,'📏 היקף')},
-      ()=>{const a=rnd(3,8),b=rnd(2,7),c=rnd(2,6);return Q('shapes',diff,`היקף משולש: ${a},${b},${c} ס"מ?`,a+b+c,drawTriangle(a,b,c,ci,0,true),`💡 ${a}+${b}+${c}=${a+b+c} ס"מ`,'📏 היקף')},
+      ()=>{const a=rnd(3,8),b=rnd(2,7),c=rnd(Math.abs(a-b)+1,a+b-1);return Q('shapes',diff,`היקף משולש: ${a},${b},${c} ס"מ?`,a+b+c,drawTriangle(a,b,c,ci,0,true),`💡 ${a}+${b}+${c}=${a+b+c} ס"מ`,'📏 היקף')},
       ()=>{const s=rnd(3,9);return Q('shapes',diff,`שטח ריבוע (צלע ${s} ס"מ)?`,s*s,drawSquare(s,ci,'שטח=?'),`💡 ${s}²=${s*s} ס"מ²`,'📐 שטח')},
       ()=>{const w=rnd(3,10),h=rnd(2,w-1);return Q('shapes',diff,`שטח מלבן ${w}×${h}?`,w*h,drawRect(w,h,ci,'שטח=?'),`💡 ${w}×${h}=${w*h} ס"מ²`,'📐 שטח')},
       ()=>{const c=rnd(3,7),r=rnd(2,5);return Q('shapes',diff,`שטח גריד ${c}×${r}?`,c*r,drawGrid(c,r,ci),`💡 ${c}×${r}=${c*r} ס"מ²`,'📐 שטח')},
       ()=>{const deg=pick([45,60,30,120,135]);return Q('shapes',diff,`זווית ${deg}° — חדה(1) ישרה(2) קהה(3)?`,deg<90?1:deg===90?2:3,drawAngle(deg,ci,true),`💡 ${deg<90?'חדה <90°':deg===90?'ישרה =90°':'קהה >90°'}!`,'📐 זוויות')},
     ],
     hard:[
-      ()=>{const base=rnd(4,12),h=rnd(3,10);const ans=(base*h)/2;if(!Number.isInteger(ans))return g3_shapes(diff);return Q('shapes',diff,`שטח משולש: בסיס ${base}, גובה ${h}?`,ans,drawTriangle(base,h,0,ci,h,true),`💡 (${base}×${h})÷2=${ans} ס"מ²`,'📐 שטח')},
-      ()=>{const w=rnd(4,12),h=rnd(2,w);return Q('shapes',diff,`מלבן ${w}×${h}: היקף+שטח=?`,2*(w+h)+w*h,drawRect(w,h,ci,''),`💡 היקף=${2*(w+h)}, שטח=${w*h}, סכום=${2*(w+h)+w*h}`,'📐 שטח+היקף')},
       ()=>{const s=rnd(3,9);return Q('shapes',diff,`ריבוע היקף=${4*s} ס"מ. מה שטחו?`,s*s,drawSquare(s,ci,''),`💡 צלע=${s}, שטח=${s*s} ס"מ²`,'📐 שטח')},
-      ()=>{const n=rnd(1,3),d=pick([3,4,6,8]);return Q('shapes',diff,`${n}/${d} מ-${n*d*2}=?`,(n*d*2/d)*n,drawFracBar(n,d,ci),`💡 ${n*d*2}÷${d}×${n}=${(n*d*2/d)*n}`,'🍕 שברים')},
-      ()=>{const a=pick([30,45,60]),b=pick([20,30,40,60]);if(a+b>=180)return g3_shapes(diff);return Q('shapes',diff,`סכום זוויות ${a}° ו-${b}°?`,a+b,drawAngle(Math.min(a+b,175),ci,true),`💡 ${a}+${b}=${a+b}°`,'📐 זוויות')},
-      ()=>{const s=pick([3,4,5,6]);return Q('shapes',diff,`סכום כל הזוויות בריבוע?`,360,drawSquare(s,ci,'360°?'),'💡 4×90°=360°!','📐 זוויות')},
     ],
   };
   return pick(pools[diff])();
@@ -569,26 +545,18 @@ function g4_shapes(diff){
     easy:[
       ()=>{const s=rnd(3,10);return Q('shapes',diff,`שטח ריבוע (צלע ${s} ס"מ)?`,s*s,drawSquare(s,ci,'שטח=?'),`💡 ${s}²=${s*s} ס"מ²`,'📐 שטח')},
       ()=>{const w=rnd(4,14),h=rnd(2,w-1);return Q('shapes',diff,`שטח מלבן ${w}×${h}?`,w*h,drawRect(w,h,ci,'שטח=?'),`💡 ${w}×${h}=${w*h} ס"מ²`,'📐 שטח')},
-      ()=>{const b=rnd(4,12),h=rnd(3,10);return Q('shapes',diff,`שטח מקבילית: בסיס ${b}, גובה ${h}?`,b*h,drawParallelogram(b,h,ci),`💡 בסיס×גובה=${b*h} ס"מ²`,'📐 שטח')},
       ()=>Q('shapes',diff,'כמה צירי סימטריה לריבוע?',4,drawSymmetry('square',4,ci),'💡 ריבוע: 4 צירים!','🔁 סימטריה'),
-      ()=>Q('shapes',diff,'כמה צירי סימטריה למלבן?',2,drawSymmetry('rect',2,ci),'💡 מלבן: 2 צירים!','🔁 סימטריה'),
+      ()=>Q('shapes',diff,'כמה צירי סימטריה יש למלבן שאינו ריבוע?',2,drawSymmetry('rect',2,ci),'💡 מלבן: 2 צירים!','🔁 סימטריה'),
       ()=>Q('shapes',diff,'כמה צירי סימטריה למשולש שווה-צלעות?',3,drawSymmetry('triangle',3,ci),'💡 3 צירים!','🔁 סימטריה'),
       ()=>{const deg=pick([45,60,30,120,135,150]);return Q('shapes',diff,`זווית ${deg}°: חדה(1) ישרה(2) קהה(3)?`,deg<90?1:deg===90?2:3,drawAngle(deg,ci,true),`💡 ${deg<90?'חדה':deg===90?'ישרה':'קהה'}!`,'📐 זוויות')},
     ],
     medium:[
-      ()=>{const base=rnd(4,14),h=rnd(3,12);const ans=(base*h)/2;if(!Number.isInteger(ans))return g4_shapes(diff);return Q('shapes',diff,`שטח משולש: בסיס ${base}, גובה ${h}?`,ans,drawTriangle(base,h,0,ci,h,true),`💡 (${base}×${h})÷2=${ans} ס"מ²`,'📐 שטח')},
-      ()=>{const b1=rnd(5,12),b2=rnd(2,b1-2),h=rnd(3,9);if((b1+b2)*h%2!==0)return g4_shapes(diff);const ans=(b1+b2)*h/2;return Q('shapes',diff,`שטח טרפז: בסיסים ${b1},${b2} גובה ${h}?`,ans,drawTrapezoid(b1,b2,h,ci),`💡 (${b1}+${b2})×${h}÷2=${ans} ס"מ²`,'📐 שטח')},
-      ()=>{const a=rnd(40,80),b=rnd(20,70);if(a+b>=180)return g4_shapes(diff);return Q('shapes',diff,`במשולש: ${a}° ו-${b}°. הזווית השלישית?`,180-a-b,drawTriangle(8,6,5,ci,0,false),`💡 180-(${a}+${b})=${180-a-b}°`,'📐 זוויות')},
-      ()=>Q('shapes',diff,'כמה צירי סימטריה למשושה שווה-צלעות?',6,drawSymmetry('hexagon',6,ci),'💡 משושה: 6 צירים!','🔁 סימטריה'),
-      ()=>Q('shapes',diff,'כמה צירי סימטריה למחומש שווה-צלעות?',5,drawSymmetry('pentagon',5,ci),'💡 מחומש: 5 צירים!','🔁 סימטריה'),
+      ()=>Q('shapes',diff,'כמה צירי סימטריה למשושה משוכלל?',6,drawSymmetry('hexagon',6,ci),'💡 משושה: 6 צירים!','🔁 סימטריה'),
+      ()=>Q('shapes',diff,'כמה צירי סימטריה למחומש משוכלל?',5,drawSymmetry('pentagon',5,ci),'💡 מחומש: 5 צירים!','🔁 סימטריה'),
       ()=>{const s=rnd(3,12);return Q('shapes',diff,`היקף ריבוע=${4*s}. מה שטחו?`,s*s,drawSquare(s,ci,'שטח=?'),`💡 צלע=${s}, שטח=${s*s} ס"מ²`,'📐 שטח')},
     ],
     hard:[
       ()=>{const W=rnd(5,10),H=rnd(4,W),w=rnd(2,W-2),h=rnd(2,H-2);return Q('shapes',diff,`שטח צורת L: ${W}×${H} פחות ${w}×${h}?`,W*H-w*h,drawLShape(W,H,w,h,ci),`💡 ${W*H}-${w*h}=${W*H-w*h} ס"מ²`,'📐 שטח')},
-      ()=>{const n=rnd(4,6);const total=(n-2)*180;return Q('shapes',diff,`סכום זוויות פנימיות ${n}–צלע?`,total,drawRegularPoly(n,ci,''),`💡 (${n}-2)×180°=${total}°`,'📐 זוויות')},
-      ()=>Q('shapes',diff,'לעיגול כמה צירי סימטריה? (אינסוף=99)',99,drawSymmetry('circle',999,ci),'💡 עיגול — אינסוף צירים! כתוב 99','🔁 סימטריה'),
-      ()=>{const b1=rnd(6,14),b2=rnd(3,b1-2),h=rnd(4,10);if((b1+b2)*h%2!==0)return g4_shapes(diff);const ans=(b1+b2)*h/2;return Q('shapes',diff,`שטח טרפז (${b1}+${b2})×${h}÷2?`,ans,drawTrapezoid(b1,b2,h,ci),`💡 ${b1+b2}×${h}÷2=${ans} ס"מ²`,'📐 שטח')},
-      ()=>{const a=rnd(40,80),b=rnd(20,60),c=rnd(20,50);if(a+b+c!==180)return g4_shapes(diff);return Q('shapes',diff,`זוויות משולש: ${a}°,${b}°,${c}°. האם הסכום נכון? (כן=1 לא=0)`,1,drawTriangle(8,6,5,ci,0,false),`💡 ${a}+${b}+${c}=180°!`,'📐 זוויות')},
     ],
   };
   return pick(pools[diff])();
@@ -605,24 +573,16 @@ function g5_shapes(diff){
     easy:[
       ()=>{const base=rnd(4,14),h=rnd(3,12);const ans=(base*h)/2;if(!Number.isInteger(ans))return g5_shapes(diff);return Q('shapes',diff,`שטח משולש: בסיס ${base}, גובה ${h}?`,ans,drawTriangle(base,h,0,ci,h,true),`💡 (${base}×${h})÷2=${ans} ס"מ²`,'📐 שטח')},
       ()=>{const s=rnd(2,7);return Q('shapes',diff,`נפח קוביה (צלע ${s} ס"מ)?`,s*s*s,drawBox3D('cube',ci),`💡 ${s}³=${s*s*s} ס"מ³`,'📦 נפח')},
-      ()=>{const l=rnd(2,8),w=rnd(2,8),h=rnd(2,6);return Q('shapes',diff,`נפח קובייד ${l}×${w}×${h}?`,l*w*h,drawBox3D('cube',ci),`💡 ${l}×${w}×${h}=${l*w*h} ס"מ³`,'📦 נפח')},
-      ()=>{const r=rnd(2,6);return Q('shapes',diff,`היקף עיגול, רדיוס ${r} ס"מ (π≈3.14)?`,Math.round(2*3.14*r),drawCircle(r,ci,'radius'),`💡 2×3.14×${r}≈${Math.round(2*3.14*r)} ס"מ`,'⭕ עיגול')},
-      ()=>{const px=rnd(1,5),py=rnd(1,5);return Q('shapes',diff,`הנקודה (${px},${py}) — מה ה-X?`,px,drawCoordPlane(px,py,5,ci),`💡 X של (${px},${py}) הוא ${px}`,'🗺️ קואורדינטות')},
+      ()=>{const l=rnd(2,8),w=rnd(2,8),h=rnd(2,6);return Q('shapes',diff,`נפח תיבה שמידותיה ${l}×${w}×${h}?`,l*w*h,drawBox3D('cube',ci),`💡 ${l}×${w}×${h}=${l*w*h} ס"מ³`,'📦 נפח')},
     ],
     medium:[
-      ()=>{const r=rnd(2,7);return Q('shapes',diff,`שטח עיגול, רדיוס ${r} ס"מ (π≈3.14)?`,Math.round(3.14*r*r),drawCircle(r,ci,'radius'),`💡 3.14×${r*r}≈${Math.round(3.14*r*r)} ס"מ²`,'⭕ עיגול')},
       ()=>{const b1=rnd(5,14),b2=rnd(3,b1-1),h=rnd(3,10);if((b1+b2)*h%2!==0)return g5_shapes(diff);const ans=(b1+b2)*h/2;return Q('shapes',diff,`שטח טרפז: (${b1}+${b2})×${h}÷2?`,ans,drawTrapezoid(b1,b2,h,ci),`💡 ${b1+b2}×${h}÷2=${ans} ס"מ²`,'📐 שטח')},
-      ()=>{const px=rnd(-4,4),py=rnd(-4,4);return Q('shapes',diff,`הנקודה (${px},${py}) — מה ה-Y?`,py,drawCoordPlane(px,py,5,ci),`💡 Y של (${px},${py}) הוא ${py}`,'🗺️ קואורדינטות')},
       ()=>{const W=rnd(5,10),H=rnd(4,W),w=rnd(2,W-2),h=rnd(2,H-2);return Q('shapes',diff,`שטח L: ${W}×${H} פחות ${w}×${h}?`,W*H-w*h,drawLShape(W,H,w,h,ci),`💡 ${W*H}-${w*h}=${W*H-w*h} ס"מ²`,'📐 שטח')},
       ()=>{const l=rnd(3,10),w=rnd(2,8),h=rnd(2,7);return Q('shapes',diff,`נפח ארגז ${l}×${w}×${h}?`,l*w*h,drawBox3D('cube',ci),`💡 ${l}×${w}×${h}=${l*w*h} ס"מ³`,'📦 נפח')},
-      ()=>{const base=rnd(4,14),h=rnd(4,14);const ans=(base*h)/2;if(!Number.isInteger(ans))return g5_shapes(diff);return Q('shapes',diff,`שטח משולש ישר-זווית: רגליים ${base} ו-${h}?`,ans,drawRightTriangle(base,h,ci),`💡 (${base}×${h})÷2=${ans} ס"מ²`,'📐 שטח')},
+      ()=>{const base=rnd(4,14),h=rnd(4,14);const ans=(base*h)/2;if(!Number.isInteger(ans))return g5_shapes(diff);return Q('shapes',diff,`שטח משולש ישר-זווית: אורכי הניצבים ${base} ו-${h} ס״מ?`,ans,drawRightTriangle(base,h,ci),`💡 (${base}×${h})÷2=${ans} ס"מ²`,'📐 שטח')},
     ],
     hard:[
-      ()=>{const r=rnd(3,9);return Q('shapes',diff,`היקף עיגול≈${Math.round(2*3.14*r)} ס"מ. מה הרדיוס?`,r,drawCircle(r,ci,'radius'),`💡 ÷(2×3.14)≈${r} ס"מ`,'⭕ עיגול')},
       ()=>{const l=rnd(3,9),w=rnd(3,9),h=rnd(3,9);const sa=2*(l*w+l*h+w*h);return Q('shapes',diff,`שטח פנים ארגז ${l}×${w}×${h}?`,sa,drawBox3D('cube',ci),`💡 2(${l*w}+${l*h}+${w*h})=${sa} ס"מ²`,'📦 שטח פנים')},
-      ()=>{const px=rnd(1,4)*(rnd(0,1)?1:-1),py=rnd(1,4)*(rnd(0,1)?1:-1);const q=px>0&&py>0?1:px<0&&py>0?2:px<0&&py<0?3:4;return Q('shapes',diff,`(${px},${py}) — ברביע כמה? (1=ימין-מעלה 2=שמאל-מעלה 3=שמאל-מטה 4=ימין-מטה)`,q,drawCoordPlane(px,py,5,ci),`💡 רביע ${q}`,'🗺️ קואורדינטות')},
-      ()=>{const r=rnd(2,7);return Q('shapes',diff,`שטח עיגול≈${Math.round(3.14*r*r)} ס"מ². מה הרדיוס?`,r,drawCircle(r,ci,'radius'),`💡 √(${Math.round(3.14*r*r)}÷3.14)≈${r}`,'⭕ עיגול')},
-      ()=>{const n=rnd(4,8);return Q('shapes',diff,`סכום זוויות פנימיות ${n}–צלע?`,(n-2)*180,drawRegularPoly(n,ci,''),`💡 (${n}-2)×180°=${(n-2)*180}°`,'📐 זוויות')},
     ],
   };
   return pick(pools[diff])();
@@ -638,26 +598,20 @@ function g6_shapes(diff){
   const ci=rnd(0,9);
   const pools={
     easy:[
-      ()=>{const r=rnd(2,8);return Q('shapes',diff,`היקף עיגול: רדיוס ${r} ס"מ (π≈3.14)?`,Math.round(2*3.14*r),drawCircle(r,ci,'radius'),`💡 2×3.14×${r}≈${Math.round(2*3.14*r)} ס"מ`,'⭕ עיגול')},
-      ()=>{const r=rnd(2,8);return Q('shapes',diff,`שטח עיגול: רדיוס ${r} ס"מ (π≈3.14)?`,Math.round(3.14*r*r),drawCircle(r,ci,'radius'),`💡 3.14×${r*r}≈${Math.round(3.14*r*r)} ס"מ²`,'⭕ עיגול')},
+      ()=>{const r=rnd(2,8);return Q('shapes',diff,`חשבו את היקף המעגל. רדיוס ${r} ס"מ (π≈3.14). עגלו למספר השלם הקרוב.`,Math.round(2*3.14*r),drawCircle(r,ci,'radius'),`💡 2×3.14×${r}≈${Math.round(2*3.14*r)} ס"מ`,'⭕ עיגול')},
+      ()=>{const r=rnd(2,8);return Q('shapes',diff,`חשבו את שטח העיגול. רדיוס ${r} ס"מ (π≈3.14). עגלו למספר השלם הקרוב.`,Math.round(3.14*r*r),drawCircle(r,ci,'radius'),`💡 3.14×${r*r}≈${Math.round(3.14*r*r)} ס"מ²`,'⭕ עיגול')},
       ()=>{const r=rnd(2,8);return Q('shapes',diff,`קוטר עיגול עם רדיוס ${r} ס"מ?`,r*2,drawCircle(r,ci,'diameter'),`💡 קוטר=2×רדיוס=${r*2} ס"מ`,'⭕ עיגול')},
       ()=>{const r=rnd(2,7);const d=r*2;return Q('shapes',diff,`רדיוס עיגול עם קוטר ${d} ס"מ?`,r,drawCircle(r,ci,'diameter'),`💡 רדיוס=קוטר÷2=${r} ס"מ`,'⭕ עיגול')},
-      ()=>{const px=rnd(-4,4),py=rnd(-4,4);const q=px>0&&py>0?1:px<0&&py>0?2:px<0&&py<0?3:4;return Q('shapes',diff,`(${px},${py}) — ברביע כמה? (1=ימין-מעלה)`,q,drawCoordPlane(px,py,5,ci),`💡 רביע ${q}`,'🗺️ קואורדינטות')},
     ],
     medium:[
-      ()=>{const r=rnd(2,6),h=rnd(3,8);return Q('shapes',diff,`נפח גליל: r=${r}, h=${h} (π≈3.14)?`,Math.round(3.14*r*r*h),drawBox3D('cylinder',ci),`💡 π×r²×h≈${Math.round(3.14*r*r*h)} ס"מ³`,'📦 גליל')},
+      ()=>{const r=rnd(2,6),h=rnd(3,8);return Q('shapes',diff,`נפח גליל: r=${r}, h=${h} (π≈3.14). עגלו למספר השלם הקרוב.`,Math.round(3.14*r*r*h),drawBox3D('cylinder',ci),`💡 π×r²×h≈${Math.round(3.14*r*r*h)} ס"מ³`,'📦 גליל')},
       ()=>{const r=rnd(3,9);return Q('shapes',diff,`היקף עיגול≈${Math.round(2*3.14*r)} ס"מ. מה הרדיוס?`,r,drawCircle(r,ci,'radius'),`💡 ÷(2π)≈${r}`,'⭕ עיגול')},
       ()=>{const l=rnd(3,9),w=rnd(3,9),h=rnd(3,9);const sa=2*(l*w+l*h+w*h);return Q('shapes',diff,`שטח פנים ארגז ${l}×${w}×${h}?`,sa,drawBox3D('cube',ci),`💡 2(${l*w}+${l*h}+${w*h})=${sa} ס"מ²`,'📦 שטח פנים')},
-      ()=>{const px=rnd(-5,5),py=rnd(-5,5);return Q('shapes',diff,`מרחק מנהטן של (${px},${py}) מהראשית? (|x|+|y|)`,Math.abs(px)+Math.abs(py),drawCoordPlane(px,py,5,ci),`💡 |${px}|+|${py}|=${Math.abs(px)+Math.abs(py)}`,'🗺️ קואורדינטות')},
       ()=>{const b1=rnd(6,16),b2=rnd(3,b1-2),h=rnd(4,12);if((b1+b2)*h%2!==0)return g6_shapes(diff);const ans=(b1+b2)*h/2;return Q('shapes',diff,`שטח טרפז: (${b1}+${b2})×${h}÷2?`,ans,drawTrapezoid(b1,b2,h,ci),`💡 ${b1+b2}×${h}÷2=${ans} ס"מ²`,'📐 שטח')},
       ()=>{const W=rnd(5,10),H=rnd(4,W),w=rnd(2,W-2),h=rnd(2,H-2);return Q('shapes',diff,`שטח L: ${W}×${H} פחות ${w}×${h}?`,W*H-w*h,drawLShape(W,H,w,h,ci),`💡 ${W*H}-${w*h}=${W*H-w*h} ס"מ²`,'📐 שטח')},
     ],
     hard:[
-      ()=>{const r1=rnd(4,9),r2=rnd(1,r1-2);const ans=Math.round(3.14*(r1*r1-r2*r2));return Q('shapes',diff,`שטח טבעת: R=${r1}, r=${r2} (π≈3.14)?`,ans,drawCircle(r1,ci,'radius'),`💡 π(${r1}²-${r2}²)=3.14×${r1*r1-r2*r2}≈${ans} ס"מ²`,'⭕ טבעת')},
-      ()=>{const r=rnd(2,6),h=rnd(3,10);const vol=Math.round(3.14*r*r*h);return Q('shapes',diff,`נפח גליל: r=${r}, h=${h}?`,vol,drawBox3D('cylinder',ci),`💡 π×${r}²×${h}≈${vol} ס"מ³`,'📦 גליל')},
-      ()=>{const n=rnd(4,9);return Q('shapes',diff,`סכום זוויות פנימיות ${n}–צלע?`,(n-2)*180,drawRegularPoly(n,ci,''),`💡 (${n}-2)×180=${(n-2)*180}°`,'📐 זוויות')},
-      ()=>{const r=rnd(3,8);const area=Math.round(3.14*r*r);return Q('shapes',diff,`שטח עיגול≈${area} ס"מ². מה הרדיוס?`,r,drawCircle(r,ci,'radius'),`💡 √(${area}÷3.14)≈${r}`,'⭕ עיגול')},
-      ()=>{const px1=rnd(-4,-1),py1=rnd(1,4),px2=rnd(1,4),py2=rnd(-4,-1);const dx=Math.abs(px2-px1),dy=Math.abs(py2-py1);return Q('shapes',diff,`מרחק מנהטן בין (${px1},${py1}) ל-(${px2},${py2})?`,dx+dy,drawCoordPlane(px2,py2,5,ci),`💡 ${dx}+${dy}=${dx+dy}`,'🗺️ קואורדינטות')},
+      ()=>{const r=rnd(2,6),h=rnd(3,10);const vol=Math.round(3.14*r*r*h);return Q('shapes',diff,`רדיוס הבסיס של גליל הוא ${r} ס״מ וגובהו ${h} ס״מ. חשבו את נפחו בסמ״ק לפי π≈3.14 ועגלו למספר השלם הקרוב.`,vol,drawBox3D('cylinder',ci),`💡 π×${r}²×${h}≈${vol} ס"מ³`,'📦 גליל')},
     ],
   };
   return pick(pools[diff])();

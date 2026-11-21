@@ -137,7 +137,7 @@ function updateHome() {
 // ══ GROUPED CATEGORY GRID ══
 const CAT_GROUPS = [
   { id:'ops',       label:'פעולות חשבון',  emoji:'🔢', color:'#2ed573', colorRgb:'46,213,115',  cats:['add','sub','mul','div','order','word'] },
-  { id:'fractions', label:'שברים ומספרים', emoji:'½',  color:'#54a0ff', colorRgb:'84,160,255',  cats:['place','rounding','fractions_half','fractions_unit','fractions','decimals','percent','negatives','ratio','powers'] },
+  { id:'fractions', label:'שברים ומספרים', emoji:'½',  color:'#54a0ff', colorRgb:'84,160,255',  cats:['place','rounding','divisibility','fractions_half','fractions_unit','fractions','decimals','percent','negatives','ratio','powers'] },
   { id:'algebra', label:'אלגברה', emoji:'𝑥', color:'#69dbad', colorRgb:'105,219,173', cats:['algebra','equations'] },
   { id:'geometry',  label:'הנדסה ומדידה',  emoji:'📐', color:'#c77dff', colorRgb:'199,125,255', cats:['shapes','measurement','angles','area','circle','volume','transforms','coordinates','pythagoras'] },
   { id:'data',      label:'נתונים',         emoji:'📊', color:'#ffd32a', colorRgb:'255,211,42',  cats:['data','probability','graphs'] },

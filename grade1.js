@@ -14,7 +14,7 @@ window.GRADE_CONFIG = {
   availableLearnTopics: ['shapes', 'measurement'],
   availableExamTopics:  ['add', 'sub', 'shapes', 'measurement'],
   ranges: {
-    add: { easy:{aMin:1,aMax:9,bMin:1,bMax:9},    medium:{aMin:5,aMax:15,bMin:1,bMax:10}, hard:{aMin:10,aMax:20,bMin:1,bMax:10} },
+    add: { easy:{aMin:1,aMax:9,bMin:1,bMax:9},    medium:{aMin:5,aMax:15,bMin:1,bMax:10}, hard:{aMin:10,aMax:19,bMin:1,bMax:10} },
     sub: { easy:{aMin:2,aMax:9},                   medium:{aMin:5,aMax:15},                hard:{aMin:10,aMax:20} },
   },
   pts: { easy:3, medium:6, hard:10 },
@@ -25,7 +25,7 @@ window.GRADE_CONFIG = {
       const r = window.GRADE_CONFIG.ranges.add[diff];
       const a = rnd(r.aMin,r.aMax), b = rnd(r.bMin,r.bMax);
       // Ensure sum stays in grade 1 range
-      const safeB = diff==='easy' ? Math.min(b, 10-a) || 1 : b;
+      const safeB = diff==='easy' ? Math.min(b, 10-a) : Math.min(b,20-a);
       const theme = pick(GAME_THEMES);
       return { type:'num', cat:'add', diff, label:theme.label, gameLabel:brainrotLabel(),
         text:`${a} + ${safeB} = ?`, answer:a+safeB, pts:window.GRADE_CONFIG.pts[diff],

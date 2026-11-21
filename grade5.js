@@ -66,7 +66,7 @@ window.GRADE_CONFIG = {
     fractions(diff) {
       const r = window.GRADE_CONFIG.ranges.fractions[diff];
       const [n,d] = pick(r.pairs);
-      const total = rnd(d, Math.floor(r.totalMax/d)) * d;
+      const total = rnd(1, Math.floor(r.totalMax/d)) * d;
       const part = (total/d)*n;
       const theme = pick(GAME_THEMES);
       // Grade 5 fractions: mix of fraction of quantity, add/sub different denominators, multiply by whole

@@ -147,7 +147,7 @@ function genQ(cat, diff) {
   const gc = window.GRADE_CONFIG;
   const options = variants[cat];
   const grade = gc?.gradeId;
-  if (grade && options && rnd(0,2)!==0) {
+  if (grade && options && (rnd(0,2)!==0 || (cat==='data' && 'בגד'.includes(grade)))) {
     // The youngest grades practice one operation at a time.
     const size = grade==='א' && ['add','sub','word'].includes(cat) ? 2 : options.length;
     return makeQuestionVariant(grade,cat,diff,rnd(0,size-1));

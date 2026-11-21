@@ -14,6 +14,7 @@ const variantInstructions = {
   equivalent:['השלימו את המספר החסר כך ששני היחסים יהיו שווים','Complete the equivalent ratio','Дополни равное отношение','أكمل النسبة المكافئة','Complète le rapport équivalent','Доповни рівне відношення'],
   percent:['כתבו כאחוז. הזינו מספר בלבד','Convert to percent. Enter the number only','Вырази в процентах. Введи только число','حوّل إلى نسبة مئوية. أدخل العدد فقط','Convertis en pourcentage. Saisis seulement le nombre','Вирази у відсотках. Введи лише число'],
   solve:['פתרו את המשוואה. הזינו את ערכו של x','Solve the equation. Enter the value of x','Реши уравнение. Введи значение x','حلّ المعادلة. أدخل قيمة x','Résous l’équation. Saisis la valeur de x','Розв’яжи рівняння. Введи значення x'],
+  identity:['השלימו מספר כך שהשוויון יתקיים לכל ערך של x','Fill in the number that makes the equality true for every value of x','Впишите число, при котором равенство верно для любого x','أكملوا العدد بحيث تتحقق المساواة لكل قيمة لـ x','Complète pour que l’égalité soit vraie pour toute valeur de x','Впишіть число, щоб рівність виконувалася для кожного значення x'],
   substitute:['הציבו בביטוי את הערך הנתון של x וחשבו את ערך הביטוי','Evaluate the expression at the given value of x','Вычисли значение выражения при заданном x','احسب قيمة التعبير عند قيمة x المعطاة','Calcule la valeur de l’expression pour la valeur donnée de x','Обчисли значення виразу за вказаного значення x'],
   coefficient:['כנסו איברים דומים וכתבו את המקדם של x','Combine like terms and write the coefficient of x','Приведи подобные слагаемые и запиши коэффициент при x','اجمع الحدود المتشابهة واكتب معامل x','Réduis l’expression et écris le coefficient de x','Зведи подібні доданки й запиши коефіцієнт при x'],
   sides:['כמה צלעות יש למצולע?','How many sides does the polygon have?','Сколько сторон у многоугольника?','كم ضلعًا للمضلع؟','Combien de côtés a le polygone ?','Скільки сторін має многокутник?'],
@@ -57,7 +58,7 @@ const variants = {
     (a,b)=>['missing',`${a*b} ÷ ${b} = □`,a],
   ],
   place: [
-    (a,b)=>['tens',`${10*a+b%10}`,a%10],
+    (a,b,g)=>['tens',`${({'א':0,'ב':100,'ג':1000,'ד':10000}[g]||0)*b+10*a+b%10}`,a],
     (a,b)=>['missing',`${a*10+b%10} = □ + ${b%10}`,a*10],
     (a,b)=>['missing',`${a}, ${a+b}, □, ${a+3*b}`,a+2*b],
   ],
@@ -122,6 +123,7 @@ const variants = {
     (a,b)=>['coefficient',`${a}x + ${b}x − x + 7`,a+b-1],
     (a,b)=>['coefficient',`${a}(2x + 1) − ${b}x`,2*a-b],
     (a,b)=>['coefficient',`4(x − ${a}) + ${b}(x + 1)`,4+b],
+    (a,b)=>['identity',`${a}(x + ${b}) = ${a}x + □`,a*b],
   ],
   equations:[
     (a,b)=>['solve',`x − ${b} = ${a}`,a+b],
