@@ -255,8 +255,10 @@ function minigameQuestion(diff) {
   const grade = window.GRADE_CONFIG?.gradeId || 'ב';
   const categories = Object.keys(curriculum[grade] || curriculum['ב']);
   const actualGrade = curriculum[grade] ? grade : 'ב';
-  const questions = categories.map(cat => curriculumQuestion(actualGrade, cat, diff));
-  const textQuestions = questions.filter(q => !q.shapeHtml && q.visual?.kind !== 'graph'
+  const questions = categories.flatMap(cat => [
+    curriculumQuestion(actualGrade,cat,diff), genQ(cat,diff),
+  ]);
+  const textQuestions = questions.filter(q => !q.shapeHtml && !q.visual
     && !(q.cat === 'coordinates' && q.diff === 'easy'));
   const quickQuestions = textQuestions.filter(q => q.text.length <= 115);
   const available = window.GRADE_CONFIG?.availableCategories || [];

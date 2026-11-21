@@ -327,7 +327,7 @@ function endQ(){qs.done=true;const inp=document.getElementById('ansInp');if(inp)
 
 function nextQ(){if(qs.isDaily){qs.isDailyIdx++;if(qs.isDailyIdx>=2){finishDaily();return;}qs.idx++;if(qs.idx<qs.pool.length)loadQ(qs.pool[qs.idx]);return;}qs.idx++;if(qs.idx>=qs.pool.length){genMore();return;}loadQ(qs.pool[qs.idx]);}
 function skipQ(){addPts(-1);nextQ();}
-function genMore(){const firstNew = qs.pool.length; qs.pool.push(...genPool(qs.cat,qs.diff,10)); qs.idx=firstNew; loadQ(qs.pool[qs.idx]);}
+function genMore(){const firstNew = qs.pool.length; qs.pool.push(...genPool(qs.cat,qs.diff,10,qs.pool)); qs.idx=firstNew; loadQ(qs.pool[qs.idx]);}
 function exitToHome(){if(qs.hintInterval)clearInterval(qs.hintInterval);show('home');}
 
 // ── Streak ──
@@ -347,12 +347,12 @@ function openHistory(){show('history-scr');renderHistory('all');const total=st.h
 
 function filterHist(type){['all','ok','bad'].forEach(t=>document.getElementById('hf'+t.charAt(0).toUpperCase()+t.slice(1)).style.background=t===type?'rgba(30,144,255,.2)':'rgba(255,255,255,.06)');renderHistory(type);}
 
-function renderHistory(filter){const list=document.getElementById('histList');list.innerHTML='';const items=[...st.history].reverse().slice(0,50);const filtered=filter==='all'?items:items.filter(h=>filter==='ok'?h.correct:!h.correct);if(filtered.length===0){list.innerHTML='<div style="color:var(--txt2);text-align:center;padding:20px">אין פריטים להציג</div>';return;}const catNames={add:'חיבור',sub:'חיסור',mul:'כפל',div:'חילוק',word:'מילוליות',shapes:'גיאומטריה',fractions:'שברים'};filtered.forEach(h=>{const d=new Date(h.ts);const timeStr=`${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;const el=document.createElement('div');el.className='hist-entry';el.innerHTML=`<div class="hist-icon">${h.correct?'✅':'❌'}</div><div class="hist-info"><div class="hist-q">${h.q}</div><div class="hist-meta">${catNames[h.cat]||CAT_NAMES[h.cat]||h.cat} • ${h.diff==='easy'?'קל':h.diff==='medium'?'בינוני':'קשה'} • ${timeStr}</div>${!h.correct?`<div style="font-size:.78rem;color:var(--a1)">תשובה נכונה: ${h.answer}</div>`:''}</div><span class="hist-status ${h.correct?'hs-ok':'hs-bad'}">${h.correct?'✓':'✗'}</span>`;el.onclick=()=>retryFromHistory(h);list.appendChild(el);});}
+function renderHistory(filter){const list=document.getElementById('histList');list.innerHTML='';const items=[...st.history].reverse().slice(0,50);const filtered=filter==='all'?items:items.filter(h=>filter==='ok'?h.correct:!h.correct);if(filtered.length===0){list.innerHTML='<div style="color:var(--txt2);text-align:center;padding:20px">אין פריטים להציג</div>';return;}const catNames={add:'חיבור',sub:'חיסור',mul:'כפל',div:'חילוק',word:'מילוליות',shapes:'גיאומטריה',fractions:'שברים'};filtered.forEach(h=>{const d=new Date(h.ts);const timeStr=`${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;const el=document.createElement('div');el.className='hist-entry';el.innerHTML=`<div class="hist-icon">${h.correct?'✅':'❌'}</div><div class="hist-info"><div class="hist-q">${questionPrompt(h.qObj || {text:h.q})}</div><div class="hist-meta">${catNames[h.cat]||CAT_NAMES[h.cat]||h.cat} • ${h.diff==='easy'?'קל':h.diff==='medium'?'בינוני':'קשה'} • ${timeStr}</div>${!h.correct?`<div style="font-size:.78rem;color:var(--a1)">תשובה נכונה: ${h.answer}</div>`:''}</div><span class="hist-status ${h.correct?'hs-ok':'hs-bad'}">${h.correct?'✓':'✗'}</span>`;el.onclick=()=>retryFromHistory(h);list.appendChild(el);});}
 
 function retryFromHistory(h){if(!h.qObj)return;qs.pool=[h.qObj];qs.idx=0;qs.isDaily=false;qs.isMistakes=false;qs.isExam=false;qs.cat=h.cat;qs.diff=h.diff;show('q-scr');loadQ(h.qObj);}
 
 // ── Mistakes ──
-function openMistakes(){show('mistakes-scr');const list=document.getElementById('mistakesList');list.innerHTML='';const mistakes=st.history.filter(h=>!h.correct&&h.qObj).slice(-20).reverse();document.getElementById('practiceMistakesBtn').style.display=mistakes.length>0?'block':'none';if(mistakes.length===0){list.innerHTML='<div style="color:var(--txt2);text-align:center;padding:24px">🌟 אין טעויות! כל הכבוד!</div>';return;}const catNames={add:'חיבור',sub:'חיסור',mul:'כפל',div:'חילוק',word:'מילוליות'};mistakes.forEach(h=>{const el=document.createElement('div');el.className='hist-entry';el.innerHTML=`<div class="hist-icon">🔄</div><div class="hist-info"><div class="hist-q">${h.q}</div><div class="hist-meta">${catNames[h.cat]||CAT_NAMES[h.cat]||h.cat} • תשובה: <strong style="color:var(--a3)">${h.answer}</strong></div></div><button style="padding:6px 12px;background:rgba(255,159,67,.2);border:1px solid var(--streak);color:var(--streak);border-radius:8px;cursor:pointer;font-family:'Rubik',sans-serif;font-size:.8rem;white-space:nowrap;">תרגל</button>`;el.querySelector('button').onclick=(e)=>{e.stopPropagation();retryFromHistory(h);};list.appendChild(el);});}
+function openMistakes(){show('mistakes-scr');const list=document.getElementById('mistakesList');list.innerHTML='';const mistakes=st.history.filter(h=>!h.correct&&h.qObj).slice(-20).reverse();document.getElementById('practiceMistakesBtn').style.display=mistakes.length>0?'block':'none';if(mistakes.length===0){list.innerHTML='<div style="color:var(--txt2);text-align:center;padding:24px">🌟 אין טעויות! כל הכבוד!</div>';return;}const catNames={add:'חיבור',sub:'חיסור',mul:'כפל',div:'חילוק',word:'מילוליות'};mistakes.forEach(h=>{const el=document.createElement('div');el.className='hist-entry';el.innerHTML=`<div class="hist-icon">🔄</div><div class="hist-info"><div class="hist-q">${questionPrompt(h.qObj || {text:h.q})}</div><div class="hist-meta">${catNames[h.cat]||CAT_NAMES[h.cat]||h.cat} • תשובה: <strong style="color:var(--a3)">${h.answer}</strong></div></div><button style="padding:6px 12px;background:rgba(255,159,67,.2);border:1px solid var(--streak);color:var(--streak);border-radius:8px;cursor:pointer;font-family:'Rubik',sans-serif;font-size:.8rem;white-space:nowrap;">תרגל</button>`;el.querySelector('button').onclick=(e)=>{e.stopPropagation();retryFromHistory(h);};list.appendChild(el);});}
 function startMistakesPractice(){const mistakes=st.history.filter(h=>!h.correct&&h.qObj).slice(-20);if(mistakes.length===0){showToast('אין טעויות לתרגל!');return;}qs.pool=mistakes.map(h=>h.qObj);qs.idx=0;qs.isMistakes=true;qs.isDaily=false;qs.isExam=false;qs.cat=qs.pool[0].cat;qs.diff=qs.pool[0].diff;show('q-scr');loadQ(qs.pool[0]);}
 
 // ── Daily ──
@@ -391,7 +391,7 @@ function startExam(){
   for(let i=0;i<10;i++){
     const cat=pick(st.examTopics);
     const diff=st.examDiff==='mix'?pick(['easy','medium','hard']):st.examDiff;
-    qs.examPool.push(genQ(cat,diff));
+    qs.examPool.push(genVariedQ(cat,diff,qs.examPool));
   }
   qs.examIdx=0;
   qs.examScore=0;
@@ -515,7 +515,7 @@ function finishExam(){
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${ok?'rgba(46,213,115,.08)':'rgba(255,71,87,.08)'};border:1px solid ${ok?'rgba(46,213,115,.22)':'rgba(255,71,87,.22)'};border-radius:12px;margin-bottom:7px">
       <span style="font-size:1.3rem;flex-shrink:0">${ok?'✅':'❌'}</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:.85rem;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i+1}. ${a.q.text}</div>
+        <div style="font-size:.85rem;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i+1}. ${questionPrompt(a.q)}</div>
         <div style="font-size:.72rem;color:var(--txt2);margin-top:1px">${catNames[a.q.cat]||a.q.cat} · ${a.q.diff==='easy'?'קל':a.q.diff==='medium'?'בינוני':'קשה'}</div>
         ${!ok?`<div style="font-size:.78rem;margin-top:3px">הגשת <strong style="color:#ff8090">${a.userAns}</strong> · נכון: <strong style="color:#68ffaa">${a.q.answer}</strong></div>`:''}
       </div>

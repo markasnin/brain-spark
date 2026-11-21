@@ -2,7 +2,7 @@
 function questionPrompt(q) {
   return Object.keys(supportedLanguages).map(language => {
     const index = ['en','ru','ar'].indexOf(language);
-    const text = (index >= 0 && q.localized?.[index]) || interfaceText(q.text,language);
+    const text = q.extraLocalizations?.[language] || (index >= 0 && q.localized?.[index]) || interfaceText(q.text,language);
     return `<span class="question-language" data-language="${language}" dir="auto"${language===activeLanguage?'':' hidden'}>${formatQuestionMath(text)}</span>`;
   }).join('');
 }
@@ -10,7 +10,7 @@ function questionPrompt(q) {
 function formatQuestionMath(text) {
   const escape = text => text.replace(/[&<>"']/g, char =>
     ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'})[char]);
-  const tokens = /\u2066([^\u2069]+)\u2069|(__|[−-]?\d+(?:[.,]\d+)*)(?:\s*([÷/⁄])\s*([−-]?\d+(?:[.,]\d+)*))?[%°]?/g;
+  const tokens = /\u2066([^\u2069]+)\u2069|(□|__|[−-]?\d+(?:[.,]\d+)*)(?:\s*([÷/⁄])\s*(□|[−-]?\d+(?:[.,]\d+)*))?[%°]?/g;
   let result = '';
   let cursor = 0;
   for (const match of text.matchAll(tokens)) {
