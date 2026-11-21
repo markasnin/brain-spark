@@ -27,7 +27,9 @@ function formatQuestionMath(text) {
 function mountQuestionVisual(container, q) {
   container.replaceChildren();
   container.hidden = false;
-  if (q.visual?.kind === 'graph') {
+  if (q.visual?.kind === 'survey') {
+    mountSurveyChart(container,q.visual);
+  } else if (q.visual?.kind === 'graph') {
     mountGraph(container, q.visual);
   } else if (q.visual?.kind === 'algebra') {
     mountAlgebra(container, q.visual);
@@ -54,6 +56,48 @@ function mountQuestionVisual(container, q) {
     if (fractions.length) mountFraction(container,fractions);
     else container.hidden = true;
   }
+}
+
+function mountSurveyChart(container,{type,values,second,fruit}) {
+  const colors=['#78baff','#ffc66d','#93dfb7'];
+  const text=(x,y,value)=>`<text x="${x}" y="${y}" text-anchor="middle">${value}</text>`;
+  let body='';
+  if(type==='pie') {
+    let start=-Math.PI/2;
+    values.forEach((value,i)=>{
+      const end=start+2*Math.PI*value/100;
+      const point=angle=>[104+76*Math.cos(angle),99+76*Math.sin(angle)].join(' ');
+      body+=`<path fill="${colors[i]}" stroke="#172239" d="M104 99 L${point(start)} A76 76 0 0 1 ${point(end)} Z"/>`;
+      body+=`<circle cx="211" cy="${54+42*i}" r="7" fill="${colors[i]}"/>`+text(235,60+42*i,fruit[i])+text(278,60+42*i,value+'%');
+      start=end;
+    });
+  } else if(type==='pictures') {
+    const maximum=Math.max(...values);
+    values.forEach((value,i)=>{
+      body+=text(20,55+50*i,fruit[i]);
+      for(let j=0;j<value;j++) body+=`<circle cx="${45+j*Math.min(18,250/maximum)}" cy="${50+50*i}" r="5" fill="${colors[i]}"/>`;
+    });
+    body+=text(160,190,'● = 1');
+  } else {
+    const paired=type==='paired';
+    const top=4*Math.ceil(Math.max(...values,...(paired?second:[]))/4);
+    for(let i=0;i<=4;i++) {
+      const y=154-30*i;
+      body+=`<path class="plot-grid" d="M37 ${y}H302"/>`+text(20,y+4,i*top/4);
+    }
+    const bar=(x,value,color)=>`<rect x="${x}" y="${154-120*value/top}" width="22" height="${120*value/top}" fill="${color}" rx="2"/>`;
+    values.forEach((value,i)=>{
+      const x=76+88*i;
+      body+=bar(x-(paired?23:11),value,colors[0]);
+      if(paired) body+=bar(x+1,second[i],colors[1]);
+      body+=text(x,176,fruit[i]);
+    });
+    if(paired) body+='<circle cx="105" cy="13" r="6" fill="'+colors[0]+'"/>'+text(126,18,'A')+'<circle cx="182" cy="13" r="6" fill="'+colors[1]+'"/>'+text(203,18,'B');
+  }
+  container.innerHTML=`<svg class="practice-plot" dir="ltr" viewBox="0 0 322 202" role="img" aria-label="${fruit.map((f,i)=>f+' '+values[i]+(type==='pie'?'%':type==='paired'?' / '+second[i]:'')).join(' · ')}">${body}</svg><div class="visual-controls">${fruit.map((f,i)=>`<button type="button" data-fruit="${i}">${f}</button>`).join('')}</div><output class="visual-feedback" dir="ltr" aria-live="polite"></output>`;
+  container.querySelectorAll('[data-fruit]').forEach((button,i)=>button.onclick=()=>{
+    container.querySelector('output').textContent=fruit[i]+'   '+(type==='paired'?`A: ${values[i]}   B: ${second[i]}`:values[i]+(type==='pie'?'%':''));
+  });
 }
 
 function mountGraph(container, {values, unit, axis, xStart = 0, label = 'שעה'}) {

@@ -117,8 +117,8 @@ const variants = {
     (a,b)=>['calculate',`(−${a})² + √${b*b}`,a*a+b],
   ],
   algebra:[
-    (a,b)=>['substitute',`2x + ${b}, x = ${a}`,2*a+b],
-    (a,b)=>['substitute',`3x − ${b}, x = −${a}`,-3*a-b],
+    (a,b)=>substitutionVariant(a,`2x + ${b}`,2*a+b),
+    (a,b)=>substitutionVariant(-a,`3x − ${b}`,-3*a-b),
     (a,b)=>['coefficient',`${a}x + ${b}x − x + 7`,a+b-1],
     (a,b)=>['coefficient',`${a}(2x + 1) − ${b}x`,2*a-b],
     (a,b)=>['coefficient',`4(x − ${a}) + ${b}(x + 1)`,4+b],
@@ -131,6 +131,9 @@ const variants = {
     (a,b)=>['solve',`5x − ${a} = 3x + ${a}`,a],
   ],
   data:[
+    (a,b)=>surveyChart('bars',a,b),
+    (a,b,g)=>surveyChart('אבג'.includes(g)?'pictures':'paired',a,b),
+    (a,b,g)=>surveyChart('וז'.includes(g)?'pie':'pictures',a,b),
     (a,b,g)=>'אבגד'.includes(g)?['maximum',`${a}, ${a+b}, ${b}`,a+b]:['mean',`${a}, ${a+b}, ${a+2*b}`,a+b],
     (a,b,g)=>'אבגד'.includes(g)?['minimum',`${a+1}, ${a}, ${a+b}`,a]:['range',`${a+b}, ${a}, ${a+2*b}`,2*b],
   ],
@@ -189,11 +192,41 @@ const variants = {
     (a,b)=>rightTriangleVariant(6*a,8*a,10*a,false),
   ],
   graphs:[
+    (a,b)=>surveyChart('paired',a,b),
+    (a,b)=>surveyChart('pie',a,b),
     (a,b)=>['graphMax','',2,{kind:'graph',axis:'גובה המים',unit:'ס״מ',values:[a,a+2,a+b+4,a+1]}],
     (a,b)=>['graphChange','',b,{kind:'graph',axis:'מרחק',unit:'ק״מ',values:[a,a+2,a+3,a+2+b]}],
     (a,b)=>['graphChange','',b,{kind:'graph',axis:'גובה המים',unit:'ס״מ',values:[a+2,a+b+4,a+b,a+4]}],
   ],
 };
+
+function substitutionVariant(value,expression,answer) {
+  const assignment = `⁦x = ${String(value).replace('-','−')}⁩`;
+  return [[`הציבו ${assignment} וחשבו את ערך הביטוי`,`Use ${assignment} to evaluate the expression`,
+    `Подставьте ${assignment} и вычислите значение выражения`,`عوّضوا ${assignment} واحسبوا قيمة التعبير`,
+    `Calcule la valeur de l’expression pour ${assignment}`,`Підставте ${assignment} й обчисліть значення виразу`],expression,answer];
+}
+
+function surveyChart(type,a,b) {
+  const values=[a,b,a+b];
+  const second=[b,a+b,a];
+  const fruit=['🍎','🍐','🍊'];
+  const target=a%3;
+  const symbol=fruit[target];
+  const count=[`כמה ילדים בחרו בפרי ${symbol}?`,`How many children chose ${symbol}?`,`Сколько детей выбрали ${symbol}?`,`كم طفلًا اختار ${symbol}؟`,`Combien d’enfants ont choisi ${symbol} ?`,`Скільки дітей обрали ${symbol}?`];
+  const compare=[`כמה ילדים בשתי הקבוצות יחד בחרו בפרי ${symbol}?`,`How many children across both groups chose ${symbol}?`,`Сколько детей в двух группах вместе выбрали ${symbol}?`,`كم طفلًا في المجموعتين معًا اختار ${symbol}؟`,`Combien d’enfants des deux groupes réunis ont choisi ${symbol} ?`,`Скільки дітей у двох групах разом обрали ${symbol}?`];
+  const total=4*(a+b);
+  const percent=25*(1+a%2);
+  const pie=[`בסקר השתתפו ${total} ילדים. לפי דיאגרמת העיגול, כמה מהם בחרו בפרי ${symbol}?`,`A survey included ${total} children. Use the pie chart to find how many chose ${symbol}.`,`В опросе участвовали ${total} детей. По круговой диаграмме определите, сколько выбрали ${symbol}.`,`شارك ${total} طفلًا في استطلاع. بحسب المخطط الدائري، كم منهم اختار ${symbol}؟`,`Parmi les ${total} enfants interrogés, combien ont choisi ${symbol} selon le diagramme circulaire ?`,`В опитуванні взяли участь ${total} дітей. За круговою діаграмою визначте, скільки обрали ${symbol}.`];
+  if(type==='pie') {
+    values[target]=percent;
+    values[(target+1)%3]=25;
+    values[(target+2)%3]=75-percent;
+  }
+  const paired=type==='paired';
+  return [type==='pie'?pie:paired?compare:count,'',type==='pie'?total*percent/100:values[target]+(paired?second[target]:0),
+    {kind:'survey',type,values,second,fruit}];
+}
 
 function unitFractionVariant(part,groups) {
   const total=part*groups;
