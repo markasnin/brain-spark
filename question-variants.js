@@ -11,10 +11,10 @@ const variantInstructions = {
   maximum:['כתבו את המספר הגדול ביותר','Write the largest number','Запиши наибольшее число','اكتب العدد الأكبر','Écris le plus grand nombre','Запиши найбільше число'],
   mean:['חשבו את הממוצע','Find the mean','Найди среднее арифметическое','احسب المتوسط الحسابي','Calcule la moyenne','Знайди середнє арифметичне'],
   range:['חשבו את ההפרש בין הערך הגדול לקטן','Find the difference between the largest and smallest values','Найди разность наибольшего и наименьшего значений','احسب الفرق بين أكبر وأصغر قيمة','Calcule la différence entre la plus grande et la plus petite valeur','Знайди різницю між найбільшим і найменшим значеннями'],
-  equivalent:['השלימו את היחס השווה','Complete the equivalent ratio','Дополни равное отношение','أكمل النسبة المكافئة','Complète le rapport équivalent','Доповни рівне відношення'],
+  equivalent:['השלימו את המספר החסר כך ששני היחסים יהיו שווים','Complete the equivalent ratio','Дополни равное отношение','أكمل النسبة المكافئة','Complète le rapport équivalent','Доповни рівне відношення'],
   percent:['כתבו כאחוז. הזינו מספר בלבד','Convert to percent. Enter the number only','Вырази в процентах. Введи только число','حوّل إلى نسبة مئوية. أدخل العدد فقط','Convertis en pourcentage. Saisis seulement le nombre','Вирази у відсотках. Введи лише число'],
   solve:['פתרו את המשוואה. הזינו את ערכו של x','Solve the equation. Enter the value of x','Реши уравнение. Введи значение x','حلّ المعادلة. أدخل قيمة x','Résous l’équation. Saisis la valeur de x','Розв’яжи рівняння. Введи значення x'],
-  substitute:['חשבו את ערך הביטוי עבור הערך הנתון של x','Evaluate the expression at the given value of x','Вычисли значение выражения при заданном x','احسب قيمة التعبير عند قيمة x المعطاة','Calcule la valeur de l’expression pour la valeur donnée de x','Обчисли значення виразу за вказаного значення x'],
+  substitute:['הציבו בביטוי את הערך הנתון של x וחשבו את ערך הביטוי','Evaluate the expression at the given value of x','Вычисли значение выражения при заданном x','احسب قيمة التعبير عند قيمة x المعطاة','Calcule la valeur de l’expression pour la valeur donnée de x','Обчисли значення виразу за вказаного значення x'],
   coefficient:['כנסו איברים דומים וכתבו את המקדם של x','Combine like terms and write the coefficient of x','Приведи подобные слагаемые и запиши коэффициент при x','اجمع الحدود المتشابهة واكتب معامل x','Réduis l’expression et écris le coefficient de x','Зведи подібні доданки й запиши коефіцієнт при x'],
   sides:['כמה צלעות יש למצולע?','How many sides does the polygon have?','Сколько сторон у многоугольника?','كم ضلعًا للمضلع؟','Combien de côtés a le polygone ?','Скільки сторін має многокутник?'],
   angle:['חשבו את גודל הזווית המסומנת במעלות','Find the marked angle in degrees','Найди отмеченный угол в градусах','احسب قياس الزاوية المحددة بالدرجات','Calcule l’angle indiqué en degrés','Знайди величину позначеного кута в градусах'],
@@ -32,7 +32,7 @@ const variantInstructions = {
   reflect:['שקפו את הנקודה ביחס לציר y. כתבו את שיעור ה-x החדש','Reflect the point across the y-axis. Write the new x-coordinate','Отрази точку относительно оси y. Запиши новую координату x','اعكس النقطة حول المحور y. اكتب الإحداثي x الجديد','Effectue la symétrie par rapport à l’axe y. Écris la nouvelle abscisse','Відобрази точку відносно осі y. Запиши нову координату x'],
   turn:['סובבו את הנקודה ב-180° סביב הראשית. כתבו את שיעור ה-y החדש','Rotate the point 180° about the origin. Write the new y-coordinate','Поверни точку на 180° вокруг начала координат. Запиши новую координату y','دوّر النقطة 180° حول نقطة الأصل. اكتب الإحداثي y الجديد','Tourne le point de 180° autour de l’origine. Écris la nouvelle ordonnée','Поверни точку на 180° навколо початку координат. Запиши нову координату y'],
 };
-const variantHint = ['היעזרו בנתונים הנתונים ובדקו את התוצאה','Use the given information and check your result','Используй данные и проверь результат','استخدم المعطيات وتحقق من النتيجة','Utilise les données et vérifie ton résultat','Скористайся даними й перевір результат'];
+const variantHint = ['היעזרו בנתוני השאלה ובדקו את התוצאה','Use the given information and check your result','Используй данные и проверь результат','استخدم المعطيات وتحقق من النتيجة','Utilise les données et vérifie ton résultat','Скористайся даними й перевір результат'];
 uiTranslations.set(variantHint[0],variantHint.slice(1));
 
 const variants = {
@@ -71,9 +71,9 @@ const variants = {
     (a,b)=>[['יש '+4*a+' מדבקות. כמה מדבקות יש ברבע מהכמות?','There are '+4*a+' stickers. How many are in a quarter of the total?','Есть '+4*a+' наклеек. Сколько наклеек в четверти от общего числа?','هناك '+4*a+' ملصقًا. كم ملصقًا في ربع الكمية؟','Il y a '+4*a+' autocollants. Combien y en a-t-il dans un quart du total ?', 'Є '+4*a+' наліпок. Скільки наліпок у чверті від їхньої кількості?'],'',a],
   ],
   fractions_unit: [
-    (a,b)=>['calculate',`1/5 × ${5*a}`,a],
-    (a,b)=>['missing',`1/6 × □ = ${a}`,6*a],
-    (a,b)=>['calculate',`1/3 × ${3*a}`,a],
+    (a,b)=>unitFractionVariant(a,5),
+    (a,b)=>unitFractionVariant(b,6),
+    (a,b)=>unitFractionVariant(a,3),
   ],
   fractions: [
     (a,b)=>['numerator',`${a}/10 = __/20`,2*a],
@@ -108,8 +108,8 @@ const variants = {
     (a,b)=>['calculate',`−${a} + ${b}`,b-a],
     (a,b)=>['calculate',`${a} − (−${b})`,a+b],
     (a,b)=>['minimum',`−${a}, 0, ${b}`,-a],
-    (a,b)=>['calculate',`(−${a}) × (−${b})`,a*b],
-    (a,b)=>['calculate',`(−${a*b}) ÷ ${b}`,-a],
+    (a,b,g)=>g==='ז'?['calculate',`(−${a}) × (−${b})`,a*b]:['maximum',`−${a+b}, −${a}, −${a+1}`,-a],
+    (a,b,g)=>g==='ז'?['calculate',`(−${a*b}) ÷ ${b}`,-a]:['missing',`−${a+b} + □ = −${a}`,b],
   ],
   powers:[
     (a,b)=>['calculate',`√${a*a}`,a],
@@ -135,14 +135,14 @@ const variants = {
     (a,b,g)=>'אבגד'.includes(g)?['minimum',`${a+1}, ${a}, ${a+b}`,a]:['range',`${a+b}, ${a}, ${a+2*b}`,2*b],
   ],
   probability:[
-    (a,b)=>['percent',`${a%9+1}/10`,10*(a%9+1)],
-    (a,b)=>['percent',`${a}/${4*a}`,25],
-    (a,b)=>['percent',`${3*a}/${5*a}`,60],
+    (a,b)=>marbleProbability(a,4*a),
+    (a,b)=>marbleProbability(3*a,a),
+    (a,b)=>marbleProbability(3*a,2*a),
   ],
   measurement:[
-    (a,b)=>['missing',`${a} + □ = ${a+b}`,b],
-    (a,b,g)=>'אב'.includes(g)?['calculate',`${a+b} − ${b}`,a]:['missing',`${a} m = □ cm`,100*a],
-    (a,b,g)=>'אב'.includes(g)?['calculate',`${a} + ${b}`,a+b]:['missing',`${100*a+10*b} cm = □ m`,a+b/10],
+    (a,b)=>['missing',`${a} cm + □ cm = ${a+b} cm`,b],
+    (a,b,g)=>'אב'.includes(g)?['missing',`${a+b} cm − ${b} cm = □ cm`,a]:['missing',`${a} m = □ cm`,100*a],
+    (a,b,g)=>'אב'.includes(g)?['missing',`${a} cm + ${b} cm = □ cm`,a+b]:['missing',`${100*a+10*b} cm = ${a} m + □ cm`,10*b],
   ],
   word:[
     (a,b)=>[['בסל היו '+(a+b)+' תפוחים. לקחו '+b+'. כמה נותרו?','There were '+(a+b)+' apples. '+b+' were taken. How many remain?','Было '+(a+b)+' яблок. Взяли '+b+'. Сколько осталось?','كان هناك '+(a+b)+' تفاحة. أُخذت '+b+'. كم بقي؟','Il y avait '+(a+b)+' pommes. On en prend '+b+'. Combien en reste-t-il ?','Було '+(a+b)+' яблук. Забрали '+b+'. Скільки залишилося?' ],'',a],
@@ -194,6 +194,29 @@ const variants = {
     (a,b)=>['graphChange','',b,{kind:'graph',axis:'גובה המים',unit:'ס״מ',values:[a+2,a+b+4,a+b,a+4]}],
   ],
 };
+
+function unitFractionVariant(part,groups) {
+  const total=part*groups;
+  return [[
+    `בקופסה ${total} חרוזים. החלק של החרוזים הכחולים הוא ⁦1/${groups}⁩ מכלל החרוזים. כמה חרוזים כחולים בקופסה?`,
+    `A box contains ${total} beads. One out of every ${groups} beads is blue. How many blue beads are there?`,
+    `В коробке ${total} бусин. Одна из каждых ${groups} бусин синяя. Сколько синих бусин в коробке?`,
+    `في علبة ${total} خرزة. واحدة من كل ${groups} خرزات زرقاء. كم خرزة زرقاء في العلبة؟`,
+    `Une boîte contient ${total} perles. Une perle sur ${groups} est bleue. Combien de perles sont bleues ?`,
+    `У коробці ${total} намистин. Одна з кожних ${groups} намистин синя. Скільки синіх намистин у коробці?`
+  ],'',part];
+}
+
+function marbleProbability(blue,red) {
+  return [[
+    `בשקית ${blue} גולות כחולות ו-${red} גולות אדומות. מוציאים גולה אחת באקראי. מה ההסתברות, באחוזים, להוציא גולה כחולה?`,
+    `A bag contains ${blue} blue marbles and ${red} red marbles. One marble is drawn at random. What is the probability, as a percentage, of drawing a blue marble?`,
+    `В мешке ${blue} синих и ${red} красных шариков. Наугад вынимают один шарик. Какова вероятность в процентах, что он синий?`,
+    `في كيس ${blue} كرة زرقاء و${red} كرة حمراء. نسحب كرة واحدة عشوائيًا. ما احتمال سحب كرة زرقاء بالنسبة المئوية؟`,
+    `Un sac contient ${blue} billes bleues et ${red} billes rouges. On tire une bille au hasard. Quelle est la probabilité, en pourcentage, de tirer une bille bleue ?`,
+    `У мішку ${blue} синіх і ${red} червоних кульок. Навмання виймають одну кульку. Яка ймовірність у відсотках, що вона синя?`
+  ],'',100*blue/(blue+red)];
+}
 
 function meetingVariant(a,b) {
   const children=2*a+b;

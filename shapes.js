@@ -1098,19 +1098,19 @@ window.genShapesInteractive = function(diff) {
   }
 
   if(grade === 'ד'){
-    var pool=[g4_areaRect, g4_areaTriangle, g4_areaSquare, g4_angleSumTriangle, g4_dragResize, g3_perimeterRect, g3_perimeterTriangle, g_measureLength, g_measureTime];
+    var pool=[g4_areaRect, g3_gridArea, g4_areaSquare, g3_angleType, g4_dragResize, g3_perimeterRect, g3_perimeterTriangle, g_measureLength, g_measureTime];
     var w=diff==='easy'?[3,2,3,2,1,2,1,2,2]:diff==='medium'?[2,2,2,2,2,2,2,2,2]:[2,2,2,3,2,1,1,2,2];
     return _wp(pool,w)(diff);
   }
 
   if(grade === 'ה'){
-    var pool=[g5_lShape, g5_circlePerimArea, g5_extAngle, g5_pythagorasIntro, g4_areaTriangle, g4_areaRect, g_measureLength, g_measureWeight];
+    var pool=[g5_lShape, g4_areaSquare, g3_missingPerim, g4_dragResize, g4_areaTriangle, g4_areaRect, g_measureLength, g_measureWeight];
     var w=diff==='easy'?[2,2,1,1,3,3,2,2]:diff==='medium'?[2,2,2,2,2,2,2,2]:[2,3,2,3,1,1,2,2];
     return _wp(pool,w)(diff);
   }
 
   if(grade === 'ו'){
-    var pool=[g6_circleArea, g6_pythagoras, g6_polyAngleSum, g6_scaleFactor, g5_lShape, g5_circlePerimArea, g_measureLength, g_measureWeight];
+    var pool=[g6_circleArea, g4_areaTriangle, g3_missingPerim, g6_scaleFactor, g5_lShape, g5_circlePerimArea, g_measureLength, g_measureWeight];
     var w=diff==='easy'?[3,1,2,2,2,2,2,2]:diff==='medium'?[2,2,2,2,2,2,2,2]:[2,2,3,2,2,2,2,2];
     return _wp(pool,w)(diff);
   }
