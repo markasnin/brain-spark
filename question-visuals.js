@@ -17,7 +17,9 @@ const unitLookup=new Map();
 for(const row of measurementUnits){
   for(const unit of row) unitLookup.set(unit.toLowerCase(),row);
 }
-for(const [alias,key] of Object.entries({'ס"מ²':'cm²','ס"מ³':'cm³',"מ'":'m'})) unitLookup.set(alias,unitLookup.get(key));
+for(const [alias,key] of Object.entries({
+  'ס"מ²':'cm²','ס"מ³':'cm³',"מ'":'m','מ״ל':'ml','ק״ג':'kg'
+})) unitLookup.set(alias.replaceAll('״','"'),unitLookup.get(key));
 const unitTokens=[...unitLookup.keys()].sort((a,b)=>b.length-a.length).join('|');
 const unitPattern=new RegExp('(?<![\\p{L}])('+unitTokens.replaceAll('"','["״“”]')+')(?![\\p{L}²³])','giu');
 
@@ -30,10 +32,13 @@ function localizeMeasurementUnits(text,language) {
     return unitLookup.get(token.replace(/[״“”]/g,'"').toLowerCase())?.[index]||token;
   });
 }
+const explicitUnknown = /[□■▲]|__+|[🔺🔵⬜].*?=|\?(?=\s*[/⁄=+×÷−-])|(?<=[/⁄])\?/u;
+
 function usesTriangle(q) {
   if(q.cat==='unknown') return true;
   if(!'אבגדהו'.includes(q.grade||window.GRADE_CONFIG?.gradeId||'!')) return false;
-  return /□|__+|[■▲]|(?:[🔺🔵⬜]|\bx\b).*?=|\?(?=\s*[/=+×÷−])/u.test(q.text);
+  if (['algebra','equations','transforms','coordinates','pythagoras'].includes(q.cat)) return false;
+  return explicitUnknown.test(q.text) || /\bx\b.*?=/u.test(q.text);
 }
 
 function triangleText(text,source) {
@@ -42,8 +47,11 @@ function triangleText(text,source) {
   if(shapes.length>1){
     const target=source.match(/כמה (?:שווה )?(🔺|🔵|⬜)/u)?.[1];
     for(const shape of shapes.filter(s=>s!==target)){
-      const given=source.match(new RegExp(shape+'\\s*=\\s*(\\d+)(?![×\\d])','u'));
-      if(given)text=text.replaceAll(shape,given[1]);
+      const assignment=new RegExp('(^|[.。؛]\\s*)'+shape+'\\s*=\\s*(\\d+)\\s*(?=[.。؛]|$)','u');
+      const given=source.match(assignment);
+      if(given) {
+        text=text.replace(new RegExp(assignment.source+'[.。؛]?\\s*','u'),'$1').replaceAll(shape,given[2]);
+      }
       else {
         const ratio=source.match(/(🔺|🔵|⬜):(🔺|🔵|⬜)\s*=\s*(\d+):(\d+)/u);
         const total=source.match(/(?:🔺|🔵|⬜)\s*\+\s*(?:🔺|🔵|⬜)\s*=\s*(\d+)/u);
@@ -57,7 +65,7 @@ function triangleText(text,source) {
       }
     }
   }
-  return text.replace(/\bx\b|□|__+|[■●]|🔺|🔵|⬜\uFE0F?|\?(?=\s*[/=+×÷−])/gu,'▲');
+  return text.replace(/\bx\b|□|__+|[■●]|🔺|🔵|⬜\uFE0F?|\?(?=\s*[/⁄=+×÷−-])|(?<=[/⁄])\?/gu,'▲');
 }
 
 function questionPrompt(q) {
@@ -71,7 +79,7 @@ function questionPrompt(q) {
 }
 
 function missingNumberPrompt(text) {
-    // Earlier saved questions separated the instruction and equation with a colon.
+  // Earlier saved questions separated the instruction and equation with a colon.
   const parts=text.match(/^(.+?)(?:\s*[:：]\s*|\n+)⁦(.+)⁩$/u);
   if (!parts) return formatQuestionMath(text);
   return formatQuestionMath(parts[1])+'<br><bdi dir="ltr">'+formatQuestionMath(parts[2])+'</bdi>';
