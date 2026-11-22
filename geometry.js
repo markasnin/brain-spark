@@ -25,10 +25,8 @@ const cs = i => STROKES[Math.abs(i) % STROKES.length];
 // SVG PRIMITIVES
 // ──────────────────────────────────────────────────────────
 function svgWrap(w, h, body) {
-  return `<svg role="img" aria-label="תרשים גאומטרי" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"
-    style="width:100%;max-width:${w}px;display:block;margin:4px auto 8px;
-    border-radius:20px;background:linear-gradient(135deg,#1a1040,#0d0820);
-    border:2px solid rgba(255,255,255,.13);box-shadow:0 8px 32px rgba(0,0,0,.5)">${body}</svg>`;
+  return `<svg class="geometry-figure" direction="ltr" role="img" aria-label="תרשים גאומטרי"
+    viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${body}</svg>`;
 }
 
 function T(x, y, t, col, sz, anc, fw) {
@@ -52,9 +50,8 @@ function dimLine(x1, y1, x2, y2, label, col, perp) {
 ${T(mx, my+5, label, '#111', 12)}`;
 }
 
-function RA(x, y, sz, col) { // right-angle marker
-  sz=sz||11; col=col||'#ffd32a';
-  return `<polyline points="${x+sz},${y} ${x+sz},${y+sz} ${x},${y+sz}" fill="none" stroke="${col}" stroke-width="2.2"/>`;
+function RA(x, y, dx=10, dy=10) {
+  return `<path d="M${x+dx} ${y}v${dy}h${-dx}" fill="none" stroke="#ffd32a" stroke-width="2"/>`;
 }
 
 function arcSec(cx, cy, r, a1deg, a2deg, col) { // filled arc sector
@@ -89,7 +86,7 @@ function drawSquare(side, ci, label) {
     `<rect x="${ox}" y="${oy}" width="${sd}" height="${sd}" fill="${f}44" stroke="${s}" stroke-width="3.5" rx="3" filter="url(#gSq)">
       <animate attributeName="opacity" values="0;1" dur=".45s" fill="freeze"/>
     </rect>` +
-    RA(ox, oy+sd-11) + RA(ox+sd-11, oy) + RA(ox, oy) + RA(ox+sd-11, oy+sd-11) +
+    RA(ox,oy+sd,10,-10) + RA(ox+sd,oy,-10,10) + RA(ox,oy) + RA(ox+sd,oy+sd,-10,-10) +
     dimLine(ox, oy-20, ox+sd, oy-20, side+' ס"מ', s, 0) +
     dimLine(ox+sd+16, oy, ox+sd+16, oy+sd, side+' ס"מ', s, 0) +
     T(ox+sd/2, oy+sd/2+6, label||'שטח=?', '#ffffffdd', 17)
@@ -98,14 +95,14 @@ function drawSquare(side, ci, label) {
 
 function drawRect(w, h, ci, label) {
   const f=cf(ci), s=cs(ci);
-  const pw=clamp(w*11,60,195), ph=clamp(h*11,45,135);
+  const scale=Math.min(190/w,136/h), pw=w*scale, ph=h*scale;
   const ox=(300-pw)/2, oy=(210-ph)/2;
   return svgWrap(300, 210,
     glowDef('gRe') +
     `<rect x="${ox}" y="${oy}" width="${pw}" height="${ph}" fill="${f}44" stroke="${s}" stroke-width="3.5" rx="3" filter="url(#gRe)">
       <animate attributeName="opacity" values="0;1" dur=".45s" fill="freeze"/>
     </rect>` +
-    RA(ox, oy+ph-11) + RA(ox+pw-11, oy) +
+    RA(ox,oy+ph,10,-10) + RA(ox+pw,oy,-10,10) +
     dimLine(ox, oy-20, ox+pw, oy-20, w+' ס"מ', s, 0) +
     dimLine(ox+pw+16, oy, ox+pw+16, oy+ph, h+' ס"מ', s, 0) +
     T(ox+pw/2, oy+ph/2+6, label||'היקף=?', '#ffffffdd', 16)
@@ -114,9 +111,11 @@ function drawRect(w, h, ci, label) {
 
 function drawTriangle(base, sideB, sideC, ci, heightVal, showHeight) {
   const f=cf(ci), s=cs(ci);
-  const bpx=clamp(base*9,80,210), hpx=clamp((sideB||base)*8,60,150);
-  const ox=(300-bpx)/2, oy=195-hpx;
-  const apex=[ox+bpx/2, oy], bl=[ox, oy+hpx], br=[ox+bpx, oy+hpx];
+  const foot=heightVal?base/2:(base*base+sideC*sideC-sideB*sideB)/(2*base);
+  const height=heightVal||Math.sqrt(Math.max(0,sideC*sideC-foot*foot));
+  const scale=Math.min(192/(Math.max(base,foot)-Math.min(0,foot)),142/height);
+  const bpx=base*scale, hpx=height*scale, ox=(300-bpx)/2, oy=(200-hpx)/2;
+  const apex=[ox+foot*scale,oy], bl=[ox,oy+hpx], br=[ox+bpx,oy+hpx];
   let body = glowDef('gTr') +
     `<polygon points="${apex} ${bl} ${br}" fill="${f}44" stroke="${s}" stroke-width="3.5" filter="url(#gTr)">
       <animate attributeName="opacity" values="0;1" dur=".45s" fill="freeze"/>
@@ -133,36 +132,29 @@ function drawTriangle(base, sideB, sideC, ci, heightVal, showHeight) {
 
 function drawRightTriangle(leg1, leg2, ci) {
   const f=cf(ci), s=cs(ci);
-  const px1=clamp(leg1*11,60,200), px2=clamp(leg2*11,50,160);
+  const scale=Math.min(192/leg1,142/leg2), px1=leg1*scale, px2=leg2*scale;
   const ox=50, oy=60;
   return svgWrap(300, 230,
     glowDef('gRt') +
     `<polygon points="${ox},${oy+px2} ${ox+px1},${oy+px2} ${ox},${oy}" fill="${f}44" stroke="${s}" stroke-width="3.5" filter="url(#gRt)">
       <animate attributeName="opacity" values="0;1" dur=".45s" fill="freeze"/>
     </polygon>` +
-    RA(ox, oy+px2-11) +
+    RA(ox,oy+px2,10,-10) +
     dimLine(ox, oy+px2+18, ox+px1, oy+px2+18, leg1+' ס"מ', s, 0) +
     dimLine(ox-18, oy, ox-18, oy+px2, leg2+' ס"מ', s, 0)
   );
 }
 
 function drawCircle(r, ci, mode) {
-  // mode: 'radius' | 'diameter' | null
-  const f=cf(ci), s=cs(ci), cr=clamp(r*11,35,95), cx=150, cy=118;
-  let body = glowDef('gCi') +
-    `<circle cx="${cx}" cy="${cy}" r="${cr}" fill="${f}44" stroke="${s}" stroke-width="3.5" filter="url(#gCi)">
-      <animate attributeName="opacity" values="0;1" dur=".45s" fill="freeze"/>
-    </circle>`;
-  if (mode==='radius') {
-    body += `<line x1="${cx}" y1="${cy}" x2="${cx+cr}" y2="${cy}" stroke="#ffd32a" stroke-width="3"/>
-      <circle cx="${cx}" cy="${cy}" r="4" fill="#ffd32a"/>` +
-      dimLine(cx, cy-14, cx+cr, cy-14, 'r='+r+' ס"מ', '#ffd32a', 0);
-  } else if (mode==='diameter') {
-    body += `<line x1="${cx-cr}" y1="${cy}" x2="${cx+cr}" y2="${cy}" stroke="#ffd32a" stroke-width="3"/>
-      <circle cx="${cx}" cy="${cy}" r="4" fill="#ffd32a"/>` +
-      dimLine(cx-cr, cy-14, cx+cr, cy-14, 'ø='+(2*r)+' ס"מ', '#ffd32a', 0);
+  const cx=150, cy=107, radius=88;
+  let body=`<circle cx="${cx}" cy="${cy}" r="${radius}" stroke="${cs(ci)}" fill="${cf(ci)}44" stroke-width="3"/>`;
+  if(mode){
+    const start=mode==='radius'?cx:cx-radius, end=cx+radius;
+    body+=`<path d="M${start} ${cy}H${end}" stroke="#ffda76" stroke-width="2.5"/>
+      <circle cx="${cx}" cy="${cy}" r="3.5" fill="#ffda76"/>`+
+      T((start+end)/2,cy-10,(mode==='radius'?r:2*r)+' ס״מ','#ffda76',15);
   }
-  return svgWrap(300, 230, body);
+  return svgWrap(300,214,body);
 }
 
 function drawParallelogram(base, height, ci) {
@@ -174,17 +166,17 @@ function drawParallelogram(base, height, ci) {
     `<polygon points="${ox+off},${oy} ${ox+off+bpx},${oy} ${ox+bpx},${oy+hpx} ${ox},${oy+hpx}" fill="${f}44" stroke="${s}" stroke-width="3.5" filter="url(#gPa)">
       <animate attributeName="opacity" values="0;1" dur=".45s" fill="freeze"/>
     </polygon>` +
-    `<line x1="${ox+off+bpx/2}" y1="${oy}" x2="${ox+bpx/2}" y2="${oy+hpx}" stroke="#ff9f7e" stroke-width="2" stroke-dasharray="5,3"/>` +
+    `<line x1="${ox+bpx/2}" y1="${oy}" x2="${ox+bpx/2}" y2="${oy+hpx}" stroke="#ff9f7e" stroke-width="2" stroke-dasharray="5,3"/>` +
     dimLine(ox+off, oy-18, ox+off+bpx, oy-18, base+' ס"מ', s, 0) +
-    dimLine(ox+bpx+off+14, oy, ox+bpx+14, oy+hpx, height+' ס"מ', '#ff9f7e', 0) +
+    dimLine(ox+bpx+off+14, oy, ox+bpx+off+14, oy+hpx, height+' ס"מ', '#ff9f7e', 0) +
     T(ox+bpx/2+off/2, oy+hpx/2+6, 'שטח=?', '#ffffffdd', 15)
   );
 }
 
 function drawTrapezoid(b1, b2, h, ci) {
   const f=cf(ci), s=cs(ci);
-  const b1px=clamp(b1*10,80,210), b2px=clamp(b2*10,50,160), hpx=clamp(h*10,45,120);
-  const ox=(300-b1px)/2, oy=70, off=(b1px-b2px)/2;
+  const scale=Math.min(218/b1,145/h), b1px=b1*scale, b2px=b2*scale, hpx=h*scale;
+  const ox=(300-b1px)/2, oy=(225-hpx)/2, off=(b1px-b2px)/2;
   return svgWrap(300, 225,
     glowDef('gTz') +
     `<polygon points="${ox},${oy+hpx} ${ox+b1px},${oy+hpx} ${ox+off+b2px},${oy} ${ox+off},${oy}" fill="${f}44" stroke="${s}" stroke-width="3.5" filter="url(#gTz)">
@@ -193,7 +185,7 @@ function drawTrapezoid(b1, b2, h, ci) {
     `<line x1="${ox+off}" y1="${oy}" x2="${ox+off}" y2="${oy+hpx}" stroke="#ff9f7e" stroke-width="2" stroke-dasharray="5,3"/>` +
     dimLine(ox, oy+hpx+16, ox+b1px, oy+hpx+16, b1+' ס"מ', s, 0) +
     dimLine(ox+off, oy-16, ox+off+b2px, oy-16, b2+' ס"מ', s, 0) +
-    T(clamp(ox-5,8,50), oy+hpx/2, h+' ס"מ', '#ff9f7e', 12, 'end')
+    T(ox+off+9, oy+hpx/2+4, h+' ס״מ', '#ffd1b4', 14, 'start')
   );
 }
 
@@ -211,16 +203,18 @@ function drawRegularPoly(n, ci, label) {
 }
 
 function drawLShape(W, H, w, h, ci) {
-  const f=cf(ci), s=cs(ci), sc=16, ox=28, oy=22;
-  return svgWrap(300, 250,
+  const f=cf(ci), s=cs(ci), sc=Math.min(194/W,148/H);
+  const ox=(340-W*sc)/2, oy=(224-H*sc)/2;
+  return svgWrap(340, 240,
     glowDef('gLS') +
     `<polygon points="${ox},${oy} ${ox+W*sc},${oy} ${ox+W*sc},${oy+(H-h)*sc} ${ox+(W-w)*sc},${oy+(H-h)*sc} ${ox+(W-w)*sc},${oy+H*sc} ${ox},${oy+H*sc}" fill="${f}44" stroke="${s}" stroke-width="3.5" filter="url(#gLS)">
       <animate attributeName="opacity" values="0;1" dur=".45s" fill="freeze"/>
     </polygon>` +
-    dimLine(ox, oy-16, ox+W*sc, oy-16, W+' ס"מ', s, 0) +
-    dimLine(ox-16, oy, ox-16, oy+H*sc, H+' ס"מ', s, 0) +
-    dimLine(ox+(W-w)*sc, oy+(H-h)*sc-14, ox+W*sc, oy+(H-h)*sc-14, w+' ס"מ', '#ff9f7e', 0) +
-    dimLine(ox+W*sc+12, oy, ox+W*sc+12, oy+(H-h)*sc, h+' ס"מ', '#ff9f7e', 0)
+    dimLine(ox, oy, ox+W*sc, oy, W+' ס״מ', s, -18) +
+    dimLine(ox, oy, ox, oy+H*sc, H+' ס״מ', s, 31) +
+    dimLine(ox+(W-w)*sc, oy+H*sc, ox+W*sc, oy+H*sc, w+' ס״מ', '#ffbc91', 16) +
+    dimLine(ox+W*sc, oy+(H-h)*sc, ox+W*sc, oy+H*sc, h+' ס״מ', '#ffbc91', -30) +
+    `<path d="M${ox+W*sc} ${oy+(H-h)*sc}v${h*sc}h${-w*sc}" fill="none" stroke="#ffbc91" stroke-dasharray="4 4"/>`
   );
 }
 
@@ -233,7 +227,7 @@ function drawAngle(deg, ci, showValue) {
     `<line x1="${cx}" y1="${cy}" x2="${cx+r}" y2="${cy}" stroke="${s}" stroke-width="5.5" stroke-linecap="round" filter="url(#gAg)"/>
     <line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="${s}" stroke-width="5.5" stroke-linecap="round" filter="url(#gAg)"/>` +
     arcSec(cx, cy, 46, 0, deg, f) +
-    (deg===90 ? RA(cx, cy-13, 13) : '') +
+    (deg===90 ? RA(cx,cy,12,-12) : '') +
     `<circle cx="${cx}" cy="${cy}" r="5.5" fill="#ffd32a"/>` +
     T(cx+72*Math.cos(-rad/2), cy+72*Math.sin(-rad/2)+4,
       showValue ? deg+'°' : '?°', '#ffd32a', 22)
@@ -521,7 +515,7 @@ function g3_shapes(diff){
     medium:[
       ()=>{const s=rnd(3,10);return Q('shapes',diff,`היקף ריבוע (צלע ${s} ס"מ)?`,4*s,drawSquare(s,ci,''),`💡 4×${s}=${4*s} ס"מ`,'📏 היקף')},
       ()=>{const w=rnd(4,12),h=rnd(2,w-1);return Q('shapes',diff,`היקף מלבן ${w}×${h}?`,2*(w+h),drawRect(w,h,ci,''),`💡 2×(${w}+${h})=${2*(w+h)} ס"מ`,'📏 היקף')},
-      ()=>{const a=rnd(3,8),b=rnd(2,7),c=rnd(Math.abs(a-b)+1,a+b-1);return Q('shapes',diff,`היקף משולש: ${a},${b},${c} ס"מ?`,a+b+c,drawTriangle(a,b,c,ci,0,true),`💡 ${a}+${b}+${c}=${a+b+c} ס"מ`,'📏 היקף')},
+      ()=>{const a=rnd(3,8),b=rnd(2,7),c=rnd(Math.abs(a-b)+1,a+b-1);return Q('shapes',diff,`היקף משולש: ${a},${b},${c} ס"מ?`,a+b+c,drawTriangle(a,b,c,ci,0,false),`💡 ${a}+${b}+${c}=${a+b+c} ס"מ`,'📏 היקף')},
       ()=>{const s=rnd(3,9);return Q('shapes',diff,`שטח ריבוע (צלע ${s} ס"מ)?`,s*s,drawSquare(s,ci,'שטח=?'),`💡 ${s}²=${s*s} ס"מ²`,'📐 שטח')},
       ()=>{const w=rnd(3,10),h=rnd(2,w-1);return Q('shapes',diff,`שטח מלבן ${w}×${h}?`,w*h,drawRect(w,h,ci,'שטח=?'),`💡 ${w}×${h}=${w*h} ס"מ²`,'📐 שטח')},
       ()=>{const c=rnd(3,7),r=rnd(2,5);return Q('shapes',diff,`שטח גריד ${c}×${r}?`,c*r,drawGrid(c,r,ci),`💡 ${c}×${r}=${c*r} ס"מ²`,'📐 שטח')},
@@ -600,7 +594,7 @@ function g6_shapes(diff){
     easy:[
       ()=>{const r=rnd(2,8);return Q('shapes',diff,`חשבו את היקף המעגל. רדיוס ${r} ס"מ (π≈3.14). עגלו למספר השלם הקרוב.`,Math.round(2*3.14*r),drawCircle(r,ci,'radius'),`💡 2×3.14×${r}≈${Math.round(2*3.14*r)} ס"מ`,'⭕ עיגול')},
       ()=>{const r=rnd(2,8);return Q('shapes',diff,`חשבו את שטח העיגול. רדיוס ${r} ס"מ (π≈3.14). עגלו למספר השלם הקרוב.`,Math.round(3.14*r*r),drawCircle(r,ci,'radius'),`💡 3.14×${r*r}≈${Math.round(3.14*r*r)} ס"מ²`,'⭕ עיגול')},
-      ()=>{const r=rnd(2,8);return Q('shapes',diff,`קוטר עיגול עם רדיוס ${r} ס"מ?`,r*2,drawCircle(r,ci,'diameter'),`💡 קוטר=2×רדיוס=${r*2} ס"מ`,'⭕ עיגול')},
+      ()=>{const r=rnd(2,8);return Q('shapes',diff,`קוטר עיגול עם רדיוס ${r} ס"מ?`,r*2,drawCircle(r,ci,'radius'),`💡 קוטר=2×רדיוס=${r*2} ס"מ`,'⭕ עיגול')},
       ()=>{const r=rnd(2,7);const d=r*2;return Q('shapes',diff,`רדיוס עיגול עם קוטר ${d} ס"מ?`,r,drawCircle(r,ci,'diameter'),`💡 רדיוס=קוטר÷2=${r} ס"מ`,'⭕ עיגול')},
     ],
     medium:[

@@ -939,3 +939,6 @@ html[dir="rtl"] .arcade-play > span { display:inline-block; transform:scaleX(-1)
 .choice-more[open] summary {margin-bottom:.4rem}
 
 .triangle-answer .ans-eq { order:-1; white-space:nowrap; direction:ltr; }
+
+.geometry-figure { display:block; width:100%; height:auto; margin-inline:auto; background:#191632; border-radius:12px; direction:ltr }
+.question-visual .geometry-figure,.question-visual .shape-diagram { display:block; width:100%; max-width:36rem; height:auto; margin-inline:auto }

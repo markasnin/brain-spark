@@ -48,6 +48,17 @@ function mountQuestionVisual(container, q) {
     container.innerHTML = q.shapeHtml;
     if (['shapes','area','angles','measurement','volume','circle'].includes(q.cat)) {
       const svg = container.querySelector('svg');
+      if (svg && (svg.matches('.geometry-figure') || svg.getAttribute('aria-label')==='תרשים גאומטרי')) {
+        svg.removeAttribute('style');
+        svg.classList.add('geometry-figure');
+        svg.setAttribute('direction','ltr');
+        const bounds=svg.getBBox();
+        if(bounds.width && bounds.height){
+          const width=Math.max(bounds.width+28,(bounds.height+24)*1.38);
+          const height=Math.max(bounds.height+24,width/2.8);
+          svg.setAttribute('viewBox', [bounds.x+(bounds.width-width)/2,bounds.y+(bounds.height-height)/2,width,height].join(' '));
+        }
+      }
       if (svg && q.cat !== 'angles') addShapeExplorer(container, svg);
     }
   } else {
