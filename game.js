@@ -69,8 +69,8 @@ function loadQ(q) {
   const qt = document.getElementById('qTxt');
   qt.innerHTML = questionPrompt(q);
   const answerRow=document.querySelector('#numAnsWrap .ans-row');
-  answerRow.classList.toggle('triangle-answer',q.cat==='unknown');
-  answerRow.querySelector('.ans-eq').textContent=q.cat==='unknown'?'▲ =':'=';
+  answerRow.classList.toggle('triangle-answer',usesTriangle(q));
+  answerRow.querySelector('.ans-eq').textContent=usesTriangle(q)?'▲ =':'=';
   qt.dir = q.dir || 'auto';
   qt.classList.toggle('is-equation', q.dir === 'ltr');
   document.getElementById('qCard').dataset.topic = q.cat;
@@ -346,7 +346,7 @@ function closeLvup(){document.getElementById('lvupOv').classList.remove('on');}
 function spawnConf(n=20){const cols=['#ffd32a','#ff4757','#2ed573','#1e90ff','#9b59b6','#ff6348','#ff9f43'];for(let i=0;i<n;i++){const p=document.createElement('div');p.className='cf-p';p.style.cssText=`left:${rnd(10,90)}vw;top:0;background:${pick(cols)};border-radius:${rnd(0,50)}%;width:${rnd(6,14)}px;height:${rnd(6,14)}px;animation-delay:${rnd(0,10)/10}s;`;document.body.appendChild(p);setTimeout(()=>p.remove(),2200);}}
 
 // ── History ──
-function recordHistory(q,userAns,correct){st.totalSolved++;if(correct)st.correctCount++;st.history.push({q:q.text,answer:q.answer,userAns,correct,cat:q.cat,diff:q.diff,ts:Date.now(),qObj:q});if(st.history.length>200)st.history.shift();save();}
+function recordHistory(q,userAns,correct){st.totalSolved++;if(correct)st.correctCount++;st.history.push({q:q.text,answer:q.answer,userAns,correct,cat:q.cat,diff:q.diff,ts:Date.now(),qObj:{...q,grade:q.grade||window.GRADE_CONFIG?.gradeId}});if(st.history.length>200)st.history.shift();save();}
 
 function openHistory(){show('history-scr');renderHistory('all');const total=st.history.length,ok=st.history.filter(h=>h.correct).length;document.getElementById('histStats').innerHTML=`<div style="background:var(--card);border-radius:13px;padding:12px;text-align:center;border:1px solid rgba(255,255,255,.07)"><div style="font-size:1.6rem;font-weight:900;color:var(--a2)">${total}</div><div style="font-size:.77rem;color:var(--txt2)">סה"כ</div></div><div style="background:var(--card);border-radius:13px;padding:12px;text-align:center;border:1px solid rgba(46,213,115,.2)"><div style="font-size:1.6rem;font-weight:900;color:var(--a3)">${ok}</div><div style="font-size:.77rem;color:var(--txt2)">נכון</div></div><div style="background:var(--card);border-radius:13px;padding:12px;text-align:center;border:1px solid rgba(255,71,87,.2)"><div style="font-size:1.6rem;font-weight:900;color:var(--a1)">${total-ok}</div><div style="font-size:.77rem;color:var(--txt2)">שגוי</div></div>`;}
 
@@ -432,9 +432,9 @@ function loadExamQ(){
       <div style="background:rgba(255,71,87,.07);border:1.5px solid rgba(255,71,87,.28);border-radius:12px;padding:8px 14px;margin-bottom:16px;font-size:.8rem;color:#ff8090;text-align:center;font-weight:600">
         ⚠️ ניסיון אחד בלבד — חשוב לפני שאתה מגיש!
       </div>
-      <div class="ans-row ${q.cat==='unknown'?'triangle-answer':''}">
+      <div class="ans-row ${usesTriangle(q)?'triangle-answer':''}">
         <input type="number" step="any" id="eInp" class="ans-inp" placeholder="?" onkeydown="if(event.key==='Enter')submitExamAns()">
-        <div class="ans-eq">${q.cat==='unknown'?'▲ =':'='}</div>
+        <div class="ans-eq">${usesTriangle(q)?'▲ =':'='}</div>
       </div>
       <div class="fb-box" id="eFb"></div>
       <div class="qbtns" id="eBtns">

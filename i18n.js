@@ -396,7 +396,9 @@ function localizeTextNode(node) {
   if (node.parentElement?.closest(skippedTranslation)) return;
   const record = translatedNodes.get(node);
   const source = record?.display === node.data ? record.source : node.data;
-  const display = interfaceText(source);
+  const translated=interfaceText(source);
+  const display=node.parentElement?.closest('svg,.visual-feedback,#hintContent')
+    ? localizeMeasurementUnits(translated,activeLanguage) : translated;
   if (source !== display || record) translatedNodes.set(node,{source,display});
   if (node.data !== display) node.data = display;
 }

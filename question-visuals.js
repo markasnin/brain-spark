@@ -1,18 +1,79 @@
 /* Shared presentation for practice, exams and minigames. */
+const measurementUnits = [
+  ['cm','ס"מ','см','سم','cm','см'],
+  ['mm','מ"מ','мм','مم','mm','мм'],
+  ['km','ק"מ','км','كم','km','км'],
+  ['m','מ׳','м','م','m','м'],
+  ['kg','ק"ג','кг','كغ','kg','кг'],
+  ['g','גרם','г','غ','g','г'],
+  ['ml','מ"ל','мл','مل','mL','мл'],
+  ['L','ליטר','л','لتر','L','л'],
+  ['cm²','סמ"ר','см²','سم²','cm²','см²'],
+  ['cm³','סמ"ק','см³','سم³','cm³','см³'],
+  ['m²','מ"ר','м²','م²','m²','м²'],
+  ['m³','מ"ק','м³','م³','m³','м³'],
+];
+const unitLookup=new Map();
+for(const row of measurementUnits){
+  for(const unit of row) unitLookup.set(unit.toLowerCase(),row);
+}
+for(const [alias,key] of Object.entries({'ס"מ²':'cm²','ס"מ³':'cm³',"מ'":'m'})) unitLookup.set(alias,unitLookup.get(key));
+const unitTokens=[...unitLookup.keys()].sort((a,b)=>b.length-a.length).join('|');
+const unitPattern=new RegExp('(?<![\\p{L}])('+unitTokens.replaceAll('"','["״“”]')+')(?![\\p{L}²³])','giu');
+
+function localizeMeasurementUnits(text,language) {
+  const index=['en','he','ru','ar','fr','uk'].indexOf(language);
+  if(index<0)return text;
+  return text.replace(unitPattern,(token,offset)=>{
+    // A single Latin letter can also name a point or an L-shaped polygon.
+    if (/^[mgl]$/i.test(token) && !/[\d▲□_)]\s*$/.test(text.slice(0,offset))) return token;
+    return unitLookup.get(token.replace(/[״“”]/g,'"').toLowerCase())?.[index]||token;
+  });
+}
+function usesTriangle(q) {
+  if(q.cat==='unknown') return true;
+  if(!'אבגדהו'.includes(q.grade||window.GRADE_CONFIG?.gradeId||'!')) return false;
+  return /□|__+|[■▲]|(?:[🔺🔵⬜]|\bx\b).*?=|\?(?=\s*[/=+×÷−])/u.test(q.text);
+}
+
+function triangleText(text,source) {
+  // Some older equations supply a second shape as a known quantity.
+  const shapes=[...new Set(source.match(/🔺|🔵|⬜/gu)||[])];
+  if(shapes.length>1){
+    const target=source.match(/כמה (?:שווה )?(🔺|🔵|⬜)/u)?.[1];
+    for(const shape of shapes.filter(s=>s!==target)){
+      const given=source.match(new RegExp(shape+'\\s*=\\s*(\\d+)(?![×\\d])','u'));
+      if(given)text=text.replaceAll(shape,given[1]);
+      else {
+        const ratio=source.match(/(🔺|🔵|⬜):(🔺|🔵|⬜)\s*=\s*(\d+):(\d+)/u);
+        const total=source.match(/(?:🔺|🔵|⬜)\s*\+\s*(?:🔺|🔵|⬜)\s*=\s*(\d+)/u);
+        if(ratio && total){
+          const share=shape===ratio[1]?Number(ratio[3]):Number(ratio[4]);
+          text=text.replaceAll(shape,String(Number(total[1])*share/(Number(ratio[3])+Number(ratio[4]))));
+        } else {
+          const factor=source.match(new RegExp(shape+'\\s*=\\s*(\\d+)×'+target,'u'));
+          if(factor) text=text.replaceAll(shape,'('+factor[1]+'×▲)');
+        }
+      }
+    }
+  }
+  return text.replace(/\bx\b|□|__+|[■●]|🔺|🔵|⬜\uFE0F?|\?(?=\s*[/=+×÷−])/gu,'▲');
+}
+
 function questionPrompt(q) {
   return Object.keys(supportedLanguages).map(language => {
     const index = ['en','ru','ar'].indexOf(language);
     const text = q.extraLocalizations?.[language] || (index >= 0 && q.localized?.[index]) || interfaceText(q.text,language);
-    const prompt=q.cat==='unknown'?missingNumberPrompt(text):formatQuestionMath(text);
+    const localized=localizeMeasurementUnits(text,language);
+    const prompt=usesTriangle(q)?missingNumberPrompt(triangleText(localized,q.text)):formatQuestionMath(localized);
     return `<span class="question-language" data-language="${language}" dir="auto"${language===activeLanguage?'':' hidden'}>${prompt}</span>`;
   }).join('');
 }
 
 function missingNumberPrompt(text) {
-  const normalized=text.replace(/\bx\b|[■●□]/g,'▲');
-  // Earlier saved questions separated the instruction and equation with a colon.
-  const parts=normalized.match(/^(.+?)(?:\s*[:：]\s*|\n+)⁦(.+)⁩$/u);
-  if (!parts) return formatQuestionMath(normalized);
+    // Earlier saved questions separated the instruction and equation with a colon.
+  const parts=text.match(/^(.+?)(?:\s*[:：]\s*|\n+)⁦(.+)⁩$/u);
+  if (!parts) return formatQuestionMath(text);
   return formatQuestionMath(parts[1])+'<br><bdi dir="ltr">'+formatQuestionMath(parts[2])+'</bdi>';
 }
 
