@@ -117,16 +117,16 @@ function ptsForQ(cat, diff) {
   return (base[diff] || cfg.ptsEasy) + bonus;
 }
 
-function genPool(cat, diff, n, previous = []) {
+function genPool(cat, diff, n, previous = [], make) {
   const pool = [];
   for (let i=0; i<n; i++) {
     const d = diff==='mix' ? pick(['easy','medium','hard']) : diff;
-    pool.push(genVariedQ(cat, d, [...previous, ...pool]));
+    pool.push(genVariedQ(cat, d, [...previous, ...pool], make));
   }
   return pool;
 }
 
-function genVariedQ(cat, diff, previous) {
+function genVariedQ(cat, diff, previous, make) {
   const key = q => q.variantKey || q.text.replace(/[−-]?\d+(?:[.,]\d+)*/g,'#');
   const recent = previous.slice(-24);
   const counts = new Map();
@@ -135,7 +135,7 @@ function genVariedQ(cat, diff, previous) {
   const seen = new Set(recent.map(fingerprint));
   let best, bestCost = Infinity;
   for (let attempt=0;attempt<7;attempt++) {
-    const q = genQ(cat,diff);
+    const q = make ? make() : genQ(cat,diff);
     const cost = (counts.get(key(q)) || 0) + (seen.has(fingerprint(q))?100:0);
     if (cost < bestCost) { best=q; bestCost=cost; }
     if (cost === 0) break;
@@ -147,6 +147,8 @@ function genQ(cat, diff) {
   const gc = window.GRADE_CONFIG;
   const options = variants[cat];
   const grade = gc?.gradeId;
+  if (numberLimits[grade] && operations.includes(cat)) return operationQuestion(grade,cat,diff);
+  if (numberLimits[grade] && cat==='unknown') return operationQuestion(grade,cat,diff,pick(missingOps(grade)));
   if (grade && options && (rnd(0,2)!==0 || (cat==='data' && 'בגד'.includes(grade)))) {
     // The youngest grades practice one operation at a time.
     const size = grade==='א' && ['add','sub','word'].includes(cat) ? 2 : options.length;

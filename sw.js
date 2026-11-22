@@ -1,4 +1,4 @@
-const RELEASE = '27';
+const RELEASE = '28';
 const CACHE_PREFIX = 'brainspark-v';
 const CACHE = CACHE_PREFIX + RELEASE;
 const OFFLINE_PAGE = './index.html';
@@ -18,6 +18,7 @@ const ASSETS = [
   'question-visuals.js',
   'curriculum.js',
   'question-variants.js',
+  'practice-skills.js',
   'questions.js',
   'game.js',
   'lessons.js',

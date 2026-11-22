@@ -2,13 +2,13 @@
 <html lang="he" dir="rtl">
 <head>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
-<link rel="manifest" href="manifest.json?v=27">
+<link rel="manifest" href="manifest.json?v=28">
 <meta name="theme-color" content="#07050f">
 <meta charset="UTF-8">
-<meta name="brainspark-release" content="27">
+<meta name="brainspark-release" content="28">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Brain Spark ⚡</title>
-<link rel="stylesheet" href="style.css?v=27">
+<link rel="stylesheet" href="style.css?v=28">
 <!-- Grade config loader slot -->
 <script id="gradeScript"></script>
 <!-- ══ LOAD ORDER ══
@@ -20,18 +20,19 @@
   6. ui.js             — show, updateHome, buildGrid, settings, friends UI
   7. firebase.js       — Firebase init + all async Firebase functions (module)
 -->
-<script src="special-users.js?v=27"></script>
-<script src="translations.js?v=27"></script>
-<script src="i18n.js?v=27"></script>
-<script src="config.js?v=27"></script>
-<script src="question-visuals.js?v=27"></script>
-<script src="curriculum.js?v=27"></script>
-<script src="question-variants.js?v=27"></script>
-<script src="questions.js?v=27"></script>
-<script src="game.js?v=27"></script>
-<script src="lessons.js?v=27"></script>
-<script src="ui.js?v=27"></script>
-<script type="module" src="firebase.js?v=27"></script>
+<script src="special-users.js?v=28"></script>
+<script src="translations.js?v=28"></script>
+<script src="i18n.js?v=28"></script>
+<script src="config.js?v=28"></script>
+<script src="question-visuals.js?v=28"></script>
+<script src="curriculum.js?v=28"></script>
+<script src="question-variants.js?v=28"></script>
+<script src="practice-skills.js?v=28"></script>
+<script src="questions.js?v=28"></script>
+<script src="game.js?v=28"></script>
+<script src="lessons.js?v=28"></script>
+<script src="ui.js?v=28"></script>
+<script type="module" src="firebase.js?v=28"></script>
 </head>
 <body>
   <header class="app-header">
@@ -39,16 +40,16 @@
     <div class="header-actions">
       <details class="language-control" id="appLanguage">
         <summary class="language-trigger" aria-label="שפה">
-          <img class="language-flag" id="appLanguageFlag" src="Flags/il.svg?v=27" alt="">
+          <img class="language-flag" id="appLanguageFlag" src="Flags/il.svg?v=28" alt="">
           <bdi class="language-current" id="appLanguageName" lang="he" data-no-translate>עברית</bdi>
         </summary>
         <div class="language-options">
-          <button type="button" data-language="he" aria-pressed="false"><img class="language-flag" src="Flags/il.svg?v=27" alt=""><bdi lang="he" data-no-translate>עברית</bdi></button>
-          <button type="button" data-language="en" aria-pressed="false"><img class="language-flag" src="Flags/us.svg?v=27" alt=""><bdi lang="en" data-no-translate>English</bdi></button>
-          <button type="button" data-language="ar" aria-pressed="false"><img class="language-flag" src="Flags/sa.svg?v=27" alt=""><bdi lang="ar" data-no-translate>العربية</bdi></button>
-          <button type="button" data-language="ru" aria-pressed="false"><img class="language-flag" src="Flags/ru.svg?v=27" alt=""><bdi lang="ru" data-no-translate>Русский</bdi></button>
-          <button type="button" data-language="fr" aria-pressed="false"><img class="language-flag" src="Flags/fr.svg?v=27" alt=""><bdi lang="fr" data-no-translate>Français</bdi></button>
-          <button type="button" data-language="uk" aria-pressed="false"><img class="language-flag" src="Flags/ua.svg?v=27" alt=""><bdi lang="uk" data-no-translate>Українська</bdi></button>
+          <button type="button" data-language="he" aria-pressed="false"><img class="language-flag" src="Flags/il.svg?v=28" alt=""><bdi lang="he" data-no-translate>עברית</bdi></button>
+          <button type="button" data-language="en" aria-pressed="false"><img class="language-flag" src="Flags/us.svg?v=28" alt=""><bdi lang="en" data-no-translate>English</bdi></button>
+          <button type="button" data-language="ar" aria-pressed="false"><img class="language-flag" src="Flags/sa.svg?v=28" alt=""><bdi lang="ar" data-no-translate>العربية</bdi></button>
+          <button type="button" data-language="ru" aria-pressed="false"><img class="language-flag" src="Flags/ru.svg?v=28" alt=""><bdi lang="ru" data-no-translate>Русский</bdi></button>
+          <button type="button" data-language="fr" aria-pressed="false"><img class="language-flag" src="Flags/fr.svg?v=28" alt=""><bdi lang="fr" data-no-translate>Français</bdi></button>
+          <button type="button" data-language="uk" aria-pressed="false"><img class="language-flag" src="Flags/ua.svg?v=28" alt=""><bdi lang="uk" data-no-translate>Українська</bdi></button>
         </div>
       </details>
       <button class="logout-btn app-logout" onclick="fbLogout()">התנתק</button>
@@ -239,13 +240,8 @@
 <!-- ══ DIFFICULTY ══ -->
 <div class="scr" id="diff-scr">
   <div style="font-family:'Fredoka',sans-serif;font-size:2rem;color:var(--a2);margin-bottom:6px;text-align:center;" id="diffTitle"></div>
-  <div style="color:var(--txt2);font-size:.95rem;margin-bottom:24px;text-align:center">בחר רמת קושי:</div>
-  <div class="diffs">
-    <button class="dbtn de" onclick="startCat('easy')"><span style="font-size:1.7rem">🌱</span><div><div>קל</div><small style="color:var(--txt2);font-weight:400">להתחמם</small></div></button>
-    <button class="dbtn dm" onclick="startCat('medium')"><span style="font-size:1.7rem">⚡</span><div><div>בינוני</div><small style="color:var(--txt2);font-weight:400">אתגר מתון</small></div></button>
-    <button class="dbtn dh" onclick="startCat('hard')"><span style="font-size:1.7rem">🔥</span><div><div>קשה</div><small style="color:var(--txt2);font-weight:400">כמו מתמטיקאי אמיתי!</small></div></button>
-    <button class="dbtn dx" onclick="startCat('mix')"><span style="font-size:1.7rem">🎲</span><div><div>תערובת</div><small style="color:var(--txt2);font-weight:400">הפתעות!</small></div></button>
-  </div>
+  <p class="skill-prompt">מה נתרגל? בחרו מסלול אחד.</p>
+  <div id="practiceChoices" class="practice-choices"></div>
   <button class="back" onclick="show('home')">← חזרה</button>
 </div>
 <!-- ══ QUESTION ══ -->
@@ -573,15 +569,15 @@
   load();
   createStars();
 </script>
-<script src="profile-fields.js?v=27"></script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=27');}</script>
-  <script src="minigame-fishing.js?v=27"></script>
-  <script src="minigame-dungeon.js?v=27"></script>
-  <script src="minigame-rocket.js?v=27"></script>
-  <script src="minigame-chef.js?v=27"></script>
-  <script src="minigame-builder.js?v=27"></script>
-  <script src="minigame-puzzles.js?v=27"></script>
-  <script src="minigames.js?v=27"></script>
+<script src="profile-fields.js?v=28"></script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=28');}</script>
+  <script src="minigame-fishing.js?v=28"></script>
+  <script src="minigame-dungeon.js?v=28"></script>
+  <script src="minigame-rocket.js?v=28"></script>
+  <script src="minigame-chef.js?v=28"></script>
+  <script src="minigame-builder.js?v=28"></script>
+  <script src="minigame-puzzles.js?v=28"></script>
+  <script src="minigames.js?v=28"></script>
 <script>
 // ── PATCH: fix minigames tile onclick and export helpers to window ──
 window.show = function(id) {
@@ -610,7 +606,7 @@ function _patchUpdateHome() {
 }
 _patchUpdateHome();
 </script>
-  <script src="geometry.js?v=27"></script>
+  <script src="geometry.js?v=28"></script>
   <footer class="site-credit" lang="en" dir="ltr">Made by <strong>MindUp™</strong></footer>
 </body>
 </html>

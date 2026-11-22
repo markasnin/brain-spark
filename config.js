@@ -71,6 +71,7 @@ const ALL_CATS = [
   { id:'data',            cls:'',         icon:'📊', name:'חקר נתונים',          sub:'קריאה והשוואה של נתונים',      borderColor:'#6c5ce7' },
   {id:'place', icon:'🔢', name:'מבנה המספר'},
   {id:'divisibility', icon:'🔢', name:'סימני התחלקות'},
+  {id:'unknown',icon:'□',name:'מציאת המספר החסר'},
   {id:'order', icon:'🧮', name:'סדר פעולות'},
   {id:'percent', icon:'💯', name:'אחוזים'},
   {id:'negatives', icon:'➖', name:'מספרים מכוונים'},

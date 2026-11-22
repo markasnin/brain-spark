@@ -923,3 +923,17 @@ html[dir="rtl"] .arcade-play > span { display:inline-block; transform:scaleX(-1)
   border:1px solid var(--spark-line); border-radius:11px; min-height:44px; font:700 1.3rem Rubik,sans-serif;
 }
 .arcade-puzzle[data-mode="vault"] .puzzle-track { direction:ltr; }
+
+.skill-prompt {margin:.3rem 0 1.2rem;color:var(--txt2);text-align:center}
+.practice-choices {width:min(100%,58rem);margin:0 auto 1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:.8rem}
+.practice-choice {position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:.45rem;padding:1rem 1.15rem;min-height:5.5rem;border:1px solid #615687;border-radius:1rem;background:#292443;color:#faf7ff;text-align:start;font:inherit;cursor:pointer}
+.practice-choice:hover,.practice-choice:focus-visible {background:#353054;outline:2px solid #84dfcd;outline-offset:1px}
+.practice-choice strong {font-size:1rem;line-height:1.6}
+.practice-choice small {color:#d6cde9}
+.practice-choice .choice-start {color:#87edd1;font-weight:700}
+.choice-preview {width:100%;display:grid;place-items:center;pointer-events:none}
+.choice-preview svg {max-height:7rem;max-width:100%;width:auto}
+
+.choice-more {grid-column:1/-1}
+.choice-more summary {padding:.8rem 1rem;color:#cfc7ff;cursor:pointer;font-weight:700}
+.choice-more[open] summary {margin-bottom:.4rem}
