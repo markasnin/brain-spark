@@ -66,9 +66,9 @@ function operationQuestion(grade,cat,diff,unknown) {
   const hint={type:'text',msg:variantHint[0]};
   if(!unknown) return {type:'num',cat,diff,hint,dir:'ltr',text:`${a} ${symbol} ${b} = ?`,answer,pts:ptsForQ(cat,diff)};
   const hideFirst=rnd(0,1)===0;
-  const variable=grade==='ז'?'x':pick(['■','●','▲']);
+  const variable=grade==='ז'?'x':'▲';
   const equation=`${hideFirst?variable:a} ${symbol} ${hideFirst?b:variable} = ${answer}`;
-  const labels=variantInstructions.missing.map(label=>`${label}: ⁦${equation}⁩`);
+  const labels=variantInstructions.missing.map(label=>`${label}\n⁦${equation}⁩`);
   return {type:'num',cat,diff,hint,text:labels[0],answer:hideFirst?a:b,pts:ptsForQ(cat,diff),
     localized:labels.slice(1,4),extraLocalizations:{fr:labels[4],uk:labels[5]}};
 }

@@ -68,6 +68,9 @@ function loadQ(q) {
   if (qs.isDaily) { dl.style.display='block'; dl.textContent=`📅 שאלה יומית ${qs.isDailyIdx+1}/2`; } else dl.style.display='none';
   const qt = document.getElementById('qTxt');
   qt.innerHTML = questionPrompt(q);
+  const answerRow=document.querySelector('#numAnsWrap .ans-row');
+  answerRow.classList.toggle('triangle-answer',q.cat==='unknown');
+  answerRow.querySelector('.ans-eq').textContent=q.cat==='unknown'?'▲ =':'=';
   qt.dir = q.dir || 'auto';
   qt.classList.toggle('is-equation', q.dir === 'ltr');
   document.getElementById('qCard').dataset.topic = q.cat;
@@ -429,9 +432,9 @@ function loadExamQ(){
       <div style="background:rgba(255,71,87,.07);border:1.5px solid rgba(255,71,87,.28);border-radius:12px;padding:8px 14px;margin-bottom:16px;font-size:.8rem;color:#ff8090;text-align:center;font-weight:600">
         ⚠️ ניסיון אחד בלבד — חשוב לפני שאתה מגיש!
       </div>
-      <div class="ans-row">
+      <div class="ans-row ${q.cat==='unknown'?'triangle-answer':''}">
         <input type="number" step="any" id="eInp" class="ans-inp" placeholder="?" onkeydown="if(event.key==='Enter')submitExamAns()">
-        <div class="ans-eq">=</div>
+        <div class="ans-eq">${q.cat==='unknown'?'▲ =':'='}</div>
       </div>
       <div class="fb-box" id="eFb"></div>
       <div class="qbtns" id="eBtns">

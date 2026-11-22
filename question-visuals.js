@@ -3,8 +3,17 @@ function questionPrompt(q) {
   return Object.keys(supportedLanguages).map(language => {
     const index = ['en','ru','ar'].indexOf(language);
     const text = q.extraLocalizations?.[language] || (index >= 0 && q.localized?.[index]) || interfaceText(q.text,language);
-    return `<span class="question-language" data-language="${language}" dir="auto"${language===activeLanguage?'':' hidden'}>${formatQuestionMath(q.cat==='unknown'?text.replace(/\bx\b|□/g,'■'):text)}</span>`;
+    const prompt=q.cat==='unknown'?missingNumberPrompt(text):formatQuestionMath(text);
+    return `<span class="question-language" data-language="${language}" dir="auto"${language===activeLanguage?'':' hidden'}>${prompt}</span>`;
   }).join('');
+}
+
+function missingNumberPrompt(text) {
+  const normalized=text.replace(/\bx\b|[■●□]/g,'▲');
+  // Earlier saved questions separated the instruction and equation with a colon.
+  const parts=normalized.match(/^(.+?)(?:\s*[:：]\s*|\n+)⁦(.+)⁩$/u);
+  if (!parts) return formatQuestionMath(normalized);
+  return formatQuestionMath(parts[1])+'<br><bdi dir="ltr">'+formatQuestionMath(parts[2])+'</bdi>';
 }
 
 function formatQuestionMath(text) {

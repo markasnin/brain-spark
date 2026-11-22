@@ -937,3 +937,5 @@ html[dir="rtl"] .arcade-play > span { display:inline-block; transform:scaleX(-1)
 .choice-more {grid-column:1/-1}
 .choice-more summary {padding:.8rem 1rem;color:#cfc7ff;cursor:pointer;font-weight:700}
 .choice-more[open] summary {margin-bottom:.4rem}
+
+.triangle-answer .ans-eq { order:-1; white-space:nowrap; direction:ltr; }
