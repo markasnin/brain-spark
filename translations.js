@@ -1,5 +1,9 @@
 /* Offline translations of authored BrainSpark text. Columns: en, ru, ar, fr, uk. */
 const appTranslations = {
+  "הילחמו במפלצת": ["Fight a monster", "Сразись с монстром", "قاتلوا وحشًا", "Affronte un monstre", "Бийся з монстром"],
+  "חפשו אוצר": ["Search for treasure", "Ищи сокровища", "ابحثوا عن كنز", "Cherche un trésor", "Шукай скарб"],
+  "השתמשו בשיקוי ריפוי": ["Use a healing potion", "Используй лечебное зелье", "استخدموا جرعة الشفاء", "Utilise une potion de soin", "Використай зілля зцілення"],
+  "פינת האחים": ["Brothers’ Corner", "Уголок братьев", "ركن الإخوة", "Le coin des frères", "Куточок братів"],
   "שביל המספרים": ["Number Trail", "Числовая тропа", "درب الأعداد", "La piste des nombres", "Числова стежка"],
   "כספת המספרים": ["Number Vault", "Числовой сейф", "خزنة الأعداد", "Le coffre des nombres", "Числовий сейф"],
   "בחרו תשובות והתקדמו לאורך השביל עד האוצר.": ["Follow the trail to the treasure by choosing answers.", "Выбирай ответы и двигайся к сокровищу.", "اختاروا الإجابات واتبعوا الدرب حتى الكنز.", "Choisis les réponses et avance jusqu’au trésor.", "Обирай відповіді й рухайся до скарбу."],

@@ -91,7 +91,7 @@ window.ChefGame = (function () {
           <span style="color:${c.color};font-family:'Fredoka',sans-serif;font-size:.95rem">${c.name}</span>
           <span style="color:#ffd43b;font-size:.8rem">+${c.tip}&#x1FA99;</span>
         </div>
-        <div style="color:#e2e8f0;font-size:.82rem;font-family:Rubik,sans-serif;margin-bottom:4px">${c.recipe.emoji} ${c.amount} ${c.recipe.name}</div>
+        <div style="color:#e2e8f0;font-size:.82rem;font-family:Rubik,sans-serif;margin-bottom:4px"><span aria-hidden="true">${c.recipe.emoji}</span> <bdi>${c.amount}</bdi> <span>${c.recipe.name}</span></div>
         <div style="background:rgba(255,255,255,.1);border-radius:4px;height:6px"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:4px;transition:width .5s"></div></div>
       </div>
     </div>`;

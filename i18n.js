@@ -350,13 +350,13 @@ function feedbackTranslation(core,index) {
 function generatedTranslation(core,index) {
   const normalized = normalizeTranslation(core);
   const exact = normalizedTranslations.get(normalized)?.[index];
-  if (exact) return exact;
+  if (exact) return decodeTranslationEntities(exact);
   for (const {regex,tokens,translations,hint} of translationPatterns) {
     if (!translations[index] || !normalized.includes(hint)) continue;
     const match = normalized.match(regex);
     if (match) {
       const values = Object.fromEntries(tokens.map((token,i)=>[token,normalizedTranslations.get(match[i+1])?.[index] || uiTranslations.get(match[i+1])?.[index] || match[i+1]]));
-      return translations[index].replace(/QZ\d+ZQ/g,token=>values[token]??match[1]??token);
+      return decodeTranslationEntities(translations[index].replace(/QZ\d+ZQ/g,token=>values[token]??match[1]??token));
     }
   }
   return '';

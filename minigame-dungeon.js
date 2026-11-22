@@ -35,7 +35,7 @@ window.DungeonGame = (function () {
     {id:'boss',  name:'הבוס הגדול',emoji:'👹',hp:8,gold:60,xp:50,diff:'hard',  color:'#ff6b6b'},
   ];
 
-  const ROOMS=['חדר הכניסה','המסדרון האפל','קרן האחים','חדר הכבוד','מגדל המכשף','כלא הדרקון','האולם הסודי','חדר האוצר'];
+  const ROOMS=['חדר הכניסה','המסדרון האפל','פינת האחים','חדר הכבוד','מגדל המכשף','כלא הדרקון','האולם הסודי','חדר האוצר'];
   const ROOM_BG=['#1a1a2e','#16213e','#0f3460','#1a1a2e','#2d1b69','#1a0a0a','#0a1a0a','#1a1500'];
   const HERO_MAX_HP=5;
 
@@ -83,10 +83,10 @@ window.DungeonGame = (function () {
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-        <button onclick="window.DungeonGame.enterRoom('monster')" style="padding:14px;background:linear-gradient(135deg,#7f1d1d,#991b1b);border:2px solid #ef4444;color:#fff;border-radius:14px;font-family:'Fredoka',sans-serif;font-size:1rem;cursor:pointer">&#x2694;&#xFE0F; הילחם במפלצת</button>
-        <button onclick="window.DungeonGame.enterRoom('treasure')" style="padding:14px;background:linear-gradient(135deg,#713f12,#92400e);border:2px solid #fbbf24;color:#fff;border-radius:14px;font-family:'Fredoka',sans-serif;font-size:1rem;cursor:pointer">&#x1F381; חפש אוצר</button>
+        <button onclick="window.DungeonGame.enterRoom('monster')" style="padding:14px;background:linear-gradient(135deg,#7f1d1d,#991b1b);border:2px solid #ef4444;color:#fff;border-radius:14px;font-family:'Fredoka',sans-serif;font-size:1rem;cursor:pointer"><span aria-hidden="true">&#x2694;&#xFE0F;</span> <span>הילחמו במפלצת</span></button>
+        <button onclick="window.DungeonGame.enterRoom('treasure')" style="padding:14px;background:linear-gradient(135deg,#713f12,#92400e);border:2px solid #fbbf24;color:#fff;border-radius:14px;font-family:'Fredoka',sans-serif;font-size:1rem;cursor:pointer"><span aria-hidden="true">&#x1F381;</span> <span>חפשו אוצר</span></button>
       </div>
-      ${st.inventory.includes('potion')?`<button onclick="window.DungeonGame.usePotion()" style="width:100%;padding:10px;background:rgba(239,68,68,.15);border:1px solid #ef4444;color:#fca5a5;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.85rem;cursor:pointer;margin-bottom:6px">&#x1F9EA; כוס מרפא (&#x2764;&#xFE0F;+1)</button>`:''}
+      ${st.inventory.includes('potion')?`<button onclick="window.DungeonGame.usePotion()" style="width:100%;padding:10px;background:rgba(239,68,68,.15);border:1px solid #ef4444;color:#fca5a5;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.85rem;cursor:pointer;margin-bottom:6px"><span aria-hidden="true">&#x1F9EA;</span> <span>השתמשו בשיקוי ריפוי</span> <bdi dir="ltr">(+1 &#x2764;&#xFE0F;)</bdi></button>`:''}
       <button onclick="window.DungeonGame.exit()" style="width:100%;padding:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#6b7280;border-radius:12px;font-family:'Rubik',sans-serif;font-size:.82rem;cursor:pointer">← עזוב מבוך</button>
       ${st.log.length?`<div style="margin-top:8px;color:#6b7280;font-size:.72rem;font-family:Rubik,sans-serif;text-align:center">${st.log[st.log.length-1]}</div>`:''}
     `;
