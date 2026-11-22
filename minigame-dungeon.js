@@ -21,10 +21,7 @@ window.DungeonGame = (function () {
 
   const makeQ = minigameQuestion;
 
-  function helpBtn(msg){
-    const safe=msg.replace(/'/g,"&#39;").replace(/"/g,"&quot;");
-    return `<div style="text-align:center;margin-bottom:10px"><button onclick="window._showHelp('${safe}')" style="padding:6px 18px;background:rgba(255,211,42,.15);border:1px solid #ffd43b88;color:#ffd43b;border-radius:20px;font-family:'Rubik',sans-serif;font-size:.8rem;cursor:pointer;font-weight:700">💡 איך משחקים?</button></div>`;
-  }
+
 
   const MONSTERS = [
     {id:'slime', name:'סלייים',    emoji:'🟢',hp:2,gold:5, xp:3, diff:'easy',  color:'#69db7c'},
@@ -75,7 +72,7 @@ window.DungeonGame = (function () {
     const bgColor=ROOM_BG[st.room%ROOM_BG.length],roomName=ROOMS[st.room%ROOMS.length],isLast=st.room>=7;
     el.innerHTML=`
       <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:#ffd43b;text-align:center;margin-bottom:6px">&#x2694;&#xFE0F; מבוך המתמטיקה</div>
-      ${helpBtn("&#x2694;&#xFE0F; מבוך המתמטיקה\n\n• בחר: קרב מפלצת או חיפוש אוצר\n• קרב: פתור תרגיל לפני שהזמן נגמר\n• נכון → פוגע במפלצת | שגוי → אתה נפגע\n• נגמר הזמן → אתה נפגע אוטומטית\n• אוצר: פתור תרגיל להשיג זהב\n• 8 חדרים להשלים — בהצלחה!")}
+      ${arcadeHelpButton("&#x2694;&#xFE0F; מבוך המתמטיקה\n\n• בחר: קרב מפלצת או חיפוש אוצר\n• קרב: פתור תרגיל לפני שהזמן נגמר\n• נכון → פוגע במפלצת | שגוי → אתה נפגע\n• נגמר הזמן → אתה נפגע אוטומטית\n• אוצר: פתור תרגיל להשיג זהב\n• 8 חדרים להשלים — בהצלחה!")}
       ${heroStatus()}
       <div style="background:${bgColor};border-radius:16px;padding:16px;text-align:center;margin-bottom:10px;border:1px solid rgba(255,255,255,.1)">
         <div style="font-size:3rem;margin-bottom:4px">${isLast?'&#x1F3C6;':'🚪'}</div>
@@ -110,7 +107,7 @@ window.DungeonGame = (function () {
       </div>
       <div style="background:rgba(255,255,255,.06);border-radius:14px;padding:12px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.05rem;font-weight:700;direction:${q.dir || 'rtl'}" class="minigame-prompt">${questionPrompt(q)}</span>
+          <span style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.05rem;font-weight:700;direction:${q.dir || 'inherit'}" class="minigame-prompt">${questionPrompt(q)}</span>
           <span id="qTimer" style="color:${timeColor};font-family:'Fredoka',sans-serif;font-size:1.2rem;font-weight:900;min-width:52px;text-align:center">⏱ ${_fmtTime(st.qTimeLeft)}</span>
         </div>
         <div style="background:rgba(255,255,255,.1);border-radius:4px;height:5px;margin-bottom:10px;overflow:hidden">
@@ -135,7 +132,7 @@ window.DungeonGame = (function () {
       <div style="background:linear-gradient(135deg,#713f12,#92400e);border:2px solid #fbbf24;border-radius:16px;padding:20px;text-align:center;margin-bottom:10px">
         <div style="font-size:3rem;margin-bottom:8px">&#x1F381;</div>
         <div style="font-family:'Fredoka',sans-serif;font-size:1.1rem;color:#fbbf24;margin-bottom:10px">פתח את הארגז! פתור:</div>
-        <div style="font-family:'Rubik',sans-serif;font-size:1.1rem;color:#fff;font-weight:700;margin-bottom:12px;direction:${st.activeQ.dir || 'rtl'}" class="minigame-prompt">${questionPrompt(st.activeQ)}</div>
+        <div style="font-family:'Rubik',sans-serif;font-size:1.1rem;color:#fff;font-weight:700;margin-bottom:12px;direction:${st.activeQ.dir || 'inherit'}" class="minigame-prompt">${questionPrompt(st.activeQ)}</div>
         <div style="display:flex;gap:8px;justify-content:center">
           <input id="treasAns" type="number" step="any" placeholder="?" onkeydown="if(event.key==='Enter')window.DungeonGame.submitTreasure()" autofocus
             style="width:120px;padding:12px;background:rgba(255,255,255,.15);border:2px solid #fbbf2466;color:#fff;border-radius:12px;font-size:1.2rem;font-family:'Rubik',sans-serif;text-align:center;outline:none">
@@ -150,7 +147,7 @@ window.DungeonGame = (function () {
 
   // ── Timer — easy=40s, medium=60s, hard=90s ──
   function _diffSecs(d){return d==='hard'?90:d==='medium'?60:40;}
-  function _fmtTime(s){const m=Math.floor(s/60),sec=s%60;return s>=60?m+':'+(sec<10?'0':'')+sec:s+'ש';}
+  function _fmtTime(s){const m=Math.floor(s/60),sec=s%60;return m+':'+String(sec).padStart(2,'0');}
 
   function startTimer(){
     clearTimer();

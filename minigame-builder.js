@@ -22,9 +22,7 @@ window.BuilderGame = (function () {
 
   const makeQ = minigameQuestion;
 
-  function helpBtn(msg) {
-    return '<div style="text-align:center;margin-bottom:10px"><button onclick="window._showHelp(this.dataset.msg)" data-msg="' + msg.replace(/"/g,'&quot;') + '" style="padding:6px 18px;background:rgba(255,211,42,.15);border:1px solid #ffd43b88;color:#ffd43b;border-radius:20px;font-family:Rubik,sans-serif;font-size:.8rem;cursor:pointer;font-weight:700">&#x1F4A1; \u05d0\u05d9\u05da \u05de\u05e9\u05d7\u05e7\u05d9\u05dd?</button></div>';
-  }
+
 
   const BUILDINGS = [
     {name:'\u05d1\u05e7\u05ea\u05d4',        emoji:'&#x1F6D6;', cost:5,  reward:8,  color:'#c47b2b', diff:'easy',   w:1,h:1},
@@ -58,7 +56,7 @@ window.BuilderGame = (function () {
   function renderCity(el) {
     el.innerHTML = `
       <div style="font-family:'Fredoka',sans-serif;font-size:1.5rem;color:#69db7c;text-align:center;margin-bottom:4px">&#x1F3D7;&#xFE0F; \u05d1\u05e0\u05d4 \u05d0\u05ea \u05d4\u05e2\u05d9\u05e8 \u05e9\u05dc\u05da!</div>
-      ${helpBtn('\u05d1\u05e0\u05d0\u05d9 \u05d4\u05de\u05ea\u05de\u05d8\u05d9\u05e7\u05d4!\\n\\n\u2022 \u05dc\u05d7\u05e5 "\u05d1\u05e0\u05d4 \u05de\u05d1\u05e0\u05d4" \u05dc\u05d1\u05d7\u05d5\u05e8 \u05de\u05d4 \u05dc\u05d1\u05e0\u05d5\u05ea\\n\u2022 \u05e4\u05ea\u05d5\u05e8 \u05ea\u05e8\u05d2\u05d9\u05dc \u05de\u05ea\u05de\u05d8\u05d9\u05e7\u05d4 \u05dc\u05e7\u05d1\u05dc \u05d7\u05d5\u05de\u05e8\u05d9 \u05d1\u05e0\u05d9\u05d9\u05d4\\n\u2022 \u05e8\u05d0\u05d4 \u05d0\u05ea \u05d4\u05e2\u05d9\u05e8 \u05d2\u05d3\u05dc\u05ea!\\n\u2022 15 \u05ea\u05d5\u05e8\u05d5\u05ea \u05dc\u05d1\u05e0\u05d5\u05ea \u05e2\u05d9\u05e8 \u05de\u05d3\u05d4\u05d9\u05de\u05d4!')}
+      ${arcadeHelpButton('בחרו מבנה ופתרו תרגילים כדי לאסוף חומרי בנייה. יש לכם 15 תורות.')}
       <div style="display:flex;justify-content:space-between;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 12px;margin-bottom:8px">
         <span style="color:#69db7c;font-family:'Fredoka',sans-serif">&#x1F9F1; ${st.resources} \u05d7\u05d5\u05de\u05e8\u05d9\u05dd</span>
         <span style="color:#ffd43b;font-family:'Fredoka',sans-serif">&#x2B50; ${st.score}</span>
@@ -129,7 +127,7 @@ window.BuilderGame = (function () {
       <div style="background:${isBuild?b.color+'22':'rgba(255,211,42,.1)'};border:2px solid ${isBuild?b.color+'66':'#ffd43b66'};border-radius:18px;padding:18px;text-align:center;margin-bottom:12px">
         <div style="font-size:3rem;margin-bottom:8px">${isBuild ? b.emoji : '&#x1F9F1;'}</div>
         ${isBuild ? `<div style="color:#adb5bd;font-size:.85rem;font-family:Rubik,sans-serif;margin-bottom:10px">\u05e2\u05dc\u05d5\u05ea: ${b.cost}&#x1F9F1; | \u05ea\u05e8\u05d5\u05d5\u05d9\u05d7: ${b.reward}&#x2B50;</div>` : `<div style="color:#adb5bd;font-size:.85rem;font-family:Rubik,sans-serif;margin-bottom:10px">\u05e4\u05ea\u05d5\u05e8 \u05e0\u05db\u05d5\u05df &#x2192; +\u05d7\u05d5\u05de\u05e8\u05d9\u05dd!</div>`}
-        <div style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.4rem;font-weight:900;direction:${q.dir || 'rtl'};margin-bottom:14px" class="minigame-prompt">${questionPrompt(q)}</div>
+        <div style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.4rem;font-weight:900;direction:${q.dir || 'inherit'};margin-bottom:14px" class="minigame-prompt">${questionPrompt(q)}</div>
         <div style="display:flex;gap:8px">
           <input id="bldAns" type="number" step="any" placeholder="?" onkeydown="if(event.key==='Enter')window.BuilderGame.submit()" autofocus
             style="flex:1;padding:13px;background:rgba(255,255,255,.12);border:2px solid ${isBuild?b.color+'88':'#ffd43b88'};color:#fff;border-radius:12px;font-size:1.3rem;font-family:'Rubik',sans-serif;text-align:center;outline:none">

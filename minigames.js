@@ -1,3 +1,8 @@
+function arcadeHelpButton(message) {
+  const attribute = message.replaceAll('&','&amp;').replaceAll('"','&quot;');
+  return `<div class="arcade-help"><button type="button" class="game-help-dismiss" data-msg="${attribute}" onclick="window._showHelp(this)">💡 איך משחקים?</button></div>`;
+}
+
 window._showHelp = function(elOrMsg) {
   const msg = typeof elOrMsg === 'string' ? elOrMsg
     : (elOrMsg && elOrMsg.dataset ? elOrMsg.dataset.msg : String(elOrMsg||''));
@@ -6,12 +11,13 @@ window._showHelp = function(elOrMsg) {
   const d = document.createElement('div');
   d.id = '_hp';
   d.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.78)';
-  const clean = (msg||'').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+  const clean = decodeTranslationEntities(msg).replace(/\\n/g,'\n');
   d.innerHTML = '<div class="game-help-panel">'
     + '<div style="font-family:Fredoka,sans-serif;font-size:1.4rem;color:#ffd43b;margin-bottom:10px;text-align:center">💡 איך משחקים?</div>'
-    + '<div style="color:#e2e8f0;font-size:.93rem;line-height:1.8;white-space:pre-line">' + clean + '</div>'
+    + '<div style="color:#e2e8f0;font-size:.93rem;line-height:1.8;white-space:pre-line" class="game-help-copy"></div>'
     + '<button onclick="document.getElementById(\'_hp\').remove()" class="game-help-dismiss">הבנתי! ✅</button>'
     + '</div>';
+  d.querySelector('.game-help-panel').children[1].textContent = clean;
   d.onclick = e => { if(e.target===d) d.remove(); };
   document.body.appendChild(d);
 };

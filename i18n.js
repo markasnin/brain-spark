@@ -257,9 +257,19 @@ const uiTranslations = new Map(`
 
 const supportedLanguages = {he:'rtl', ar:'rtl', en:'ltr', ru:'ltr', fr:'ltr', uk:'ltr'};
 const translationLanguages = ['en','ru','ar','fr','uk'];
-const normalizeTranslation = text => text.trim().replace(/\s+/g,' ');
+const decodeTranslationEntities = text => text.replace(/&#(?:x([\da-f]+)|(\d+));|&(quot|apos|amp);/gi,
+  (match,hex,decimal,named) => {
+    if (named) return {quot:'"',apos:"'",amp:'&'}[named.toLowerCase()];
+    const code = hex ? parseInt(hex,16) : Number(decimal);
+    return code <= 0x10ffff ? String.fromCodePoint(code) : match;
+  });
+const normalizeTranslation = text => decodeTranslationEntities(text).trim().replace(/\s+/g,' ');
+const normalizedTranslations = new Map();
+for (const [key,translations] of Object.entries(appTranslations)) {
+  normalizedTranslations.set(normalizeTranslation(key),translations);
+}
 const escapeTranslationPattern = text => text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-const translationPatterns = Object.entries(appTranslations)
+const translationPatterns = [...normalizedTranslations]
   .filter(([key]) => /QZ\d+ZQ/.test(key))
   .map(([key,translations]) => {
     const parts = key.split(/(QZ\d+ZQ)/);
@@ -269,7 +279,7 @@ const translationPatterns = Object.entries(appTranslations)
     const weight = literals.reduce((sum,part)=>sum+part.length,0);
     const regex = new RegExp('^'+parts.map((part,i)=>i%2?'(.+?)':escapeTranslationPattern(part)).join('')+'$','u');
     return {regex,tokens,translations,hint,weight};
-  }).filter(entry=>entry.weight>=5)
+  }).filter(entry=>entry.weight>=4)
   .sort((a,b)=>b.weight-a.weight);
 
 const translatedNodes = new WeakMap();
@@ -339,14 +349,14 @@ function feedbackTranslation(core,index) {
 
 function generatedTranslation(core,index) {
   const normalized = normalizeTranslation(core);
-  const exact = Object.hasOwn(appTranslations,normalized) && appTranslations[normalized][index];
+  const exact = normalizedTranslations.get(normalized)?.[index];
   if (exact) return exact;
   for (const {regex,tokens,translations,hint} of translationPatterns) {
     if (!translations[index] || !normalized.includes(hint)) continue;
     const match = normalized.match(regex);
     if (match) {
-      const values = Object.fromEntries(tokens.map((token,i)=>[token,match[i+1]]));
-      return translations[index].replace(/QZ\d+ZQ/g,token=>values[token]);
+      const values = Object.fromEntries(tokens.map((token,i)=>[token,normalizedTranslations.get(match[i+1])?.[index] || uiTranslations.get(match[i+1])?.[index] || match[i+1]]));
+      return translations[index].replace(/QZ\d+ZQ/g,token=>values[token]??match[1]??token);
     }
   }
   return '';
@@ -396,7 +406,9 @@ function localizeTextNode(node) {
   if (node.parentElement?.closest(skippedTranslation)) return;
   const record = translatedNodes.get(node);
   const source = record?.display === node.data ? record.source : node.data;
-  const translated=interfaceText(source);
+  const localized = interfaceText(source);
+  const translated = node.parentElement?.matches('.game-help-copy')
+    ? localized.replace(/ +• +/g,'\n• ') : localized;
   const display=node.parentElement?.closest('svg,.visual-feedback,#hintContent')
     ? localizeMeasurementUnits(translated,activeLanguage) : translated;
   if (source !== display || record) translatedNodes.set(node,{source,display});

@@ -45,12 +45,7 @@ window.RocketGame = (function () {
   // ── Grade-aware question generator ──
   const makeQ = minigameQuestion;
 
-  function helpBtn(msg) {
-    const safe = msg.replace(/'/g,"&#39;").replace(/"/g,"&quot;");
-    return `<div style="text-align:center;margin-bottom:10px">
-      <button onclick="window._showHelp('${safe}')" style="padding:6px 18px;background:rgba(255,211,42,.15);border:1px solid #ffd43b88;color:#ffd43b;border-radius:20px;font-family:'Rubik',sans-serif;font-size:.8rem;cursor:pointer;font-weight:700">💡 איך משחקים?</button>
-    </div>`;
-  }
+
 
   // ── Canvas ──
   let canvasCtx = null, stars = [], rocketY = 110;
@@ -146,7 +141,7 @@ window.RocketGame = (function () {
   function renderCockpit(el) {
     el.innerHTML = `
       <div style="font-family:'Fredoka',sans-serif;font-size:1.6rem;color:#a5d8ff;text-align:center;margin-bottom:8px">🚀 מרוץ החלל</div>
-      ${helpBtn("🚀 מרוץ החלל\n\n• תדלק → פתור תרגיל קל לדלק\n• גש לכוכב → פתור תרגיל לכבוש\n• אסטרואידים פוגעים בפתאום — פתור מהר!\n• טעות = חיים פחות\n• הבס את הבוס הסופי לנצחון! 👾")}
+      ${arcadeHelpButton("🚀 מרוץ החלל\n\n• תדלק → פתור תרגיל קל לדלק\n• גש לכוכב → פתור תרגיל לכבוש\n• אסטרואידים פוגעים בפתאום — פתור מהר!\n• טעות = חיים פחות\n• הבס את הבוס הסופי לנצחון! 👾")}
       ${spaceCard(`<canvas id="rocketCanvas" width="400" height="220" style="width:100%;max-width:400px;height:auto;border-radius:12px;display:block;margin:0 auto"></canvas>`)}
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;text-align:center">
         <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:8px"><div style="font-size:1.3rem">⛽</div><div style="color:#69db7c;font-size:.8rem;font-family:Rubik,sans-serif">${st.fuel}/${MAX_FUEL}</div></div>
@@ -168,7 +163,7 @@ window.RocketGame = (function () {
       <div style="font-family:'Fredoka',sans-serif;font-size:1.4rem;color:${color};text-align:center;margin-bottom:8px">${title}</div>
       ${spaceCard(`
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <span style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.15rem;font-weight:700;direction:${q.dir || 'rtl'}" class="minigame-prompt">${questionPrompt(q)}</span>
+          <span style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.15rem;font-weight:700;direction:${q.dir || 'inherit'}" class="minigame-prompt">${questionPrompt(q)}</span>
           <span id="rqTimer" style="color:#ffd43b;font-family:'Fredoka',sans-serif;font-size:1.4rem;font-weight:900">⏱ ${st.qTimeLeft}</span>
         </div>
         <div style="display:flex;gap:8px">
@@ -265,7 +260,7 @@ window.RocketGame = (function () {
 
   function renamePlanet(i, cardEl) {
     const pl = st.collected[i]; if (!pl) return;
-    const nick = prompt('✏️ שם לכוכב ' + pl.emoji + ':', pl.nickname || pl.name);
+    const nick = prompt(interfaceText('✏️ שם לכוכב ' + pl.emoji + ':'), pl.nickname !== pl.name && pl.nickname || interfaceText(pl.name));
     if (nick !== null && nick.trim()) {
       st.collected[i].nickname = nick.trim();
       const lbl = cardEl.querySelector('.pl-nick-' + i);
@@ -284,7 +279,7 @@ window.RocketGame = (function () {
       const el=document.getElementById('rqTimer');
       if(el){
         const m=Math.floor(st.qTimeLeft/60), s=st.qTimeLeft%60;
-        el.textContent='⏱ '+(m>0?m+':'+String(s).padStart(2,'0'):s+'ש');
+        el.textContent='⏱ '+m+':'+String(s).padStart(2,'0');
       }
       if(st.qTimeLeft<=0){clearTimer();timeOut();}
     },1000);

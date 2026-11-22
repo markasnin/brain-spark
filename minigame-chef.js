@@ -22,9 +22,7 @@ window.ChefGame = (function () {
 
   const makeQ = minigameQuestion;
 
-  function helpBtn(msg) {
-    return '<div style="text-align:center;margin-bottom:10px"><button onclick="window._showHelp(this.dataset.msg)" data-msg="' + msg.replace(/"/g,'&quot;') + '" style="padding:6px 18px;background:rgba(255,211,42,.15);border:1px solid #ffd43b88;color:#ffd43b;border-radius:20px;font-family:Rubik,sans-serif;font-size:.8rem;cursor:pointer;font-weight:700">&#x1F4A1; \u05d0\u05d9\u05da \u05de\u05e9\u05d7\u05e7\u05d9\u05dd?</button></div>';
-  }
+
 
   const RECIPES = [
     {name:'\u05e2\u05d5\u05d2\u05d9\u05d5\u05ea \u05e9\u05d5\u05e7\u05d5\u05dc\u05d3', emoji:'&#x1F36A;', color:'#c47b2b', base:5,  diff:'easy'},
@@ -65,7 +63,7 @@ window.ChefGame = (function () {
     const qLen = st.customers.length;
     el.innerHTML = `
       <div style="font-family:'Fredoka',sans-serif;font-size:1.6rem;color:#ffa94d;text-align:center;margin-bottom:4px">&#x1F36A; \u05d4\u05de\u05d0\u05e4\u05d9\u05d9\u05d4 \u05e9\u05dc \u05d4\u05de\u05ea\u05de\u05d8\u05d9\u05e7\u05d4</div>
-      ${helpBtn('\u05d4\u05de\u05d0\u05e4\u05d9\u05d9\u05d4 \u05e9\u05dc\u05da!\\n\\n\u2022 \u05dc\u05e7\u05d5\u05d7\u05d5\u05ea \u05de\u05d2\u05d9\u05e2\u05d9\u05dd \u05e2\u05dd \u05d4\u05d6\u05de\u05e0\u05d5\u05ea\\n\u2022 \u05dc\u05d7\u05e5 \u05e2\u05dc \u05dc\u05e7\u05d5\u05d7 \u05db\u05d3\u05d9 \u05dc\u05e7\u05d7\u05ea \u05d4\u05d6\u05de\u05e0\u05d4\\n\u2022 \u05e4\u05ea\u05d5\u05e8 \u05ea\u05e8\u05d2\u05d9\u05dc \u05de\u05ea\u05de\u05d8\u05d9\u05e7\u05d4 \u05db\u05d3\u05d9 \u05dc\u05d0\u05e4\u05d5\u05ea!\\n\u2022 \u05d0\u05dd \u05ea\u05e7\u05d7 \u05d6\u05de\u05df \u05e8\u05d1 \u05de\u05d3\u05d9 \u2014 \u05d4\u05dc\u05e7\u05d5\u05d7 \u05d4\u05d5\u05dc\u05da :\\n\u2022 \u05e9\u05e8\u05ea 10 \u05dc\u05e7\u05d5\u05d7\u05d5\u05ea \u05d1\u05d9\u05d5\u05dd \u05dc\u05d4\u05e1\u05ea\u05d9\u05d9\u05dd!')}
+      ${arcadeHelpButton('לחצו על לקוח לקבלת הזמנה ופתרו תרגיל כדי לאפות. שרתו 10 לקוחות לפני שייגמר זמן ההמתנה שלהם.')}
       <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.06);border-radius:14px;padding:8px 14px;margin-bottom:10px">
         <span style="color:#ffd43b;font-family:'Fredoka',sans-serif;font-size:1rem">&#x1FA99; ${st.coins}</span>
         <span style="color:#ffa94d;font-family:'Fredoka',sans-serif;font-size:1rem">\u05d9\u05d5\u05dd ${st.day}</span>
@@ -110,7 +108,7 @@ window.ChefGame = (function () {
         <div style="color:#fff;font-family:'Rubik',sans-serif;font-size:.95rem;margin-bottom:14px">${c.amount} \u05d9\u05d7\u05d9\u05d3\u05d5\u05ea \u05e9\u05dc ${c.recipe.name}</div>
         <div style="background:rgba(255,255,255,.08);border-radius:14px;padding:14px;margin-bottom:4px">
           <div style="color:#ffd43b;font-family:'Fredoka',sans-serif;font-size:.9rem;margin-bottom:8px">&#x1F9EE; \u05e4\u05ea\u05d5\u05e8 \u05d0\u05ea \u05d4\u05ea\u05e8\u05d2\u05d9\u05dc:</div>
-          <div style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.4rem;font-weight:900;direction:${q.dir || 'rtl'};margin-bottom:12px" class="minigame-prompt">${questionPrompt(q)}</div>
+          <div style="color:#fff;font-family:'Rubik',sans-serif;font-size:1.4rem;font-weight:900;direction:${q.dir || 'inherit'};margin-bottom:12px" class="minigame-prompt">${questionPrompt(q)}</div>
           <div style="display:flex;gap:8px">
             <input id="chefAns" type="number" step="any" placeholder="?" onkeydown="if(event.key==='Enter')window.ChefGame.submit()" autofocus
               style="flex:1;padding:13px;background:rgba(255,255,255,.12);border:2px solid ${c.color}88;color:#fff;border-radius:12px;font-size:1.3rem;font-family:'Rubik',sans-serif;text-align:center;outline:none">

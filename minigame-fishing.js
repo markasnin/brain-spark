@@ -54,14 +54,7 @@ window.FishingGame = (function () {
 
   const makeQ = minigameQuestion;
 
-  function helpBtn(msg) {
-    const safe = msg.replace(/'/g,"&#39;").replace(/"/g,"&quot;");
-    return `<div style="text-align:center;margin-bottom:10px">
-      <button onclick="window._showHelp('${safe}')" style="padding:6px 18px;background:rgba(255,211,42,.15);border:1px solid #ffd43b88;color:#ffd43b;border-radius:20px;font-family:'Rubik',sans-serif;font-size:.8rem;cursor:pointer;font-weight:700">
-        💡 איך משחקים?
-      </button>
-    </div>`;
-  }
+
 
   function pickFish() {
     let total = Object.values(RARITY_WEIGHTS).reduce((a,b)=>a+b,0);
@@ -117,14 +110,14 @@ window.FishingGame = (function () {
   }
 
   function renderCastBtn() {
-    return helpBtn('🎣 דיג מתמטי\n\n• לחץ \'זרוק חכה!\' כדי להטיל\n• כשדג נתפס — פתור תרגיל\n• נכון → תתפוס את הדג \n• טעות → הדג בורח\n• דגים נדירים = תרגילים קשים\n• לחץ ✏️ על דג באקווריום לשנות שם!') + `<button id="castBtn" onclick="window.FishingGame.cast()" style="width:100%;padding:16px;background:linear-gradient(135deg,#0d3b6e,#1e6091);border:2px solid #74c0fc;color:#fff;border-radius:16px;font-family:'Fredoka',sans-serif;font-size:1.3rem;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 20px #74c0fc44">
+    return arcadeHelpButton('🎣 דיג מתמטי\n\n• לחץ \'זרוק חכה!\' כדי להטיל\n• כשדג נתפס — פתור תרגיל\n• נכון → תתפוס את הדג \n• טעות → הדג בורח\n• דגים נדירים = תרגילים קשים\n• לחץ ✏️ על דג באקווריום לשנות שם!') + `<button id="castBtn" onclick="window.FishingGame.cast()" style="width:100%;padding:16px;background:linear-gradient(135deg,#0d3b6e,#1e6091);border:2px solid #74c0fc;color:#fff;border-radius:16px;font-family:'Fredoka',sans-serif;font-size:1.3rem;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 20px #74c0fc44">
       🎣 זרוק חכה!
     </button>`;
   }
 
   // ── Fishing question timer ──
   function _fSecs(d){return d==='hard'?90:d==='medium'?60:40;}
-  function _fFmt(s){const m=Math.floor(s/60),sec=s%60;return s>=60?m+':'+(sec<10?'0':'')+sec:s+'ש';}
+  function _fFmt(s){const m=Math.floor(s/60),sec=s%60;return m+':'+String(sec).padStart(2,'0');}
   function startFishTimer(){
     clearFishTimer();
     const diff=state.hookedFish?state.hookedFish.diff:'easy';
@@ -153,7 +146,7 @@ window.FishingGame = (function () {
         <div style="font-family:'Fredoka',sans-serif;font-size:1.1rem;color:${f.color};margin-bottom:2px">${f.name}</div>
         <div style="font-size:.78rem;color:${RARITY_COLORS[f.rarity]};font-weight:700;margin-bottom:8px">${RARITY_NAMES[f.rarity]} • +${f.pts} נק'</div>
         <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.25);border-radius:10px;padding:6px 12px;margin-bottom:10px">
-          <span style="font-family:'Rubik',sans-serif;font-size:1rem;color:#fff;font-weight:700;direction:${q.dir || 'rtl'}" class="minigame-prompt">${questionPrompt(q)}</span>
+          <span style="font-family:'Rubik',sans-serif;font-size:1rem;color:#fff;font-weight:700;direction:${q.dir || 'inherit'}" class="minigame-prompt">${questionPrompt(q)}</span>
           <span id="fishTimer" style="color:#74c0fc;font-family:'Fredoka',sans-serif;font-size:1.1rem;font-weight:900;white-space:nowrap;margin-right:8px">⏱ ${_fFmt(secs)}</span>
         </div>
         <div style="display:flex;gap:8px">
@@ -252,7 +245,7 @@ window.FishingGame = (function () {
   function inspectFish(i) {
     const f = state.aquarium[i];
     if (!f) return;
-    const nick = prompt(`✏️ שם הדג שלך (${f.emoji} ${f.name}):`, f.nickname || f.name);
+    const nick = prompt(interfaceText(`✏️ שם הדג שלך (${f.emoji} ${f.name}):`), f.nickname !== f.name && f.nickname || interfaceText(f.name));
     if (nick !== null && nick.trim()) {
       state.aquarium[i].nickname = nick.trim();
       mgSave({ aquarium: state.aquarium, casts: state.casts, totalPts: state.totalPts });

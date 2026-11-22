@@ -942,3 +942,6 @@ html[dir="rtl"] .arcade-play > span { display:inline-block; transform:scaleX(-1)
 
 .geometry-figure { display:block; width:100%; height:auto; margin-inline:auto; background:#191632; border-radius:12px; direction:ltr }
 .question-visual .geometry-figure,.question-visual .shape-diagram { display:block; width:100%; max-width:36rem; height:auto; margin-inline:auto }
+
+.arcade-help { text-align:center; margin-bottom:10px; }
+.arcade-help .game-help-dismiss { padding:.4rem 1rem; background:#ffd43b22; border:1px solid #ffd43b88; border-radius:999px; color:#ffe391; font:inherit; cursor:pointer; }
