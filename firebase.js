@@ -1,7 +1,7 @@
 // ══ FIREBASE CONFIG & AUTH ══
 // This file handles: init, auth state, login, register, save/load, friends, password reset.
 
-import "./family.js?v=42";
+import "./family.js?v=43";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
   onAuthStateChanged, signOut, updatePassword, EmailAuthProvider,

@@ -1072,3 +1072,5 @@ html[dir="rtl"] .arcade-play > span { display:inline-block; transform:scaleX(-1)
 .family-panel .study-question{background:#353054;padding:1rem;border-radius:14px}.family-panel p{margin:0;color:#ddd6eb}
 #familyVisual{width:100%;max-width:640px;justify-self:center}#familyVisual:empty{display:none}
 @media(max-width:600px){#familyScreen{padding-inline:8px}.family-panel{width:100%}.family-panel .family-row{align-items:flex-start}.family-panel select{width:100%}}
+
+.answer-review{flex-basis:100%;min-width:0}.answer-review summary{padding:.8rem .2rem;color:#c4b2ff;cursor:pointer;font-weight:700}.answer-review select{margin:.4rem 0}.answer-review ol{padding-inline-start:2rem}.answer-review li{padding:.8rem .4rem;border-block-start:1px solid #51476a;overflow-wrap:anywhere}.answer-review li>div{margin:.4rem 0}.answer-review .answer-right{color:#79e1bb}.answer-review .answer-wrong{color:#ffaaa9}.answer-review .choice-preview{max-width:340px}

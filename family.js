@@ -3,6 +3,13 @@ import {doc, collection, getDoc, setDoc, deleteDoc, writeBatch, onSnapshot, quer
 const labels = {
  shared:'תנו לילד את הקוד. אחרי שישלח בקשה, אשרו אותה כאן.|Share this code with your child. When they send a request, accept it here.|Передайте код ребёнку. Когда придёт запрос, подтвердите его здесь.|شارك الرمز مع طفلك. عندما يرسل طلبًا، وافق عليه هنا.|Donnez ce code à votre enfant, puis acceptez sa demande ici.|Передайте код дитині. Коли надійде запит, підтвердьте його тут.',
  assigned:'נשלח|Assigned|Назначено|أُرسلت|Envoyé|Призначено',
+ review:'צפייה בתשובות|Review answers|Посмотреть ответы|مراجعة الإجابات|Voir les réponses|Переглянути відповіді',
+ all:'הכול|All|Все|الكل|Toutes|Усі',
+ wrong:'לא נכון|Incorrect|Неверно|غير صحيح|Incorrect|Неправильно',
+ submitted:'התשובה שניתנה|Submitted answer|Ответ ребёнка|إجابة الطفل|Réponse donnée|Відповідь дитини',
+ expected:'התשובה הנכונה|Correct answer|Правильный ответ|الإجابة الصحيحة|Bonne réponse|Правильна відповідь',
+ unavailable:'לא נשמרה|Not recorded|Не сохранён|لم تُحفظ|Non enregistrée|Не збережено',
+ noMatches:'אין תשובות להצגה|No matching answers|Таких ответов нет|لا توجد إجابات مطابقة|Aucune réponse correspondante|Немає таких відповідей',
  family:'המשפחה שלי|My family|Моя семья|عائلتي|Ma famille|Моя родина',
  parent:'חשבון הורה|Parent account|Аккаунт родителя|حساب ولي الأمر|Compte parent|Обліковий запис батьків',
  child:'חשבון ילד|Child account|Детский аккаунт|حساب الطفل|Compte enfant|Дитячий обліковий запис',
@@ -128,7 +135,9 @@ function render(){
 
 }
 function renderReports(host,child){
- if(!host)return;host.replaceChildren(element('h2',label('tasks')));
+ if(!host)return;
+ const previous=new Map([...host.querySelectorAll('details[data-task]')].map(d=>[d.dataset.task,{open:d.open,filter:d.querySelector('select').value}]));
+ host.replaceChildren(element('h2',label('tasks')));
  const rows=tasks.filter(t=>t.child===child&&links.some(l=>l.accepted&&l.parent===t.parent&&l.child===child));
  if(!rows.length)host.append(element('p',label('empty')));
  for(const t of rows){
@@ -140,6 +149,7 @@ function renderReports(host,child){
    card.append(element('strong',translated('answered')+' '+t.index+'/'+t.total+' · '+translated('correct')+' '+t.correct));
    if(t.completed)card.append(element('time',translated('done')+' · '+t.completed.toDate().toLocaleString(document.documentElement.lang)));
    else if(role==='child')card.append(action(label('start'),()=>play(t)));
+   if(role==='parent' && t.answers.length)card.append(reviewAnswers(t,previous.get(t.id)));
    host.append(card);
  }
 }
@@ -187,18 +197,62 @@ async function editor(link){
  }));
  const reports=element('section');reports.id='familyReports';root.append(reports);renderReports(reports,selected);
 }
+// Keep the original task seed so existing assignments can also be reviewed.
+function assignmentQuestion(task,index){
+ let offset=index;
+ const part=task.parts.find(part=>{if(offset<part.count)return true;offset-=part.count;return false;});
+ return seededPractice(task.id+'-'+index,()=>{
+   const choices=practiceChoices(task.grade,part.cat);
+   const choice=part.skill==='mixed'?pick(choices.filter(c=>c.make&&c.diff===part.diff)):choices[Number(part.skill)];
+   return {...choice.make(),cat:part.cat,grade:task.grade};
+ });
+}
+function snapshotQuestion(q){
+ const prompt=document.createElement('template');
+ prompt.innerHTML=questionPrompt(q);
+ for(const frac of prompt.content.querySelectorAll('.math-fraction')){if(frac.children.length===2)frac.replaceWith([...frac.children].map(n=>n.textContent).join('/'));}
+ for(const br of prompt.content.querySelectorAll('br'))br.replaceWith(' ');
+ return Object.fromEntries([...prompt.content.children].map(node=>[node.dataset.language,node.textContent]));
+}
+function reviewAnswers(task,previous){
+ const details=element('details');details.dataset.task=task.id;details.className='answer-review';
+ details.append(element('summary',label('review')));
+ const filter=element('select');filter.setAttribute('aria-label',label('review'));
+ options(filter,['all','correct','wrong'].map(key=>[key,label(key)]));filter.value=previous?.filter||'all';
+ const list=element('ol');details.append(filter,list);
+ function draw(){
+   list.replaceChildren();
+   for(const [index,correct] of task.answers.entries()){
+     if(filter.value!=='all' && correct!==(filter.value==='correct'))continue;
+     const saved=task.responses?.find(entry=>entry.index===index);
+     const item=element('li');item.value=index+1;
+     const status=element('strong',label(correct?'correct':'wrong'));status.className=correct?'answer-right':'answer-wrong';item.append(status);
+     const q=assignmentQuestion(task,index),prompt=element('div');prompt.innerHTML=questionPrompt(q);
+     const matches=!saved||saved.prompts.he===snapshotQuestion(q).he;
+     if(!matches){
+       prompt.replaceChildren();
+       for(const [language,source] of Object.entries(saved.prompts)){
+         const text=element('span',source);text.className='question-language';text.dataset.language=language;text.hidden=language!==activeLanguage;text.dir='auto';prompt.append(text);
+       }
+     }
+     item.append(prompt);
+     if(matches && (q.visual||q.shapeHtml)){const visual=element('div');visual.className='choice-preview';visual.inert=true;item.append(visual);list.append(item);mountQuestionVisual(visual,q);visual.querySelectorAll('.visual-controls,button').forEach(n=>n.remove());}
+     const expected=saved?.expected??(q.fraction?q.fraction.join('/'):String(q.answer));
+     for(const [title,value] of [['submitted',saved?.value??(correct?expected:label('unavailable'))],['expected',expected]]){
+       const row=element('div');row.append(element('span',label(title)),document.createTextNode(' · '),element('bdi',value));item.append(row);
+     }
+     list.append(item);
+   }
+   if(!list.children.length)list.append(element('li',label('noMatches')));
+ }
+ details.ontoggle=()=>{if(details.open)draw();};filter.onchange=draw;details.open=!!previous?.open;
+ return details;
+}
 function play(t){
  if(window.GRADE_CONFIG?.gradeId!==t.grade){showToast(label('wrongGrade'));return;}
  active=t.id;root.replaceChildren();
- let offset=t.index;
- const p=t.parts.find(p=>{if(offset<p.count)return true;offset-=p.count;return false;});
- if(!p){open();return;}
- const q=seededPractice(t.id+'-'+t.index,()=>{
-   const choices=practiceChoices(t.grade,p.cat);
-   const choice=p.skill==='mixed'?pick(choices.filter(c=>c.make&&c.diff===p.diff)):choices[Number(p.skill)];
-   return choice.make();
- });
- root.append(element('h2',CAT_NAMES[p.cat]),element('small',(t.index+1)+' / '+t.total));
+ const q=assignmentQuestion(t,t.index);
+ root.append(element('h2',CAT_NAMES[q.cat]),element('small',(t.index+1)+' / '+t.total));
  const prompt=element('div');prompt.className='study-question';prompt.innerHTML=questionPrompt(q);
  const visual=element('div');visual.className='question-visual';visual.id='familyVisual';
  const input=element('input');input.id='familyAnswer';input.type=q.fraction?'text':'number';input.step='any';input.placeholder='?';input.setAttribute('aria-label',interfaceText('תשובה'));
@@ -206,11 +260,18 @@ function play(t){
  const submit=action(label('submit'),async()=>{
    const answer=numericAnswer(input.value,q.fraction);if(!Number.isFinite(answer)){showToast(label('number'));return;}
    const correct=Math.abs(answer-q.answer)<1e-8;
-   const applied=await runTransaction(db(),async tx=>{
+   const submission={index:t.index,value:input.value.trim(),expected:q.fraction?q.fraction.join('/'):String(q.answer),prompts:snapshotQuestion(q)};
+   const save=withDetails=>runTransaction(db(),async tx=>{
      const ref=taskRef(t),current=(await tx.get(ref)).data();
      if(current.index!==t.index)return false;
-     tx.update(ref,{index:t.index+1,correct:current.correct+Number(correct),answers:[...current.answers,correct],completed:t.index+1===t.total?serverTimestamp():null});return true;
+     tx.update(ref,{...(withDetails?{responses:[...(current.responses||[]),submission]}:{}),index:t.index+1,correct:current.correct+Number(correct),answers:[...current.answers,correct],completed:t.index+1===t.total?serverTimestamp():null});return true;
    });
+   let applied;
+   try{applied=await save(true);}catch(error){
+     if(error.code!=='permission-denied')throw error;
+     // Projects running the previous rules still accept the original progress update.
+     applied=await save(false);
+   }
    if(active!==t.id)return;
    const next=(await getDoc(taskRef(t))).data();if(active!==t.id)return;
    if(applied)showToast(correct?'✅ '+interfaceText('נכון!'):'✏️ '+interfaceText('תשובה')+' '+(q.fraction?q.fraction.join('/'):q.answer));

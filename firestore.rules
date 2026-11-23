@@ -41,9 +41,19 @@ service cloud.firestore {
             && d.total is int && d.total >= d.parts.size() && d.total <= 100
             && d.index == 0 && d.correct == 0 && d.answers == [] && d.created == request.time && d.completed == null;
         }
+        function validResponse(d,old) {
+          let previous = old.get('responses', []);
+          let entry = d.responses[previous.size()];
+          return d.responses == previous.concat([entry]) && entry.keys().hasOnly(['index','value','expected','prompts'])
+            && entry.index == old.index && entry.value is string && entry.value.size() <= 128
+            && entry.expected is string && entry.expected.size() <= 128
+            && entry.prompts is map && entry.prompts.keys().hasAll(['he','en','fr','uk','ar','ru'])
+            && entry.prompts.keys().hasOnly(['he','en','fr','uk','ar','ru']);
+        }
         function oneAnswer(d,old) {
           return own(old.child) && old.index < old.total && d.index == old.index + 1
-            && d.diff(old).affectedKeys().hasOnly(['index','correct','answers','completed'])
+            && d.diff(old).affectedKeys().hasOnly(['index','correct','answers','completed','responses'])
+            && (!d.diff(old).affectedKeys().hasAny(['responses']) || validResponse(d,old))
             && (d.correct == old.correct || d.correct == old.correct + 1)
             && d.answers == old.answers.concat([d.correct > old.correct])
             && (d.index == old.total ? d.completed == request.time : d.completed == null);
