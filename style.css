@@ -1105,3 +1105,20 @@ html[dir="rtl"] .arcade-play > span { display:inline-block; transform:scaleX(-1)
 .settings-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:16px}
 @media(max-width:850px){#setGradeGrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:620px){#settings-scr{padding-inline:12px}.settings-grid{grid-template-columns:minmax(0,1fr);gap:12px}#setGradeGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+#settingsContent .settings-grid{align-items:stretch}
+.settings-wide{grid-column:1/-1}
+.settings-streak,.settings-management-grid{display:grid;gap:12px}
+.settings-streak{grid-template-columns:repeat(3,minmax(0,1fr))}
+.settings-management-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+#settings-scr :is(.settings-streak,.settings-management-grid) .set-row{
+  padding:12px;min-width:0;border:1px solid var(--spark-line);
+  border-radius:12px;background:var(--spark-inset)
+}
+#settings-scr .settings-streak .set-row{justify-content:space-between}
+#settings-scr .settings-streak input{width:4rem}
+#settingsContent .settings-actions{margin-top:0}
+#settings-scr .settings-management{background:#211d34}
+@media(max-width:750px){
+  .settings-streak,.settings-management-grid{grid-template-columns:minmax(0,1fr)}
+}
