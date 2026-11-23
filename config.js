@@ -67,6 +67,7 @@ const ALL_CATS = [
   { id:'perimeter',       cls:'',         icon:'📏', name:'היקף',                sub:'סכום כל הצלעות',        borderColor:'#00cec9' },
   { id:'area',            cls:'',         icon:'📐', name:'שטח',                 sub:'שטח צורות',             borderColor:'#6c5ce7' },
   { id:'shapes3d',        cls:'',         icon:'🧊', name:'גופים',               sub:'פנים, קצוות, קודקודים', borderColor:'#74b9ff' },
+  { id:'clock', icon:'🕒', name:'קריאת שעון' },
   { id:'measurement',     cls:'',         icon:'📏', name:'מדידה',               sub:'אורך, משקל, זמן, נפח',  borderColor:'#fab1a0' },
   { id:'data',            cls:'',         icon:'📊', name:'חקר נתונים',          sub:'קריאה והשוואה של נתונים',      borderColor:'#6c5ce7' },
   {id:'place', icon:'🔢', name:'מבנה המספר'},
@@ -85,7 +86,7 @@ const ALL_CATS = [
   {id:'graphs', icon:'📈', name:'קריאת גרפים'},
   // ── מיוחד ──
   { id:'minigames', cls:'mul',     icon:'🎮', name:'מיני-משחקים',  sub:'דיג, מבוך, חלל',  borderColor:'#ffd43b',special:'minigames' },
-  { id:'learn',     cls:'learn',   icon:'📚', name:'תזכורת',        sub:'חוקים ונוסחאות',   special:'learn' },
+  { id:'learn',     cls:'learn',   icon:'📚', name:'תזכורת',        sub:'כללים ודוגמאות פתורות',   special:'learn' },
   { id:'history',   cls:'history', icon:'📊', name:'היסטוריה',     sub:'כל הפתרונות',      special:'history' },
   { id:'mistakes',  cls:'mistakes',icon:'🔄', name:'טעויות',       sub:'שיפור עצמי',       special:'mistakes' },
   { id:'exam',      cls:'test',    icon:'🏆', name:'מבחן',         sub:'בחר נושאים',       special:'exam' },

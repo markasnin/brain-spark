@@ -2,30 +2,6 @@
 // Replaces the old "learn/lesson" system.
 // No locking, no XP — just fast reference cards for any topic.
 
-// ── All reference topics (filtered by grade) ──
-const REMINDER_TOPICS = [
-  { id:'r_add',       grade:['א','ב','ג','ד','ה','ו'], icon:'➕', name:'חיבור',             color:'#2ed573' },
-  { id:'r_sub',       grade:['א','ב','ג','ד','ה','ו'], icon:'➖', name:'חיסור',             color:'#ff4757' },
-  { id:'r_mul',       grade:['ב','ג','ד','ה','ו'],     icon:'✖️', name:'כפל',               color:'#ffd32a' },
-  { id:'r_div',       grade:['ג','ד','ה','ו'],         icon:'➗', name:'חילוק',             color:'#1e90ff' },
-  { id:'r_orderops',  grade:['ג','ד','ה','ו'],         icon:'🔢', name:'סדר פעולות',        color:'#a29bfe' },
-  { id:'r_fractions', grade:['ג','ד','ה','ו'],         icon:'½',  name:'שברים',             color:'#54a0ff' },
-  { id:'r_decimals',  grade:['ד','ה','ו'],             icon:'🔢', name:'שברים עשרוניים',    color:'#00cec9' },
-  { id:'r_percents',  grade:['ה','ו'],                  icon:'💯', name:'אחוזים',            color:'#fd79a8' },
-  { id:'r_ratio',     grade:['ו'],                      icon:'⚖️', name:'יחס',               color:'#e17055' },
-  { id:'r_shapes2d',  grade:['א','ב','ג','ד','ה','ו'], icon:'🔷', name:'צורות 2D',          color:'#c77dff' },
-  { id:'r_angles',    grade:['ג','ד','ה','ו'],         icon:'📐', name:'זוויות',            color:'#fdcb6e' },
-  { id:'r_perimeter', grade:['ג','ד','ה','ו'],         icon:'📏', name:'היקף',              color:'#00cec9' },
-  { id:'r_area',      grade:['ד','ה','ו'],             icon:'📐', name:'שטח',               color:'#6c5ce7' },
-  { id:'r_shapes3d',  grade:['ד','ה','ו'],             icon:'🧊', name:'גופים 3D',          color:'#74b9ff' },
-  { id:'r_volume',    grade:['ו'],                      icon:'🧊', name:'נפח',               color:'#0984e3' },
-  { id:'r_circle',    grade:['ו'],                      icon:'⭕', name:'מעגל',              color:'#e84393' },
-  { id:'r_measure',   grade:['א','ב','ג','ד','ה','ו'], icon:'📏', name:'מדידה ויחידות',     color:'#fab1a0' },
-  { id:'r_time',      grade:['א','ב','ג','ד','ה','ו'], icon:'⏰', name:'זמן',               color:'#fdcb6e' },
-  { id:'r_stats',     grade:['ב','ג','ד','ה','ו'],     icon:'📊', name:'נתונים וממוצע',     color:'#6c5ce7' },
-  { id:'r_integers',  grade:['ו'],                      icon:'➖', name:'מספרים שלמים',      color:'#636e72' },
-];
-
 // ── Reference content ──
 const REMINDERS = {
 
@@ -492,207 +468,222 @@ const REMINDERS = {
   ]},
 };
 
-// ─────────────────────────────────────────
-// STYLES — injected once
-// ─────────────────────────────────────────
-(function injectReminderStyles(){
-  if (document.getElementById('rem-styles')) return;
-  const s = document.createElement('style');
-  s.id = 'rem-styles';
-  s.textContent = `
-    #remind-scr { padding:16px 16px 60px; }
+const guideText = [
+  ['מדריך הלימוד','Study guide','Справочник','دليل التعلّم','Guide de révision','Навчальний довідник'],
+  ['נושאים','Topics','Темы','المواضيع','Thèmes','Теми'],
+  ['בחרו נושא, קראו את הכלל ונסו דוגמה.','Choose a topic, review the rule and try an example.','Выберите тему, прочитайте правило и попробуйте решить пример.','اختاروا موضوعًا واقرؤوا القاعدة وجرّبوا مثالًا.','Choisis un thème, lis la règle et essaie un exemple.','Оберіть тему, прочитайте правило й розв’яжіть приклад.'],
+  ['איך פותרים?','How to solve it','Как решать','كيف نحلّ؟','Comment résoudre ?','Як розв’язати?'],
+  ['נסו בעצמכם','Try it yourself','Решите сами','جرّبوا بأنفسكم','À toi de jouer','Спробуйте самі'],
+  ['הצגת הפתרון','Show solution','Показать решение','عرض الحل','Voir la solution','Показати розв’язок'],
+  ['תשובה','Answer','Ответ','الإجابة','Réponse','Відповідь'],
+  ['תרגול בנושא','Practice this topic','Тренировка по теме','التدرّب على الموضوع','Pratiquer ce thème','Тренуватися з цієї теми'],
+  ['טבלת הכפל','Times table','Таблица умножения','جدول الضرب','Table de multiplication','Таблиця множення'],
+  ['בחרו משבצת. המספר בראש העמודה כפול המספר בתחילת השורה נותן את המכפלה.','Pick a cell. Multiply its column number by its row number to find the product.','Выберите клетку. Умножьте число столбца на число строки.','اختاروا خانة. اضربوا رقم العمود في رقم الصف لإيجاد حاصل الضرب.','Choisis une case. Multiplie le nombre de sa colonne par celui de sa ligne.','Оберіть клітинку. Помножте число стовпця на число рядка.'],
+  ['בחרו נושא למעבר לדוגמאות','Choose a topic to see examples','Выберите тему, чтобы увидеть примеры','اختاروا موضوعًا لرؤية الأمثلة','Choisis un thème pour voir les exemples','Оберіть тему, щоб побачити приклади'],
+  ['בשעה שלמה המחוג הארוך מצביע על 12. המחוג הקצר מצביע על השעה.','On the hour, the long hand points to 12. The short hand shows the hour.','В ровный час длинная стрелка указывает на 12, а короткая показывает час.','عند تمام الساعة يشير العقرب الطويل إلى 12، ويبيّن العقرب القصير الساعة.','À l’heure pile, la grande aiguille pointe sur 12. La petite indique l’heure.','У рівну годину довга стрілка показує на 12, а коротка показує годину.'],
+  ['המחוג הקצר מצביע על המספר שבתשובה.','The short hand points to the answer.','Короткая стрелка указывает на ответ.','يشير العقرب القصير إلى الإجابة.','La petite aiguille pointe sur la réponse.','Коротка стрілка вказує на відповідь.'],
+  ['מספר שלם מחולק לחלקים שווים. בחצי יש חלק אחד מתוך שניים, וברבע יש חלק אחד מתוך ארבעה.','Split a whole into equal parts. A half is one of two parts, and a quarter is one of four.','Разделите целое на равные части. Половина — одна из двух частей, четверть — одна из четырёх.','قسّموا الكل إلى أجزاء متساوية. النصف جزء من جزأين، والربع جزء من أربعة.','Partage le tout en parts égales. Une moitié est une part sur deux et un quart une part sur quatre.','Поділіть ціле на рівні частини. Половина — одна з двох частин, а чверть — одна з чотирьох.'],
+  ['ספרו כמה חלקים שווים יש. המונה הוא מספר החלקים שלוקחים, והמכנה הוא מספר החלקים בשלם.','Count the equal parts. The numerator tells how many you take. The denominator tells how many make the whole.','Посчитайте равные части. Числитель показывает, сколько берём, а знаменатель — сколько частей в целом.','عدّوا الأجزاء المتساوية. يبيّن البسط عدد الأجزاء المأخوذة، والمقام عدد أجزاء الكل.','Compte les parts égales. Le numérateur indique combien tu en prends. Le dénominateur indique combien forment le tout.','Порахуйте рівні частини. Чисельник показує, скільки беремо, а знаменник — скільки частин у цілому.']
+];
+for (const [he, ...translations] of guideText) uiTranslations.set(he, translations);
 
-    .rem-topbar {
-      display:flex; align-items:center; justify-content:space-between;
-      width:100%; max-width:440px; margin-bottom:16px;
-    }
-    .rem-title {
-      font-family:'Fredoka',sans-serif; font-size:2rem; font-weight:700;
-      background:linear-gradient(135deg,#fff 20%,#ffd32a 60%,#ff6348 100%);
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-    }
+const guideReferenceIds = {
+  add:'r_add', sub:'r_sub', mul:'r_mul', div:'r_div', order:'r_orderops',
+  fractions:'r_fractions', fractions_unit:'r_fractions', decimals:'r_decimals',
+  percent:'r_percents', ratio:'r_ratio', shapes:'r_shapes2d', angles:'r_angles',
+  area:'r_area', volume:'r_volume', circle:'r_circle', measurement:'r_measure',
+  data:'r_stats', negatives:'r_integers'
+};
+const guideRules = {
+  add:'התחילו במספר הראשון. הוסיפו את המספר השני כדי למצוא את הסכום.',
+  sub:'התחילו בכמות הנתונה והורידו ממנה את הכמות שמחסרים. מה שנשאר הוא ההפרש.',
+  mul:'הכפילו את מספר הקבוצות במספר הפריטים בכל קבוצה.',
+  div:'חלקו לקבוצות שוות. אם נשארו פריטים שלא ממלאים קבוצה, הם השארית.',
+  unknown:'בדקו מה כבר ידוע. כאשר חסר מחובר, חסרו את המחובר הידוע מהסכום. למשל ⁦3 + ▲ = 7⁩, לכן ⁦▲ = 7 − 3 = 4⁩.',
+  place:'ספרת היחידות נמצאת בצד ימין. משמאלה נמצאת ספרת העשרות, ואחריה ספרת המאות.',
+  rounding:'באומדן בודקים מה קרוב או גדול יותר בלי לחשב במדויק. בעיגול בוחרים את המספר העגול הקרוב ביותר.',
+  divisibility:'מספר מתחלק ב־2 אם ספרת היחידות זוגית, ב־5 אם היא 0 או 5, וב־10 אם היא 0. בחלוקה ב־3 וב־9 בודקים את סכום הספרות.',
+  shapes:'הצביעו על הצלעות וספרו אותן אחת אחת. קודקוד הוא נקודת המפגש של שתי צלעות.',
+  angles:'זווית ישרה היא כמו פינה של דף. זווית חדה קטנה ממנה, וזווית קהה גדולה ממנה וקטנה מזווית שטוחה.',
+  data:'קראו את הכותרת ואת התוויות. בדקו מה מייצגת כל עמודה או משבצת לפני שמחשבים.',
+  word:'כתבו לעצמכם מה ידוע ומה צריך למצוא. בחרו פעולה שמתאימה לסיפור ובדקו שהתוצאה הגיונית.',
+  order:'קודם פותרים סוגריים, אחר כך חזקות, אחר כך כפל וחילוק, ובסוף חיבור וחיסור. פעולות באותה דרגה פותרים משמאל לימין.',
+  powers:'חזקה אומרת כמה פעמים כופלים את הבסיס בעצמו. השורש הריבועי הוא המספר שכאשר כופלים אותו בעצמו מקבלים את המספר הנתון.',
+  equations:'כדי לבודד את המשתנה, עשו אותה פעולה בשני אגפי המשוואה. הציבו את התשובה כדי לבדוק.',
+  coordinates:'המספר הראשון בזוג הסדור הוא המיקום האופקי. המספר השני הוא המיקום האנכי.',
+  graphs:'מצאו את הערך הנתון על הציר המתאים. עקבו עד לנקודה בגרף וקראו את הערך בציר השני.',
+  probability:'כאשר כל האפשרויות שוות בסיכוייהן, מחלקים את מספר התוצאות המתאימות במספר כל התוצאות.',
+  transforms:'בהזזה כל נקודה זזה באותו כיוון ובאותו מרחק. בשיקוף כל נקודה עוברת לצד השני של ציר השיקוף, באותו מרחק ממנו.',
+  pythagoras:'במשולש ישר־זווית מחברים את ריבועי שני הניצבים ומוציאים שורש ריבועי כדי למצוא את היתר.',
+  clock:'בשעה שלמה המחוג הארוך מצביע על 12. המחוג הקצר מצביע על השעה.',
+  fractions_half:'מספר שלם מחולק לחלקים שווים. בחצי יש חלק אחד מתוך שניים, וברבע יש חלק אחד מתוך ארבעה.',
+  fractions_unit:'ספרו כמה חלקים שווים יש. המונה הוא מספר החלקים שלוקחים, והמכנה הוא מספר החלקים בשלם.'
+};
 
-    /* chips */
-    .rem-chips {
-      display:flex; flex-wrap:wrap; gap:7px;
-      width:100%; max-width:440px; margin-bottom:18px;
-    }
-    .rem-chip {
-      display:inline-flex; align-items:center; gap:5px;
-      padding:6px 12px; border-radius:99px; cursor:pointer; border:none;
-      font-family:'Rubik',sans-serif; font-size:.78rem; font-weight:700;
-      background:rgba(255,255,255,.07); color:rgba(255,255,255,.75);
-      border:1.5px solid rgba(255,255,255,.1);
-      transition:all .16s cubic-bezier(.34,1.4,.64,1); white-space:nowrap;
-    }
-    .rem-chip:hover { transform:translateY(-2px); background:rgba(255,255,255,.12); color:#fff; }
-    .rem-chip.active {
-      background:var(--chip-color,#fff)22;
-      color:var(--chip-color,#fff);
-      border-color:var(--chip-color,#fff);
-      box-shadow:0 0 14px var(--chip-color,#fff)44;
-      transform:translateY(-1px);
-    }
-
-    /* reference card */
-    .rem-card {
-      width:100%; max-width:440px;
-      background:linear-gradient(145deg,var(--card),var(--card2));
-      border-radius:20px; overflow:hidden;
-      border:1.5px solid var(--rem-color,rgba(255,255,255,.15));
-      box-shadow:0 8px 40px rgba(0,0,0,.6), 0 0 20px var(--rem-glow,transparent);
-      animation:rem-pop .22s cubic-bezier(.34,1.4,.64,1) both;
-    }
-    @keyframes rem-pop {
-      from { opacity:0; transform:scale(.95) translateY(10px); }
-      to   { opacity:1; transform:scale(1) translateY(0); }
-    }
-
-    .rem-card-head {
-      padding:18px 20px 15px;
-      background:linear-gradient(135deg,var(--rem-color,rgba(255,255,255,.05))11,transparent);
-      border-bottom:1px solid rgba(255,255,255,.07);
-      display:flex; align-items:center; gap:12px;
-    }
-    .rem-card-title {
-      font-family:'Fredoka',sans-serif; font-size:1.6rem; font-weight:700;
-      color:var(--rem-color,#fff);
-      text-shadow:0 0 20px var(--rem-glow,transparent);
-    }
-
-    /* sections */
-    .rem-sec { padding:14px 20px 12px; border-bottom:1px solid rgba(255,255,255,.05); }
-    .rem-sec:last-child { border-bottom:none; padding-bottom:20px; }
-    .rem-sec-head {
-      font-size:.72rem; font-weight:800; letter-spacing:1.2px;
-      color:var(--rem-color,#ffd32a); opacity:.9;
-      text-transform:uppercase; margin-bottom:10px;
-    }
-
-    /* table */
-    .rem-tbl { width:100%; border-collapse:collapse; }
-    .rem-tbl tr { border-bottom:1px solid rgba(255,255,255,.04); }
-    .rem-tbl tr:last-child { border-bottom:none; }
-    .rem-tbl td { padding:6px 2px; vertical-align:top; line-height:1.45; }
-    .rem-tbl td:first-child {
-      font-family:'Rubik',sans-serif; font-weight:700; font-size:.84rem;
-      color:var(--rem-color,#fff); white-space:nowrap;
-      padding-left:0; padding-right:16px; width:40%;
-    }
-    .rem-tbl td:last-child {
-      font-size:.82rem; color:rgba(255,255,255,.78);
-    }
-
-    /* empty state */
-    .rem-empty {
-      text-align:center; padding:40px 20px;
-      color:var(--txt2); font-size:.95rem;
-    }
-  `;
-  document.head.appendChild(s);
-})();
-
-// ─────────────────────────────────────────
-// RENDER
-// ─────────────────────────────────────────
 function openLearn() { openReminder(); }
 
 function openReminder() {
-  _ensureReminderScreen();
-  _buildReminderChips();
-  // Auto-select first topic for current grade
-  const grade = (window.GRADE_CONFIG || {}).gradeId || 'ו';
-  const first = reminderTopicsForGrade(grade)[0];
-  if (first) _showReminderCard(first.id);
-  show('remind-scr');
+  let screen = document.getElementById('remind-scr');
+  if (!screen) {
+    screen = document.createElement('div');
+    screen.className = 'scr';
+    screen.id = 'remind-scr';
+    document.body.append(screen);
+  }
+  const config = window.GRADE_CONFIG;
+  const topics = ALL_CATS.filter(topic => config?.availableCategories.includes(topic.id));
+  if (config?.gradeId !== 'א') topics.unshift({id:'timesTable', icon:'×', name:'טבלת הכפל'});
+
+  screen.innerHTML = `
+    <div class="study-guide">
+      <header class="study-banner">
+        <div><h1>מדריך הלימוד</h1><p>בחרו נושא, קראו את הכלל ונסו דוגמה.</p></div>
+        <button type="button" class="back" onclick="show('home')">← חזרה</button>
+      </header>
+      <div class="study-layout">
+        <aside class="study-nav">
+          <h2>נושאים</h2>
+          <label class="study-select"><span>בחרו נושא למעבר לדוגמאות</span><select id="study-topic-select"></select></label>
+          <div class="study-topics"></div>
+        </aside>
+        <section class="study-content" id="study-topic" aria-labelledby="study-topic-heading"></section>
+      </div>
+    </div>`;
+  const nav = screen.querySelector('.study-topics');
+  const select = screen.querySelector('select');
+  const content = screen.querySelector('.study-content');
+  const buttons = new Map();
+  function selectTopic(topic) {
+    select.value = topic.id;
+    buttons.forEach((button,id) => button.setAttribute('aria-pressed', String(id === topic.id)));
+    renderStudyTopic(content, topic, config.gradeId);
+  }
+  for (const topic of topics) {
+    select.add(new Option(topic.name, topic.id));
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.innerHTML = `<span aria-hidden="true">${topic.icon}</span><span>${topic.name}</span>`;
+    button.setAttribute('aria-controls',content.id);
+    button.onclick = () => selectTopic(topic);
+    nav.append(button);
+    buttons.set(topic.id,button);
+  }
+  select.onchange = () => selectTopic(topics.find(topic => topic.id === select.value));
+  if (topics.length) selectTopic(topics[0]);
+  show(screen.id);
+  screen.scrollIntoView({block:'start'});
 }
 
-function _ensureReminderScreen() {
-  if (document.getElementById('remind-scr')) return;
-  const scr = document.createElement('div');
-  scr.className = 'scr'; scr.id = 'remind-scr';
-  scr.innerHTML = `
-    <div class="rem-topbar">
-      <span class="rem-title">📚 תזכורת</span>
-      <button class="back" onclick="show('home')" style="margin-top:0">← חזרה</button>
-    </div>
-    <div class="rem-chips" id="remChips"></div>
-    <div id="remCardWrap" style="width:100%;max-width:440px"></div>
-  `;
-  document.body.appendChild(scr);
+function renderStudyTopic(content, topic, grade) {
+  content.innerHTML = `<h2 id="study-topic-heading"><span aria-hidden="true">${topic.icon}</span> <span>${topic.name}</span></h2>`;
+  if (topic.id === 'timesTable') {
+    renderStudyTimesTable(content);
+    return;
+  }
+  const rule = guideRules[topic.id];
+  const reference = REMINDERS[guideReferenceIds[topic.id]];
+  const sample = curriculum[grade]?.[topic.id] && curriculumQuestion(grade, topic.id, 'easy', 4);
+  const tips = rule ? [['',rule]] : reference?.sections[0]?.rows.slice(0,3) ||
+    (sample?.explanation ? [['',sample.explanation]] : []);
+  if (tips.length) {
+    const rulePanel = document.createElement('div');
+    rulePanel.className = 'study-rule';
+    rulePanel.innerHTML = '<h3>איך פותרים?</h3><ul>'+tips.map(([label, explanation]) =>
+      `<li>${label ? '<strong>'+label+'</strong> ' : ''}<span>${explanation}</span></li>`).join('')+'</ul>';
+    content.append(rulePanel);
+  }
+  const choices = practiceChoices(grade, topic.id).filter(choice => choice.make);
+  const examples = document.createElement('div');
+  examples.className = 'study-examples';
+  examples.innerHTML = '<h3>נסו בעצמכם</h3>';
+  content.append(examples);
+  const make = choices.length === 1 ? choices[0].make : undefined;
+  const questions = genPool(topic.id, 'easy', 2, [], make);
+  if (choices.length > 1) {
+    questions[0] = choices[0].make();
+    questions[1] = choices.find(choice => choice.diff === 'medium')?.make() || choices[1].make();
+  }
+  for (const [index, q] of questions.entries()) {
+    const card = document.createElement('article');
+    card.className = 'study-example';
+    const genericHint = q.explanation === variantHint[0] ? '' : q.explanation;
+    let explanation = q.cat === 'clock' ? 'המחוג הקצר מצביע על המספר שבתשובה.' : genericHint;
+    if (!explanation && ['add','sub','mul','div'].includes(q.cat)) {
+      const operands = q.text.match(/^(\d+)\s*[+−×÷]\s*(\d+)\s*=/);
+      if (operands) {
+        const [,first,second] = operands;
+        explanation = {add:`${first} + ${second} = ${q.answer}`, sub:`${q.answer} + ${second} = ${first}`,
+          mul:`${first} × ${second} = ${q.answer}`, div:`${second} × ${q.answer} = ${first}`}[q.cat];
+      }
+    }
+    card.innerHTML = `
+      <div class="study-question" dir="${q.dir || 'auto'}">${questionPrompt(q)}</div>
+      <div class="question-visual study-visual"></div>
+      <details ${index === 0 ? 'open' : ''}>
+        <summary>הצגת הפתרון</summary>
+        ${explanation ? `<p>${explanation}</p>` : ''}
+        <p><strong>תשובה</strong> <bdi>${worksheetAnswerLabel(q)}</bdi></p>
+      </details>`;
+    examples.append(card);
+    const visual = card.querySelector('.study-visual');
+    mountQuestionVisual(visual, q);
+    const cells = visual.querySelectorAll('.fraction-cell-grid button');
+    if (cells.length) {
+      visual.inert = true;
+      const solution = card.querySelector('details');
+      const showShading = () => cells.forEach((cell,i) => cell.setAttribute('aria-pressed', String(solution.open && i < q.answer)));
+      solution.addEventListener('toggle', showShading);
+      showShading();
+    }
+  }
+  const practice = document.createElement('button');
+  practice.className = 'auth-btn study-practice';
+  practice.type = 'button';
+  practice.textContent = 'תרגול בנושא';
+  practice.onclick = () => openCat(topic.id);
+  content.append(practice);
 }
 
-function reminderTopicsForGrade(grade) {
-  const aligned = Object.keys(curriculum[grade] || {}).filter(cat=>!worksheetGrades[grade] || worksheetGrades[grade][cat]);
-  const topics = ALL_CATS.filter(cat => aligned.includes(cat.id))
-    .map(cat => ({...cat, color:cat.borderColor || '#54a0ff'}));
-  const gradeTopics = window.GRADE_CONFIG?.availableCategories || [];
-  return [...topics, ...REMINDER_TOPICS.filter(t => t.grade.includes(grade)
-    && !aligned.includes(t.id)
-    && (gradeTopics.includes('negatives') || t.id !== 'r_integers')
-    && (gradeTopics.includes('percent') || t.id !== 'r_percents'))];
+function renderStudyTimesTable(content) {
+  const size = 10;
+  const cells = Array.from({length:size}, (_,i) => i+1);
+  const table = document.createElement('table');
+  table.className = 'study-times-table';
+  table.setAttribute('aria-labelledby','study-topic-heading');
+  table.dir = 'ltr';
+  table.innerHTML = `<thead><tr><th scope="col">×</th>${cells.map(col => `<th scope="col">${col}</th>`).join('')}</tr></thead>
+    <tbody>${cells.map(row => `<tr><th scope="row">${row}</th>${cells.map(col =>
+      `<td><button type="button" aria-label="${row} × ${col} = ${row*col}" aria-pressed="false">${row*col}</button></td>`).join('')}</tr>`).join('')}</tbody>`;
+  const hint = document.createElement('p');
+  hint.className = 'study-table-hint';
+  hint.textContent = 'בחרו משבצת. המספר בראש העמודה כפול המספר בתחילת השורה נותן את המכפלה.';
+  const result = document.createElement('output');
+  result.className = 'study-table-result';
+  result.dir = 'ltr';
+  result.setAttribute('aria-live','polite');
+  const selectCell = button => {
+    const cell = button.parentElement;
+    const row = table.rows[cell.parentElement.rowIndex];
+    table.querySelector('[aria-pressed="true"]')?.setAttribute('aria-pressed','false');
+    table.querySelectorAll('.study-highlight').forEach(el => el.classList.remove('study-highlight'));
+    for (const item of row.cells) item.classList.add('study-highlight');
+    for (const item of table.rows) item.cells[cell.cellIndex].classList.add('study-highlight');
+    button.setAttribute('aria-pressed','true');
+    result.textContent = button.getAttribute('aria-label');
+  };
+  table.onclick = event => {
+    const button = event.target.closest('button');
+    if (button) selectCell(button);
+  };
+  const example = document.createElement('article');
+  example.className = 'study-example study-table-example';
+  example.innerHTML = `<h3>נסו בעצמכם</h3><p dir="ltr">7 × 8 = ?</p>
+    <details><summary>הצגת הפתרון</summary><p dir="ltr">7 × 8 = 56</p></details>`;
+  content.append(hint, result, table, example);
+  selectCell(table.rows[3].cells[4].firstElementChild);
 }
 
-function _buildReminderChips() {
-  const container = document.getElementById('remChips');
-  if (!container) return;
-  container.innerHTML = '';
-  const grade = (window.GRADE_CONFIG || {}).gradeId || 'ו';
-
-  reminderTopicsForGrade(grade).forEach(t => {
-    const chip = document.createElement('button');
-    chip.className = 'rem-chip';
-    chip.id = 'chip-' + t.id;
-    chip.style.setProperty('--chip-color', t.color);
-    chip.innerHTML = `${t.icon} ${t.name}`;
-    chip.onclick = () => _showReminderCard(t.id);
-    container.appendChild(chip);
-  });
-}
-
-function _showReminderCard(id) {
-  document.querySelectorAll('.rem-chip').forEach(c => c.classList.remove('active'));
-  const chip = document.getElementById('chip-' + id);
-  if (chip) chip.classList.add('active');
-
-  const wrap = document.getElementById('remCardWrap');
-  if (!wrap) return;
-
-  const grade = window.GRADE_CONFIG?.gradeId || 'ו';
-  const topic = reminderTopicsForGrade(grade).find(t => t.id === id);
-  const examples = curriculum[grade]?.[id] && curriculumDifficulties.map(diff => {
-    const q = curriculumQuestion(grade, id, diff, 5);
-    return [q.text + (q.shapeHtml || ''), q.explanation + '<br><strong>' + q.answer + '</strong>'];
-  });
-  const ref = examples
-    ? {color:topic.color, title:topic.name, sections:[{head:'דוגמאות פתורות', rows:examples}]}
-    : REMINDERS[id];
-  if (!ref) { wrap.innerHTML = `<div class="rem-empty">⚠️ אין מידע לנושא זה עדיין.</div>`; return; }
-
-  const icon = topic?.icon || '📚';
-  const color = ref.color;
-  const glow = color + '44';
-
-  let html = `<div class="rem-card" style="--rem-color:${color};--rem-glow:${glow}">`;
-  html += `<div class="rem-card-head">
-    <span style="font-size:2rem;line-height:1;filter:drop-shadow(0 0 12px ${color})">${icon}</span>
-    <span class="rem-card-title">${ref.title}</span>
-  </div>`;
-
-  ref.sections.forEach(sec => {
-    html += `<div class="rem-sec">`;
-    html += `<div class="rem-sec-head">${sec.head}</div>`;
-    html += `<table class="rem-tbl">`;
-    sec.rows.forEach(([k, v]) => {
-      html += `<tr><td>${k}</td><td>${v}</td></tr>`;
-    });
-    html += `</table></div>`;
-  });
-  html += `</div>`;
-  wrap.innerHTML = html;
-}
-
-// ── Backward-compat stubs ──
-function openLesson(id) { openReminder(); }
+// Backward compatibility for callers of the old lessons screen.
+function openLesson() { openReminder(); }
 const LEARN_TOPICS = [];
 const LESSONS = {};

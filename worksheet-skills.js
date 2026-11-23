@@ -4,7 +4,7 @@
 const worksheetGrades = {
   א: {
     add:'operation', sub:'operation', unknown:'unknown', place:'count5 count10 names10 names20 sequence board20 board50 board100 even largest sign gematria',
-    word:'pictureStory v0 v1', shapes:'v0 corners', measurement:'measureRule c1 clock'
+    word:'pictureStory v0 v1', shapes:'v0 corners', measurement:'measureRule c1', clock:'clock'
   },
   ב: {
     add:'operation column hundreds', sub:'operation column hundreds', mul:'operation table', div:'operation c0 c1',

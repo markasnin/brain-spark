@@ -139,11 +139,12 @@ const CAT_GROUPS = [
   { id:'ops',       label:'פעולות חשבון',  emoji:'🔢', color:'#2ed573', colorRgb:'46,213,115',  cats:['add','sub','mul','div','unknown','order','word'] },
   { id:'fractions', label:'שברים ומספרים', emoji:'½',  color:'#54a0ff', colorRgb:'84,160,255',  cats:['place','rounding','divisibility','fractions_half','fractions_unit','fractions','decimals','percent','negatives','ratio','powers'] },
   { id:'algebra', label:'אלגברה', emoji:'𝑥', color:'#69dbad', colorRgb:'105,219,173', cats:['algebra','equations'] },
-  { id:'geometry',  label:'הנדסה ומדידה',  emoji:'📐', color:'#c77dff', colorRgb:'199,125,255', cats:['shapes','measurement','angles','area','circle','volume','transforms','coordinates','pythagoras'] },
+  { id:'geometry',  label:'הנדסה ומדידה',  emoji:'📐', color:'#c77dff', colorRgb:'199,125,255', cats:['shapes','measurement','clock','angles','area','circle','volume','transforms','coordinates','pythagoras'] },
   { id:'data',      label:'נתונים',         emoji:'📊', color:'#ffd32a', colorRgb:'255,211,42',  cats:['data','probability','graphs'] },
   { id:'minigames', label:'מיני משחקים',   emoji:'🎮', color:'#ff6348', colorRgb:'255,99,72',   cats:['minigames'] },
   { id:'social',    label:'חברים',         emoji:'👥', color:'#fd79a8', colorRgb:'253,121,168', cats:['friends'] },
-  { id:'exam',      label:'מבחן ותרגול',   emoji:'📝', color:'#00d2d3', colorRgb:'0,210,211',   cats:['exam','mistakes','learn'] },
+  { id:'exam',      label:'מבחן ותרגול',   emoji:'📝', color:'#00d2d3', colorRgb:'0,210,211',   cats:['exam','mistakes'] },
+  { id:'study', label:'מדריך הלימוד', emoji:'📚', cats:['learn'] },
 ];
 
 function _catOnclick(cat) {
