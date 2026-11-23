@@ -29,7 +29,7 @@ function goToMainScreen() {
     if (current?.id !== 'auth-scr') show('auth-scr');
     return;
   }
-  if (window.familyAccounts?.isParent()) { window.familyAccounts.open(); return; }
+  if (window.familyAccounts?.parentHomeOnly()) { window.familyAccounts.open(); return; }
   if (!window._username) { show('username-setup-scr'); return; }
   if (!window._grade) { show('grade-select-scr'); return; }
   if (current?.id === 'home') return;

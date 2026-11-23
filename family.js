@@ -10,6 +10,7 @@ const labels = {
  expected:'התשובה הנכונה|Correct answer|Правильный ответ|الإجابة الصحيحة|Bonne réponse|Правильна відповідь',
  unavailable:'לא נשמרה|Not recorded|Не сохранён|لم تُحفظ|Non enregistrée|Не збережено',
  noMatches:'אין תשובות להצגה|No matching answers|Таких ответов нет|لا توجد إجابات مطابقة|Aucune réponse correspondante|Немає таких відповідей',
+ dashboard:'מסך ההורה|Parent dashboard|Кабинет родителя|لوحة ولي الأمر|Espace parent|Кабінет батьків',
  family:'המשפחה שלי|My family|Моя семья|عائلتي|Ma famille|Моя родина',
  parent:'חשבון הורה|Parent account|Аккаунт родителя|حساب ولي الأمر|Compte parent|Обліковий запис батьків',
  child:'חשבון ילד|Child account|Детский аккаунт|حساب الطفل|Compte enfant|Дитячий обліковий запис',
@@ -44,6 +45,7 @@ const label=key=>labels[key].split('|')[0];
 const translated=key=>interfaceText(label(key));
 const root=document.getElementById('familyBody');
 const banner=document.getElementById('familyBanner');
+let adminPractice=false;
 let uid,role,links=[],tasks=[],selected=null,active=null,subscriptions=[];
 const db=()=>window._fb.db;
 const profile=id=>doc(db(),'familyProfiles',id);
@@ -59,6 +61,7 @@ function action(text,fn){
  return btn;
 }
 function reset(){
+ adminPractice=false;
  for(const stop of taskListeners.values())stop();taskListeners.clear();
  subscriptions.forEach(stop=>stop());subscriptions=[];uid=null;role=null;links=[];tasks=[];selected=null;active=null;
  root.replaceChildren();banner.replaceChildren();
@@ -76,6 +79,7 @@ async function init(user){
  const snap=await getDoc(profile(uid));
  if(uid!==user.uid)return;
  role=snap.data()?.role;
+ adminPractice=role==='parent' && snap.data()?.adminPractice===true;
  if(role==='child' && GRADE_FILES[window._grade] && snap.data().grade!==window._grade)await window._fb.updateDoc(profile(uid),{grade:window._grade});
  if(role){
    const field=role==='parent'?'parent':'child';
@@ -97,11 +101,13 @@ async function init(user){
      }
    });
  }
- refresh();if(role==='parent')open();
+ refresh();if(parentHomeOnly())open();
 }
+// Only a privileged Firebase writer can add adminPractice to a family profile.
+function parentHomeOnly(){return role==='parent' && !adminPractice;}
 function open(){active=null;selected=null;show('familyScreen');render();}
 function refresh(){
- banner.replaceChildren(action(label('family'),open));
+ banner.replaceChildren(action(label(adminPractice?'dashboard':'family'),open));
  const pending=tasks.filter(t=>!t.completed);
  if(role==='child'&&pending.length)banner.prepend(action(translated('tasks')+' · '+pending.length,()=>{open();}));
  if(document.getElementById('familyScreen').classList.contains('on')&&!active&&!selected)render();
@@ -279,7 +285,7 @@ function play(t){
  });
  root.append(submit);input.onkeydown=e=>{if(e.key==='Enter')submit.click();};input.focus();
 }
-window.familyAccounts={init,open,reset,isParent:()=>role==='parent',syncGrade:async grade=>{
+window.familyAccounts={init,open,reset,isParent:()=>role==='parent',parentHomeOnly,syncGrade:async grade=>{
  if(role!=='child')return;
  const batch=writeBatch(db());
  batch.update(profile(uid),{grade});batch.set(doc(db(),'users',uid),{grade},{merge:true});

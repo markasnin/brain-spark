@@ -1,7 +1,7 @@
 // ══ FIREBASE CONFIG & AUTH ══
 // This file handles: init, auth state, login, register, save/load, friends, password reset.
 
-import "./family.js?v=43";
+import "./family.js?v=44";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
   onAuthStateChanged, signOut, updatePassword, EmailAuthProvider,
@@ -56,7 +56,7 @@ async function enterAccount(user) {
     await fbLoad(user.uid);
     if(auth.currentUser?.uid!==user.uid)return;
     try { await window.familyAccounts.init(user); } catch(e) { console.warn('Family profile unavailable',e.code); }
-    if (auth.currentUser?.uid!==user.uid || window.familyAccounts.isParent()) return;
+    if (auth.currentUser?.uid!==user.uid || window.familyAccounts.parentHomeOnly()) return;
     document.getElementById('auth-scr').classList.remove('on');
     if (!window._username) {
       document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
