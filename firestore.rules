@@ -17,8 +17,55 @@ service cloud.firestore {
         return (d.role == 'parent' && d.keys().hasOnly(['role'])) ||
           (d.role == 'child' && d.keys().hasOnly(['role','grade']) && validGrade(d.grade));
       }
-      allow create: if own(id) && validProfile(request.resource.data);
+      allow create: if own(id) && validProfile(request.resource.data)
+        && (request.resource.data.role == 'parent' || existsAfter(slotsPath(id)));
       allow update: if own(id) && validProfile(request.resource.data) && request.resource.data.role == resource.data.role;
+    }
+    function slotsPath(child) {
+      return /databases/$(database)/documents/familyParentSlots/$(child);
+    }
+    function familyLinkPath(parent,child) {
+      return /databases/$(database)/documents/familyLinks/$(parent + '_' + child);
+    }
+    function slotsAfter(child) { return getAfter(slotsPath(child)).data; }
+    match /familyParentSlots/{child} {
+      allow get: if own(child) || own(resource.data.first) || own(resource.data.second);
+      allow list: if own(resource.data.first) || own(resource.data.second);
+      allow create: if own(child) && !exists(/databases/$(database)/documents/familyProfiles/$(child))
+        && request.resource.data.keys().hasOnly(['first','second','approved'])
+        && request.resource.data.first == '' && request.resource.data.second == ''
+        && request.resource.data.approved == false;
+
+      function reserve(old,next) {
+        return own(child) && !next.approved && (
+          (old.first == '' && next.first != '' && next.second == ''
+            && existsAfter(familyLinkPath(next.first,child))) ||
+          (old.first != '' && old.second == '' && next.first == old.first
+            && next.second != '' && next.second != old.first
+            && get(familyLinkPath(old.first,child)).data.accepted == true
+            && existsAfter(familyLinkPath(next.second,child)))
+        );
+      }
+      function release(old,next) {
+        return !next.approved && (
+          (old.second != '' && (own(child) || own(old.second))
+            && next.second == '' && next.first == old.first
+            && !existsAfter(familyLinkPath(old.second,child))) ||
+          (old.first != '' && (own(child) || own(old.first))
+            && next.second == ''
+            && ((old.second == '' || old.approved) && next.first == old.second
+              || (old.second != '' && !old.approved && next.first == '' && !existsAfter(familyLinkPath(old.second,child))))
+            && !existsAfter(familyLinkPath(old.first,child)))
+        );
+      }
+      allow update: if request.resource.data.keys().hasOnly(['first','second','approved'])
+        && request.resource.data.first is string && request.resource.data.second is string
+        && request.resource.data.approved is bool
+        && (reserve(resource.data,request.resource.data) || release(resource.data,request.resource.data)
+          || (own(resource.data.first) && resource.data.second != '' && !resource.data.approved
+            && get(familyLinkPath(resource.data.first,child)).data.accepted == true
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['approved'])
+            && request.resource.data.approved));
     }
     match /familyLinks/{id} {
       allow read: if member(resource.data);
@@ -27,10 +74,21 @@ service cloud.firestore {
         && request.resource.data.parent != request.resource.data.child
         && id == request.resource.data.parent + '_' + request.resource.data.child
         && profile(request.resource.data.parent).role == 'parent' && profile(request.resource.data.child).role == 'child'
-        && request.resource.data.accepted == false;
+        && request.resource.data.accepted == false
+        && (slotsAfter(request.resource.data.child).first == request.resource.data.parent
+          || slotsAfter(request.resource.data.child).second == request.resource.data.parent);
       allow update: if own(resource.data.parent) && resource.data.accepted == false
+        && (slotsAfter(resource.data.child).first == resource.data.parent ||
+          (slotsAfter(resource.data.child).second == resource.data.parent && slotsAfter(resource.data.child).approved))
         && request.resource.data.accepted == true && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['accepted']);
-      allow delete: if member(resource.data);
+      function deletingPendingSecond(d) {
+        let old = get(slotsPath(d.child)).data;
+        return own(old.first) && old.second == d.parent && !old.approved
+          && !existsAfter(familyLinkPath(old.first,d.child));
+      }
+      allow delete: if (member(resource.data) || deletingPendingSecond(resource.data))
+        && slotsAfter(resource.data.child).first != resource.data.parent
+        && slotsAfter(resource.data.child).second != resource.data.parent;
       match /tasks/{taskId} {
         function authorized() { return signed() && member(link(id)) && link(id).accepted == true; }
         allow read: if authorized();

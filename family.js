@@ -1,7 +1,11 @@
-import qrcode from './qrcode.js?v=48';
-import {doc, collection, getDoc, setDoc, deleteDoc, writeBatch, onSnapshot, query, where, runTransaction, serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import qrcode from './qrcode.js?v=49';
+import {doc, collection, getDoc, setDoc, writeBatch, onSnapshot, query, where, runTransaction, serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const labels = {
+ approveSecond:'אישור הורה נוסף|Approve second parent|Подтвердить второго родителя|الموافقة على ولي أمر ثانٍ|Autoriser un deuxième parent|Підтвердити другого з батьків',
+ waitFirst:'ממתין לאישור ההורה הראשון|Waiting for the first parent|Ожидает первого родителя|بانتظار موافقة ولي الأمر الأول|En attente du premier parent|Очікує згоди першого з батьків',
+ firstPending:'ההורה הראשון צריך לאשר את הקישור שלו תחילה.|Your first parent needs to accept their link first.|Первый родитель сначала должен принять свою связь.|يجب أن يوافق ولي الأمر الأول على ربط حسابه أولًا.|Ton premier parent doit d’abord accepter son lien.|Перший з батьків має спочатку підтвердити свій зв’язок.',
+ twoParents:'אפשר לקשר עד שני הורים.|You can link up to two parents.|Можно связать до двух родителей.|يمكن ربط حسابَي ولي أمر فقط.|Tu peux lier jusqu’à deux parents.|Можна під’єднати до двох батьків.',
  scan:'סרקו במצלמת הטלפון של הילד.|Scan with your child’s phone camera.|Отсканируйте камерой телефона ребёнка.|امسح بكاميرا هاتف الطفل.|Scannez avec le téléphone de votre enfant.|Відскануйте камерою телефона дитини.',
  copy:'העתקת קוד|Copy code|Скопировать код|نسخ الرمز|Copier le code|Копіювати код',
  copied:'הקוד הועתק|Code copied|Код скопирован|تم نسخ الرمز|Code copié|Код скопійовано',
@@ -60,6 +64,10 @@ let uid,role,links=[],tasks=[],selected=null,active=null,subscriptions=[];
 const db=()=>window._fb.db;
 const profile=id=>doc(db(),'familyProfiles',id);
 const pair=(parent,child)=>parent+'_'+child;
+const emptySlots=()=>({first:'',second:'',approved:false});
+const slotRef=child=>doc(db(),'familyParentSlots',child);
+let childSlots=null;
+const parentSlots=new Map();
 const linkRef=id=>doc(db(),'familyLinks',id);
 const familyTasks=(parent,child)=>collection(linkRef(pair(parent,child)),'tasks');
 const taskRef=t=>doc(familyTasks(t.parent,t.child),t.id);
@@ -86,7 +94,7 @@ function action(text,fn){
  return btn;
 }
 function reset(){
- adminPractice=false;
+ adminPractice=false;childSlots=null;parentSlots.clear();
  shownInvite='';codeDraft=undefined;
  for(const stop of taskListeners.values())stop();taskListeners.clear();
  subscriptions.forEach(stop=>stop());subscriptions=[];uid=null;role=null;links=[];tasks=[];selected=null;active=null;
@@ -107,6 +115,22 @@ async function init(user){
  role=snap.data()?.role;
  adminPractice=role==='parent' && snap.data()?.adminPractice===true;
  if(role==='child' && GRADE_FILES[window._grade] && snap.data().grade!==window._grade)await window._fb.updateDoc(profile(uid),{grade:window._grade});
+ if(role==='child'){
+   subscriptions.push(onSnapshot(slotRef(uid),snap=>{
+     if(uid!==user.uid)return;
+     childSlots=snap.data();refresh();
+   }));
+ }
+ if(role==='parent'){
+   for(const slot of ['first','second']){
+     const source=query(collection(db(),'familyParentSlots'),where(slot,'==',uid));
+     subscriptions.push(onSnapshot(source,snap=>{
+       if(uid!==user.uid)return;
+       parentSlots.set(slot,new Map(snap.docs.map(row=>[row.id,row.data()])));
+       refresh();
+     }));
+   }
+ }
  if(role){
    const field=role==='parent'?'parent':'child';
    listen('familyLinks',field,rows=>{
@@ -141,7 +165,11 @@ function refresh(){
  if(selected)renderReports(document.getElementById('familyReports'),selected);
 }
 async function choose(value){
- await setDoc(profile(uid),value==='child' && GRADE_FILES[window._grade]?{role:value,grade:window._grade}:{role:value});await init(window._fbUser);open();
+ if(value==='child' && !GRADE_FILES[window._grade])throw Error();
+ const batch=writeBatch(db());
+ batch.set(profile(uid),value==='child'?{role:value,grade:window._grade}:{role:value});
+ if(value==='child')batch.set(slotRef(uid),emptySlots());
+ await batch.commit();await init(window._fbUser);open();
 }
 function panel(title, className=''){
  const section=element('section');
@@ -176,6 +204,34 @@ function parentInvite(){
  section.append(details,image);
  return section;
 }
+async function requestParent(parent){
+ const child=uid;
+ return runTransaction(db(),async tx=>{
+   const ref=slotRef(child), slots=(await tx.get(ref)).data();
+   if(!slots)throw Error();
+   if(slots.first===parent || slots.second===parent)return 'requested';
+   if(slots.second)return 'twoParents';
+   if(slots.first && !(await tx.get(linkRef(pair(slots.first,child)))).data()?.accepted)return 'firstPending';
+   const slot=slots.first?'second':'first';
+   tx.update(ref,{[slot]:parent});
+   tx.set(linkRef(pair(parent,child)),{parent,child,name:window._displayName||window._username,accepted:false});
+   return 'requested';
+ });
+}
+async function changeParentLink(link, remove){
+ const ref=slotRef(link.child);
+ await runTransaction(db(),async tx=>{
+   const slots=(await tx.get(ref)).data();
+   if(!slots)throw Error();
+   if(!remove){tx.update(linkRef(link.id),{accepted:true});return;}
+   if(slots.first!==link.parent && slots.second!==link.parent)return;
+   const removingFirst=slots.first===link.parent;
+   const cancelPending=removingFirst && slots.second && !slots.approved;
+   if(cancelPending)tx.delete(linkRef(pair(slots.second,link.child)));
+   tx.update(ref,{first:removingFirst?(cancelPending?'':slots.second):slots.first,second:'',approved:false});
+   tx.delete(linkRef(link.id));
+ });
+}
 function childInvite(){
  const section=panel('connect');
  const invite=inviteFromUrl();
@@ -188,9 +244,8 @@ function childInvite(){
  const send=action(label('link'),async()=>{
    const parent=input.value.trim();
    if(!validCode(parent)||parent===uid)throw Error();
-   if(!links.some(link=>link.parent===parent)){
-     await setDoc(linkRef(pair(parent,uid)),{parent,child:uid,name:window._displayName||window._username,accepted:false});
-   }
+   const result=await requestParent(parent);
+   if(result!=='requested'){showToast(label(result));return;}
    if(invite)history.replaceState(history.state,'',location.pathname+location.search);
    codeDraft=undefined;showToast(label('requested'));render();
  });
@@ -214,10 +269,21 @@ function render(){
    const info=element('div');info.className='family-person-info';
    if(role==='parent' && l.accepted)info.append(action(l.name,()=>editor(l)));
    else info.append(element('strong',role==='parent'?l.name:label('parent')));
-   const status=element('span',label(l.accepted?'linked':'pending'));
+   const slots=role==='child'?childSlots:parentSlots.get('second')?.get(l.child);
+   const waitingForFirst=!l.accepted && slots?.second===l.parent && !slots.approved;
+   const status=element('span',label(l.accepted?'linked':waitingForFirst?'waitFirst':'pending'));
    status.className='family-status';info.append(status);card.append(info);
-   if(role==='parent' && !l.accepted)card.append(action(label('accept'),()=>window._fb.updateDoc(linkRef(l.id),{accepted:true})));
-   const remove=action(label('remove'),async()=>{if(confirm(interfaceText(label('remove'))+'?'))await deleteDoc(linkRef(l.id));});
+   if(role==='parent' && !l.accepted && !waitingForFirst){
+     card.append(action(label('accept'),()=>changeParentLink(l,false)));
+   }
+   const first=parentSlots.get('first')?.get(l.child);
+   if(role==='parent' && l.accepted && first?.second && !first.approved){
+     card.append(action(label('approveSecond'),()=>runTransaction(db(),async tx=>{
+       const ref=slotRef(l.child),current=(await tx.get(ref)).data();
+       if(current?.second===first.second && !current.approved)tx.update(ref,{approved:true});
+     })));
+   }
+   const remove=action(label('remove'),async()=>{if(confirm(interfaceText(label('remove'))+'?'))await changeParentLink(l,true);});
    remove.classList.add('family-secondary');card.append(remove);people.append(card);
  }
  if(role==='parent'){root.append(parentInvite(),people);return;}

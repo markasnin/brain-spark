@@ -1,7 +1,7 @@
 // ══ FIREBASE CONFIG & AUTH ══
 // This file handles: init, auth state, login, register, save/load, friends, password reset.
 
-import "./family.js?v=48";
+import "./family.js?v=49";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
   onAuthStateChanged, signOut, updatePassword, EmailAuthProvider,
@@ -190,6 +190,7 @@ window.fbRegister = async function() {
     const batch=writeBatch(db);
     batch.set(doc(db,'users',cred.user.uid),userData,{merge:true});
     batch.set(doc(db,'familyProfiles',cred.user.uid),role==='parent'?{role}:{role,grade});
+    if(role==='child')batch.set(doc(db,'familyParentSlots',cred.user.uid),{first:'',second:'',approved:false});
     await batch.commit();
     unfinishedRegistration=null;
     window._displayName = displayName;
