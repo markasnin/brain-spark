@@ -623,7 +623,7 @@ function _ensureReminderScreen() {
 }
 
 function reminderTopicsForGrade(grade) {
-  const aligned = Object.keys(curriculum[grade] || {});
+  const aligned = Object.keys(curriculum[grade] || {}).filter(cat=>!worksheetGrades[grade] || worksheetGrades[grade][cat]);
   const topics = ALL_CATS.filter(cat => aligned.includes(cat.id))
     .map(cat => ({...cat, color:cat.borderColor || '#54a0ff'}));
   const gradeTopics = window.GRADE_CONFIG?.availableCategories || [];

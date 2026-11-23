@@ -274,6 +274,14 @@ function curriculumQuestion(grade, cat, diff, n = rnd(2, 9)) {
 
 function minigameQuestion(diff) {
   const grade = window.GRADE_CONFIG?.gradeId || 'ב';
+  if(worksheetGrades[grade]){
+    const cats=Object.keys(worksheetGrades[grade]);
+    for(const cat of worksheetShuffle(cats)){
+      const q=worksheetQuestion(grade,cat,diff);
+      if(!q.visual && !q.shapeHtml && !q.fraction) return q;
+    }
+    return makeQuestionVariant(grade,'word','easy',0);
+  }
   const categories = Object.keys(curriculum[grade] || curriculum['ב']);
   const actualGrade = curriculum[grade] ? grade : 'ב';
   const questions = categories.flatMap(cat => [
@@ -289,7 +297,11 @@ function minigameQuestion(diff) {
   return pick(pool);
 }
 
-function numericAnswer(value) {
+function numericAnswer(value, fraction) {
+  if(fraction){
+    const parts=value.trim().match(/^(\d{1,8})\s*[/⁄]\s*(\d{1,8})$/u);
+    if(parts) return Number(parts[2]) ? Number(parts[1])/Number(parts[2]) : NaN;
+  }
   const text = value.trim();
   const number = text ? Number(text) : NaN;
   return Number.isFinite(number) ? number : NaN;

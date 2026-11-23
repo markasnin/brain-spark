@@ -4,6 +4,8 @@ const measurementUnits = [
   ['mm','מ"מ','мм','مم','mm','мм'],
   ['km','ק"מ','км','كم','km','км'],
   ['m','מ׳','м','م','m','м'],
+  ['h','שעות','ч','ساعات','h','год'],
+  ['min','דקות','мин','دقائق','min','хв'],
   ['kg','ק"ג','кг','كغ','kg','кг'],
   ['g','גרם','г','غ','g','г'],
   ['ml','מ"ל','мл','مل','mL','мл'],
@@ -35,7 +37,7 @@ function localizeMeasurementUnits(text,language) {
 const explicitUnknown = /[□■▲]|__+|[🔺🔵⬜].*?=|\?(?=\s*[/⁄=+×÷−-])|(?<=[/⁄])\?/u;
 
 function usesTriangle(q) {
-  if(q.cat==='unknown') return true;
+  if(q.cat==='unknown'||q.diagramUnknown) return true;
   if(!'אבגדהו'.includes(q.grade||window.GRADE_CONFIG?.gradeId||'!')) return false;
   if (['algebra','equations','transforms','coordinates','pythagoras'].includes(q.cat)) return false;
   return explicitUnknown.test(q.text) || /\bx\b.*?=/u.test(q.text);
@@ -105,14 +107,36 @@ function formatQuestionMath(text) {
 function mountQuestionVisual(container, q) {
   container.replaceChildren();
   container.hidden = false;
-  if (q.visual?.kind === 'survey') {
+  if(q.visual?.kind==='shadeCells'){
+    const grid=document.createElement('div');
+    grid.className='fraction-cell-grid';
+    grid.style.setProperty('--columns',q.visual.columns);
+    for(let i=0;i<q.visual.cells;i++){
+      if(container.classList.contains('choice-preview')){
+        grid.append(document.createElement('span'));
+        continue;
+      }
+      const cell=document.createElement('button');
+      cell.type='button';
+      cell.setAttribute('aria-label',String(i+1));
+      cell.setAttribute('aria-pressed','false');
+      cell.onclick=()=>{
+        if(qs.done)return;
+        cell.setAttribute('aria-pressed',String(cell.getAttribute('aria-pressed')!=='true'));
+        const input=document.getElementById(container.id==='examVisual'?'eInp':'ansInp');
+        if(input)input.value=String(grid.querySelectorAll('[aria-pressed="true"]').length);
+      };
+      grid.append(cell);
+    }
+    container.append(grid);
+  } else if (q.visual?.kind === 'survey') {
     mountSurveyChart(container,q.visual);
   } else if (q.visual?.kind === 'graph') {
     mountGraph(container, q.visual);
   } else if (q.visual?.kind === 'algebra') {
     mountAlgebra(container, q.visual);
   } else if (q.visual?.kind === 'shape') {
-    mountShape(container, q.visual, q.cat !== 'angles');
+    mountShape(container, q.visual, q.cat !== 'angles' && q.visual.body.includes('data-outline'));
   } else if (q.shapeHtml) {
     container.innerHTML = q.shapeHtml;
     if (['shapes','area','angles','measurement','volume','circle'].includes(q.cat)) {
@@ -248,7 +272,7 @@ function mountAlgebra(container, {terms, note, choiceLabel = 'בדקו איבר'
 }
 
 function mountShape(container, {body, label, interactiveGrid}, highlightShape) {
-  container.innerHTML = `<svg class="shape-diagram${interactiveGrid?' coordinate-plot':''}" viewBox="0 0 320 ${interactiveGrid?250:210}" role="img" aria-label="${label}">${body}</svg>`;
+  container.innerHTML = `<svg direction="ltr" class="shape-diagram${interactiveGrid?' coordinate-plot':''}" viewBox="0 0 320 ${interactiveGrid?250:210}" role="img" aria-label="${label}">${body}</svg>`;
   const svg = container.firstElementChild;
   if (highlightShape) addShapeExplorer(container, svg);
   const legs = svg.querySelector('[data-pythagoras-legs]');

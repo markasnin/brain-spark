@@ -34,7 +34,7 @@ const ALL_CATS = [
   // ── כיתה א ──
   { id:'evens',           cls:'',         icon:'🔢', name:'מספרים וזוגיות',      sub:'זוגי, אי-זוגי, עוקב',    borderColor:'#2ed573' },
   // ── כיתה ב ──
-  { id:'fractions_half',  cls:'',         icon:'½',  name:'חצי ורבע',            sub:'½ ¼ ללא סמלים',          borderColor:'#74b9ff' },
+  { id:'fractions_half',  cls:'',         icon:'½',  name:'חצי ורבע',            sub:'½ · ¼',          borderColor:'#74b9ff' },
   // ── כיתה ג ──
   { id:'fractions_unit',  cls:'',         icon:'⅓',  name:'שברי יחידה',          sub:'½ ⅓ ¼ חלק של כמות',     borderColor:'#a29bfe' },
   { id:'rounding',        cls:'',         icon:'🔢', name:'עיגול ואומדן',         sub:'עיגול לעשרה/מאה',       borderColor:'#fdcb6e' },
@@ -71,7 +71,7 @@ const ALL_CATS = [
   { id:'data',            cls:'',         icon:'📊', name:'חקר נתונים',          sub:'קריאה והשוואה של נתונים',      borderColor:'#6c5ce7' },
   {id:'place', icon:'🔢', name:'מבנה המספר'},
   {id:'divisibility', icon:'🔢', name:'סימני התחלקות'},
-  {id:'unknown',icon:'□',name:'מציאת המספר החסר'},
+  {id:'unknown',icon:'▲',name:'מציאת המספר החסר'},
   {id:'order', icon:'🧮', name:'סדר פעולות'},
   {id:'percent', icon:'💯', name:'אחוזים'},
   {id:'negatives', icon:'➖', name:'מספרים מכוונים'},
@@ -98,7 +98,7 @@ const CAT_NAMES = {
   word:'📖 מילוליות',fractions:'½ שברים',shapes:'📐 גיאומטריה',
   shapes2d:'🔷 צורות 2D',angles:'📐 זוויות',perimeter:'📏 היקף',area:'📐 שטח',
   shapes3d:'🧊 גופים',measurement:'📏 מדידה',data:'📊 נתונים',
-  evens:'🔢 מספרים וזוגיות',rounding:'🔢 עיגול',
+  evens:'🔢 מספרים וזוגיות',rounding:'🔢 עיגול ואומדן',
   fractions_half:'½ חצי ורבע',fractions_unit:'⅓ שברי יחידה',
   decimal_intro:'🔢 שברים עשרוניים',decimals:'🔢 שברים עשרוניים',
   percentages_intro:'💯 אחוזים (מבוא)',percentages:'💯 אחוזים',

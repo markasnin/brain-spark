@@ -147,8 +147,11 @@ function genQ(cat, diff) {
   const gc = window.GRADE_CONFIG;
   const options = variants[cat];
   const grade = gc?.gradeId;
-  if (numberLimits[grade] && operations.includes(cat)) return operationQuestion(grade,cat,diff);
-  if (numberLimits[grade] && cat==='unknown') return operationQuestion(grade,cat,diff,pick(missingOps(grade)));
+  if (worksheetGrades[grade]){
+    // A saved session can still reference a category retired for this grade.
+    const currentCat=worksheetGrades[grade][cat]?cat:'word';
+    return worksheetQuestion(grade,currentCat,diff);
+  }
   if (grade && options && (rnd(0,2)!==0 || (cat==='data' && 'בגד'.includes(grade)))) {
     // The youngest grades practice one operation at a time.
     const size = grade==='א' && ['add','sub','word'].includes(cat) ? 2 : options.length;

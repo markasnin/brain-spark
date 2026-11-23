@@ -78,6 +78,11 @@ function missingOps(grade) {
 }
 
 function practiceChoices(grade,cat) {
+  if (worksheetGrades[grade]) {
+    const choices=worksheetChoices(grade,cat);
+    if(choices.length>1) choices.push({label:'תרגול משולב',diff:'mix'});
+    return choices;
+  }
   const choices=[];
   if(operations.includes(cat)){
     curriculumDifficulties.forEach((diff,i)=>{
@@ -174,7 +179,7 @@ function buildPracticeChoices(cat) {
       preview.setAttribute('aria-hidden','true');
       mountQuestionVisual(preview,sample);
       preview.querySelectorAll('button,.visual-controls,.visual-feedback').forEach(el=>el.remove());
-      if(preview.textContent.trim()||preview.querySelector('svg'))button.append(preview);
+      if(preview.textContent.trim()||preview.querySelector('svg,.fraction-cell-grid'))button.append(preview);
     }
     if(!i){
       const badge=document.createElement('small');
