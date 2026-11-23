@@ -478,7 +478,11 @@ function regGoStep(step) {
 
 function selectSetGrade(grade) {
   document.getElementById('setGrade').value = grade;
-  document.querySelectorAll('#setGradeGrid .reg-grade-card').forEach(c => c.classList.toggle('selected', c.dataset.grade===grade));
+  document.querySelectorAll('#setGradeGrid .reg-grade-card').forEach(card => {
+    const selected = card.dataset.grade === grade;
+    card.classList.toggle('selected', selected);
+    card.setAttribute('aria-pressed', String(selected));
+  });
 }
 function selectRegGrade(grade) {
   document.getElementById('regGrade').value = grade;
