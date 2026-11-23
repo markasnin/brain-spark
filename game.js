@@ -227,7 +227,7 @@ function submitAns() {
         recordHistory(q, userAns, false);
         endQ();
       } else {
-        showFb('bad', `😅 לא נכון! עוד ${cfg.maxAttempts - qs.attempts} ניסיון/ות`, '');
+        showFb('bad', `נסו שוב. ניסיונות שנשארו: ${cfg.maxAttempts - qs.attempts}`, '');
         setTimeout(()=>{ document.getElementById('fbBox').classList.remove('on'); inp.focus(); }, 1600);
       }
     }
@@ -260,7 +260,7 @@ function submitAns() {
       recordHistory(q, userAns, false);
       endQ();
     } else {
-      showFb('bad', `😅 לא נכון! עוד ${cfg.maxAttempts - qs.attempts} ניסיון/ות`, '');
+      showFb('bad', `נסו שוב. ניסיונות שנשארו: ${cfg.maxAttempts - qs.attempts}`, '');
       setTimeout(()=>{ document.getElementById('fbBox').classList.remove('on'); inp.focus(); }, 1600);
     }
   }

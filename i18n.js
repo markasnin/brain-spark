@@ -333,15 +333,29 @@ for (const [he, ...labels] of [
   ['קחו','Take away','Убери','أزل','Retire','Забери'],
 ]) uiTranslations.set(he,labels);
 
+for (const [he, ...labels] of [
+  ["ממליץ לתרגל:", "Try practising:", "Попробуй потренировать:", "جرّب التدرّب على:", "Essaie de t’entraîner sur :", "Спробуй потренувати:"],
+  ["איך משחקים?", "How to play", "Как играть", "كيف تلعب؟", "Comment jouer ?", "Як грати?"],
+  ["סיים יום", "End the day", "Закончить день", "أنهِ اليوم", "Terminer la journée", "Завершити день"],
+  ["לא נכון, נסה שוב", "Try again!", "Попробуй ещё раз!", "جرّب مرة أخرى!", "Réessaie !", "Спробуй ще раз!"],
+  ["בחר רמת קושי:", "Pick a level", "Выбери уровень", "اختر المستوى", "Choisis un niveau", "Обери рівень"],
+  ["בחר לפחות נושא אחד!", "Pick at least one topic.", "Выбери хотя бы одну тему.", "اختر موضوعًا واحدًا على الأقل.", "Choisis au moins un thème.", "Обери хоча б одну тему."],
+  ["הכנס מספר!", "Type a number.", "Введи число.", "اكتب عددًا.", "Écris un nombre.", "Введи число."],
+  ["חיפוש אוצר", "Look for treasure", "Искать сокровище", "ابحث عن الكنز", "Chercher un trésor", "Шукати скарб"],
+]) uiTranslations.set(he, labels);
+
 function feedbackTranslation(core,index) {
   const correct = core.match(/^([−-]?\d+(?:[.,]\d+)?) — נכון מאוד!$/);
   if (correct) return correct[1]+' — '+uiTranslations.get('נכון מאוד!')[index];
-  const remaining = core.match(/^(😅 )?לא נכון! עוד (\d+) ניסיון\/ות$/);
+  const remaining = core.match(/^(?:😅 )?(?:\u05dc\u05d0 \u05e0\u05db\u05d5\u05df! \u05e2\u05d5\u05d3 (\d+) \u05e0\u05d9\u05e1\u05d9\u05d5\u05df\/\u05d5\u05ea|\u05e0\u05e1\u05d5 \u05e9\u05d5\u05d1\. \u05e0\u05d9\u05e1\u05d9\u05d5\u05e0\u05d5\u05ea \u05e9\u05e0\u05e9\u05d0\u05e8\u05d5: (\d+))$/);
   if (remaining) {
-    const n=remaining[2];
+    const n = remaining[1] || remaining[2];
     return [
-      `😅 Incorrect. Attempts left: ${n}`, `😅 Неверно. Осталось попыток: ${n}`, `😅 إجابة خاطئة. المحاولات المتبقية: ${n}`,
-      `😅 Incorrect. Tentatives restantes : ${n}`, `😅 Неправильно. Залишилося спроб: ${n}`,
+      `Try again. Tries left: ${n}`,
+      `Попробуй ещё раз. Осталось попыток: ${n}`,
+      `جرّب مرة أخرى. المحاولات الباقية: ${n}`,
+      `Réessaie. Essais restants : ${n}`,
+      `Спробуй ще раз. Залишилося спроб: ${n}`,
     ][index];
   }
   return '';
