@@ -1,5 +1,6 @@
 /* Interface translations. Hebrew is the source language. */
 const uiTranslations = new Map(`
+סגירה|Close|Закрыть|إغلاق|Fermer|Закрити
 שפה|Language|Язык|اللغة
 ברוכים הבאים ל-Brain Spark|Welcome to BrainSpark|Добро пожаловать в BrainSpark|مرحبًا بك في BrainSpark
 פרטיות ואבטחה:|Privacy and security|Конфиденциальность и безопасность|الخصوصية والأمان

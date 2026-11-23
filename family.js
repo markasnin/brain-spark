@@ -260,7 +260,7 @@ function play(t){
  const q=assignmentQuestion(t,t.index);
  root.append(element('h2',CAT_NAMES[q.cat]),element('small',(t.index+1)+' / '+t.total));
  const prompt=element('div');prompt.className='study-question';prompt.innerHTML=questionPrompt(q);
- const visual=element('div');visual.className='question-visual';visual.id='familyVisual';
+ const visual=element('div');visual.className='question-visual';visual.id='familyVisual';visual.dataset.category=q.cat;
  const input=element('input');input.id='familyAnswer';input.type=q.fraction?'text':'number';input.step='any';input.placeholder='?';input.setAttribute('aria-label',interfaceText('תשובה'));
  const answerLabel=element('label',usesTriangle(q)?'▲ =':interfaceText('תשובה'));answerLabel.htmlFor=input.id;root.append(prompt,visual,answerLabel,input);mountQuestionVisual(visual,q);
  const submit=action(label('submit'),async()=>{

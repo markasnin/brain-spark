@@ -546,23 +546,41 @@ function openReminder() {
     screen.id = 'remind-scr';
     document.body.append(screen);
   }
+  renderStudyGuide(screen);
+  show(screen.id);
+  screen.scrollIntoView({block:'start'});
+}
+
+function openPracticeGuide() {
+  const dialog = document.getElementById('practiceGuide');
+  const category = document.querySelector('#familyScreen.on #familyVisual')?.dataset.category || qs.current?.cat;
+  dialog.showModal();
+  renderStudyGuide(dialog.querySelector('.practice-guide-body'), {
+    inline: true,
+    initialTopic: ['mul','div'].includes(category) ? 'timesTable' : category
+  });
+  dialog.querySelector('button').focus();
+}
+
+function renderStudyGuide(screen, {inline = false, initialTopic} = {}) {
+  const prefix = inline ? 'practice-study' : 'study';
   const config = window.GRADE_CONFIG;
   const topics = ALL_CATS.filter(topic => config?.availableCategories.includes(topic.id));
   if (config?.gradeId !== 'א') topics.unshift({id:'timesTable', icon:'×', name:'טבלת הכפל'});
 
   screen.innerHTML = `
     <div class="study-guide">
-      <header class="study-banner">
+      ${inline ? '' : `<header class="study-banner">
         <div><h1>מדריך הלימוד</h1><p>בחרו נושא, קראו את הכלל ונסו דוגמה.</p></div>
         <button type="button" class="back" onclick="show('home')">← חזרה</button>
-      </header>
+      </header>`}
       <div class="study-layout">
         <aside class="study-nav">
           <h2>נושאים</h2>
-          <label class="study-select"><span>בחרו נושא למעבר לדוגמאות</span><select id="study-topic-select"></select></label>
+          <label class="study-select"><span>בחרו נושא למעבר לדוגמאות</span><select id="${prefix}-topic-select"></select></label>
           <div class="study-topics"></div>
         </aside>
-        <section class="study-content" id="study-topic" aria-labelledby="study-topic-heading"></section>
+        <section class="study-content" id="${prefix}-topic" aria-labelledby="${prefix}-topic-heading"></section>
       </div>
     </div>`;
   const nav = screen.querySelector('.study-topics');
@@ -572,7 +590,7 @@ function openReminder() {
   function selectTopic(topic) {
     select.value = topic.id;
     buttons.forEach((button,id) => button.setAttribute('aria-pressed', String(id === topic.id)));
-    renderStudyTopic(content, topic, config.gradeId);
+    renderStudyTopic(content, topic, config.gradeId, inline);
   }
   for (const topic of topics) {
     select.add(new Option(topic.name, topic.id));
@@ -585,13 +603,11 @@ function openReminder() {
     buttons.set(topic.id,button);
   }
   select.onchange = () => selectTopic(topics.find(topic => topic.id === select.value));
-  if (topics.length) selectTopic(topics[0]);
-  show(screen.id);
-  screen.scrollIntoView({block:'start'});
+  if (topics.length) selectTopic(topics.find(topic => topic.id === initialTopic) || topics[0]);
 }
 
-function renderStudyTopic(content, topic, grade) {
-  content.innerHTML = `<h2 id="study-topic-heading"><span aria-hidden="true">${topic.icon}</span> <span>${topic.name}</span></h2>`;
+function renderStudyTopic(content, topic, grade, inline) {
+  content.innerHTML = `<h2 id="${content.id}-heading"><span aria-hidden="true">${topic.icon}</span> <span>${topic.name}</span></h2>`;
   if (topic.id === 'timesTable') {
     renderStudyTimesTable(content);
     return;
@@ -652,6 +668,7 @@ function renderStudyTopic(content, topic, grade) {
       showShading();
     }
   }
+  if (inline) return;
   const practice = document.createElement('button');
   practice.className = 'auth-btn study-practice';
   practice.type = 'button';
@@ -665,7 +682,7 @@ function renderStudyTimesTable(content) {
   const cells = Array.from({length:size}, (_,i) => i+1);
   const table = document.createElement('table');
   table.className = 'study-times-table';
-  table.setAttribute('aria-labelledby','study-topic-heading');
+  table.setAttribute('aria-labelledby',content.id+'-heading');
   table.dir = 'ltr';
   table.innerHTML = `<thead><tr><th scope="col">×</th>${cells.map(col => `<th scope="col">${col}</th>`).join('')}</tr></thead>
     <tbody>${cells.map(row => `<tr><th scope="row">${row}</th>${cells.map(col =>

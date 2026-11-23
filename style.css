@@ -1122,3 +1122,31 @@ html[dir="rtl"] .arcade-play > span { display:inline-block; transform:scaleX(-1)
 @media(max-width:750px){
   .settings-streak,.settings-management-grid{grid-template-columns:minmax(0,1fr)}
 }
+.practice-guide-trigger{
+  display:none;position:fixed;z-index:5;
+  inset-inline-end:max(16px,env(safe-area-inset-right),env(safe-area-inset-left));
+  inset-block-end:max(16px,env(safe-area-inset-bottom));
+  align-items:center;gap:.55rem;min-height:46px;padding:10px 16px;
+  border:1px solid #b4f8e5;border-radius:999px;background:#a0f0dc;color:#172a35;
+  font:700 .95rem Rubik,sans-serif;box-shadow:0 5px 22px #080b22aa;cursor:pointer
+}
+body:has(#q-scr.on,#familyScreen.on #familyVisual) .practice-guide-trigger{display:inline-flex}
+#q-scr.on,#familyScreen.on:has(#familyVisual){padding-block-end:84px}
+#practiceGuide{
+  position:fixed;inset:0;margin:auto;width:min(calc(100% - 20px),1000px);
+  max-height:min(88dvh,820px);padding:0;border:1px solid #7a89b9;
+  border-radius:22px;background:#e8f0fb;color:#192b49;box-shadow:0 20px 60px #080b2270
+}
+#practiceGuide::backdrop{background:#101429b8}
+.practice-guide-header{
+  position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:10px clamp(12px,3vw,22px);background:#283865;color:white
+}
+.practice-guide-header h2{margin:0;font-size:clamp(1.12rem,4vw,1.55rem)}
+.practice-guide-header button{
+  display:grid;place-items:center;min-width:44px;min-height:44px;
+  border:1px solid #a5b6e0;border-radius:12px;background:#394d80;color:#fff;
+  font:inherit;font-size:1.5rem;cursor:pointer
+}
+.practice-guide-body{padding:clamp(6px,2vw,18px)}
+body:has(#practiceGuide[open]){overflow:hidden}
