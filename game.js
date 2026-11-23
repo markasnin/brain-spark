@@ -45,7 +45,16 @@ function openCat(cat) {
   if (LOCKED_TOPICS[cat] && !st.learnedTopics.includes(LOCKED_TOPICS[cat])) { showToast('🔒 קודם למד את הנושא הזה!'); return; }
   const gc = window.GRADE_CONFIG;
   if (gc && !gc.availableCategories.includes(cat)) { showToast('🔒 נושא זה לא זמין בכיתה שלך'); return; }
-  qs.cat = cat; document.getElementById('diffTitle').textContent = CAT_NAMES[cat]||cat; buildPracticeChoices(cat); show('diff-scr');
+  qs.cat = cat;
+  const choices = practiceChoices(gc.gradeId, cat);
+  if (choices.length === 1 && choices[0].make) {
+    const [choice] = choices;
+    startCat(choice.diff, choice.make);
+    return;
+  }
+  document.getElementById('diffTitle').textContent = CAT_NAMES[cat] || cat;
+  buildPracticeChoices(choices);
+  show('diff-scr');
 }
 
 function startCat(diff,make) {

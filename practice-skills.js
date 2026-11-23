@@ -148,10 +148,9 @@ function practiceChoices(grade,cat) {
   return choices;
 }
 
-function buildPracticeChoices(cat) {
+function buildPracticeChoices(choices) {
   const grid = document.getElementById('practiceChoices');
   const mixedButton = document.getElementById('mixedPractice');
-  const choices = practiceChoices(window.GRADE_CONFIG.gradeId, cat);
   const mixed = choices.find(choice => !choice.make);
   mixedButton.hidden = !mixed;
   mixedButton.onclick = mixed ? () => startCat(mixed.diff) : null;
