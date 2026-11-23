@@ -1,7 +1,11 @@
-import qrcode from './qrcode.js?v=48';
+import qrcode from './qrcode.js?v=50';
 import {doc, collection, getDoc, setDoc, deleteDoc, writeBatch, onSnapshot, query, where, runTransaction, serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const labels = {
+ scanCamera:'סריקת קוד QR|Scan QR code|Сканировать QR-код|مسح رمز QR|Scanner le code QR|Сканувати QR-код',
+ aimCamera:'כוונו את המצלמה לקוד ה־QR של ההורה.|Point the camera at your parent’s QR code.|Наведи камеру на QR-код родителя.|وجّه الكاميرا إلى رمز QR لولي الأمر.|Pointe la caméra vers le code QR de ton parent.|Наведи камеру на QR-код батьків.',
+ cameraError:'לא ניתן לפתוח את המצלמה. אפשר להקליד את הקוד.|Camera unavailable. You can enter the code manually.|Камера недоступна. Можно ввести код вручную.|الكاميرا غير متاحة. يمكنك إدخال الرمز يدويًا.|Caméra indisponible. Tu peux saisir le code.|Камера недоступна. Можна ввести код вручну.',
+ wrongQr:'זה לא קוד לקישור הורה. נסו קוד אחר.|Scan a parent’s Brain Spark QR code.|Отсканируй QR-код родителя из Brain Spark.|امسح رمز QR لولي الأمر من Brain Spark.|Scanne le code QR Brain Spark de ton parent.|Відскануй QR-код батьків з Brain Spark.',
  scan:'סרקו במצלמת הטלפון של הילד.|Scan with your child’s phone camera.|Отсканируйте камерой телефона ребёнка.|امسح بكاميرا هاتف الطفل.|Scannez avec le téléphone de votre enfant.|Відскануйте камерою телефона дитини.',
  copy:'העתקת קוד|Copy code|Скопировать код|نسخ الرمز|Copier le code|Копіювати код',
  copied:'הקוד הועתק|Code copied|Код скопирован|تم نسخ الرمز|Code copié|Код скопійовано',
@@ -67,6 +71,7 @@ const taskListeners=new Map();
 const validCode = code => /^[\w-]{10,128}$/.test(code);
 let shownInvite = '';
 let codeDraft;
+let scanner;
 function inviteFromUrl() {
  const code = new URLSearchParams(location.hash.slice(1)).get('family') || '';
  return validCode(code) ? code : '';
@@ -86,6 +91,7 @@ function action(text,fn){
  return btn;
 }
 function reset(){
+ scanner?.close();
  adminPractice=false;
  shownInvite='';codeDraft=undefined;
  for(const stop of taskListeners.values())stop();taskListeners.clear();
@@ -176,6 +182,74 @@ function parentInvite(){
  section.append(details,image);
  return section;
 }
+function scannedParentCode(value) {
+ try {
+   const url = new URL(value);
+   if (url.origin !== location.origin) return '';
+   const code = new URLSearchParams(url.hash.slice(1)).get('family') || '';
+   return validCode(code) && code !== uid ? code : '';
+ } catch { return ''; }
+}
+
+async function scanParentCode() {
+ if (role !== 'child' || scanner) return;
+ const dialog = element('dialog');
+ const title = element('h2',label('scanCamera'));
+ const status = element('p',label('aimCamera'));
+ const close = action('סגירה',()=>dialog.close());
+ const video = element('video');
+ const canvas = document.createElement('canvas');
+ const context = canvas.getContext('2d',{willReadFrequently:true});
+ let stream, frame, lastRead = 0;
+ dialog.className='family-scanner';
+ title.id='familyScannerTitle';dialog.setAttribute('aria-labelledby',title.id);
+ status.setAttribute('aria-live','polite');
+ video.playsInline=true;video.muted=true;video.hidden=true;
+ dialog.append(title,status,video,close);
+ dialog.addEventListener('close',()=>{
+   cancelAnimationFrame(frame);
+   stream?.getTracks().forEach(track=>track.stop());
+   video.srcObject=null;
+   scanner=undefined;
+   dialog.remove();
+   if(document.querySelector('#familyScreen.on'))document.getElementById('familyLinkCode')?.focus();
+ },{once:true});
+ scanner=dialog;
+ document.body.append(dialog);
+ dialog.showModal();
+ try {
+   stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'}}});
+   if(!dialog.open){stream.getTracks().forEach(track=>track.stop());return;}
+   await import('./jsQR.js?v=50');
+   if(!dialog.open)return;
+   video.srcObject=stream;
+   video.hidden=false;
+   await video.play();
+   function readFrame(now) {
+     if(!dialog.open)return;
+     frame=requestAnimationFrame(readFrame);
+     if(now-lastRead<160 || !video.videoWidth || video.readyState<2)return;
+     lastRead=now;
+     canvas.width=Math.min(640,video.videoWidth);
+     canvas.height=Math.round(canvas.width*video.videoHeight/video.videoWidth);
+     context.drawImage(video,0,0,canvas.width,canvas.height);
+     const pixels=context.getImageData(0,0,canvas.width,canvas.height);
+     const result=window.jsQR(pixels.data,pixels.width,pixels.height,{inversionAttempts:'dontInvert'});
+     if(!result)return;
+     const code=scannedParentCode(result.data);
+     if(!code){status.textContent=label('wrongQr');return;}
+     codeDraft=code;
+     render();
+     dialog.close();
+     showToast(label('qrReady'));
+   }
+   frame=requestAnimationFrame(readFrame);
+ } catch {
+   stream?.getTracks().forEach(track=>track.stop());
+   if(dialog.open){video.hidden=true;status.textContent=label('cameraError');}
+ }
+}
+
 function childInvite(){
  const section=panel('connect');
  const invite=inviteFromUrl();
@@ -195,7 +269,10 @@ function childInvite(){
    codeDraft=undefined;showToast(label('requested'));render();
  });
  form.onsubmit=event=>{event.preventDefault();send.click();};
- form.append(input,send);section.append(title,form);
+ form.append(input,send);
+ const scan=action(label('scanCamera'),scanParentCode);
+ scan.setAttribute('aria-haspopup','dialog');
+ section.append(scan,title,form);
  return section;
 }
 function render(){
