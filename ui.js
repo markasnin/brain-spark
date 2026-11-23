@@ -1,7 +1,15 @@
 // ══ UI HELPERS ══
 
-const rnd  = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
-const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+let practiceRandom=()=>Math.random();
+function seededPractice(key,generate){
+  let state=2166136261;
+  for(const char of key)state=Math.imul(state^char.charCodeAt(0),16777619);
+  const previous=practiceRandom;
+  practiceRandom=()=>((state=(Math.imul(state,1664525)+1013904223)>>>0)/4294967296);
+  try{return generate();}finally{practiceRandom=previous;}
+}
+const rnd  = (a,b) => Math.floor(practiceRandom()*(b-a+1))+a;
+const pick = arr => arr[Math.floor(practiceRandom()*arr.length)];
 
 function cleanUsername(val) {
   return val.trim().toLowerCase().replace(/[^\u05d0-\u05eaa-z0-9]/g, '');
@@ -21,6 +29,7 @@ function goToMainScreen() {
     if (current?.id !== 'auth-scr') show('auth-scr');
     return;
   }
+  if (window.familyAccounts?.isParent()) { window.familyAccounts.open(); return; }
   if (!window._username) { show('username-setup-scr'); return; }
   if (!window._grade) { show('grade-select-scr'); return; }
   if (current?.id === 'home') return;
@@ -451,7 +460,7 @@ function regGoStep(step) {
       if (badge && badge.textContent.includes('תפוס')) { err.textContent='שם המשתמש הזה תפוס — בחר שם אחר'; err.style.display='block'; document.getElementById('regUsername').focus(); return; }
     }
     if (_regCurrentStep===2) {
-      if (!document.getElementById('regGrade').value) { err.textContent='בחר כיתה להמשיך'; err.style.display='block'; return; }
+      if (document.getElementById('regRole').value==='child' && !document.getElementById('regGrade').value) { err.textContent='בחר כיתה להמשיך'; err.style.display='block'; return; }
     }
   }
   document.querySelectorAll('.reg-step-panel').forEach(p => p.classList.remove('on'));
@@ -479,6 +488,8 @@ function selectRegGrade(grade) {
 function resetRegForm() {
   regGoStep(1);
   ['regDisplayName','regUsername','regEmail','regPass','regPass2'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('regRole').value='child';
+  document.getElementById('learnerFields').hidden=false;
   document.getElementById('regGrade').value='';
   document.querySelectorAll('.reg-grade-card').forEach(c=>c.classList.remove('selected'));
   document.querySelectorAll('#regGenderPicker .gender-btn').forEach(b=>{b.classList.remove('selected');b.setAttribute('aria-pressed','false');});

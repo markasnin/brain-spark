@@ -1,12 +1,13 @@
 // ══ FIREBASE CONFIG & AUTH ══
 // This file handles: init, auth state, login, register, save/load, friends, password reset.
 
+import "./family.js?v=42";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
   onAuthStateChanged, signOut, updatePassword, EmailAuthProvider,
   reauthenticateWithCredential, sendPasswordResetEmail }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc,
+import { writeBatch, getFirestore, doc, setDoc, getDoc, updateDoc,
   collection, getDocs, query, where }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -32,10 +33,30 @@ window._fb = {
 };
 
 // ── AUTH STATE ──
-onAuthStateChanged(auth, async (user) => {
+const initialState=structuredClone(st);
+const initialConfig=structuredClone(cfg);
+let registering = false;
+let unfinishedRegistration;
+function clearAccount(){
+  clearTimeout(_saveTimer);
+  window.familyAccounts.reset();
+  for(const key of ['_grade','_username','_displayName','_gender','_contactEmail'])window[key]='';
+  window._termsAccepted=false;
+  window._friends=[];
+  for(const key of Object.keys(st))delete st[key];
+  for(const key of Object.keys(cfg))delete cfg[key];
+  Object.assign(st,structuredClone(initialState));
+  Object.assign(cfg,structuredClone(initialConfig));
+}
+onAuthStateChanged(auth,user=>{ if(!registering) enterAccount(user); });
+async function enterAccount(user) {
   if (user) {
+    if(window._fbUser?.uid!==user.uid)clearAccount();
     window._fbUser = user;
     await fbLoad(user.uid);
+    if(auth.currentUser?.uid!==user.uid)return;
+    try { await window.familyAccounts.init(user); } catch(e) { console.warn('Family profile unavailable',e.code); }
+    if (auth.currentUser?.uid!==user.uid || window.familyAccounts.isParent()) return;
     document.getElementById('auth-scr').classList.remove('on');
     if (!window._username) {
       document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
@@ -49,16 +70,19 @@ onAuthStateChanged(auth, async (user) => {
       updateHome();
     }
   } else {
+    clearAccount();
     window._fbUser = null;
     document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+    for(const [id,text] of [['loginBtn','🚀 כניסה'],['authBtn','הרשמה ✅']]){const button=document.getElementById(id);button.disabled=false;button.textContent=text;}
     document.getElementById('auth-scr').classList.add('on');
   }
-});
+}
 
 // ── LOAD USER DATA ──
 window.fbLoad = async function(uid) {
   try {
     const snap = await getDoc(doc(db, 'users', uid));
+    if(auth.currentUser?.uid!==uid)return;
     if (snap.exists()) {
       const d = snap.data();
       if (d.displayName)  window._displayName  = d.displayName;
@@ -83,9 +107,11 @@ let _saveTimer = null;
 window.fbSave = function() {
   if (!window._fbUser) return;
   clearTimeout(_saveTimer);
+  const uid=window._fbUser.uid;
   _saveTimer = setTimeout(async () => {
+    if(auth.currentUser?.uid!==uid)return;
     try {
-      await setDoc(doc(db, 'users', window._fbUser.uid), {
+      await setDoc(doc(db, 'users', uid), {
         st, cfg,
         displayName: window._displayName || '',
         username:    window._username    || '',
@@ -126,7 +152,8 @@ window.fbRegister = async function() {
   const username    = document.getElementById('regUsername').value.trim();
   const pass        = document.getElementById('regPass').value;
   const pass2       = document.getElementById('regPass2').value;
-  const grade       = document.getElementById('regGrade').value;
+  const role = document.getElementById('regRole').value;
+  const grade = role==='child'?document.getElementById('regGrade').value:'';
   const displayName = document.getElementById('regDisplayName').value.trim();
   const gender      = window.getSelectedGender ? window.getSelectedGender('reg') : '';
   const contactEmail= document.getElementById('regEmail')?.value.trim() || '';
@@ -136,7 +163,7 @@ window.fbRegister = async function() {
 
   if (!displayName || displayName.length < 2) { err.textContent='שם תצוגה חייב להיות לפחות 2 תווים'; err.style.display='block'; return; }
   if (!username    || username.length < 2)    { err.textContent='שם משתמש חייב להיות לפחות 2 תווים'; err.style.display='block'; return; }
-  if (!grade)  { err.textContent='בחר כיתה'; err.style.display='block'; return; }
+  if (role==='child' && !grade)  { err.textContent='בחר כיתה'; err.style.display='block'; return; }
   if (pass.length < 6) { err.textContent='סיסמה חייבת להיות לפחות 6 תווים'; err.style.display='block'; return; }
   if (pass !== pass2)  { err.textContent='הסיסמאות לא תואמות'; err.style.display='block'; return; }
   if (!termsAccepted)  {
@@ -154,21 +181,28 @@ window.fbRegister = async function() {
   try {
     document.getElementById('authBtn').disabled = true;
     document.getElementById('authBtn').textContent = 'נרשם...';
-    const cred = await createUserWithEmailAndPassword(auth, fakeEmail, pass);
+    registering = true;
+    const cred=unfinishedRegistration?.user===auth.currentUser && auth.currentUser?.email===fakeEmail ? unfinishedRegistration : await createUserWithEmailAndPassword(auth,fakeEmail,pass);
+    unfinishedRegistration=cred;
     const userData = { displayName, username: cleanU, grade, createdAt: Date.now(), friends: [], st, cfg, termsAccepted: true };
     if (gender)       userData.gender       = gender;
     if (contactEmail) userData.contactEmail = contactEmail.toLowerCase();
-    await setDoc(doc(db, 'users', cred.user.uid), userData, { merge: true });
+    const batch=writeBatch(db);
+    batch.set(doc(db,'users',cred.user.uid),userData,{merge:true});
+    batch.set(doc(db,'familyProfiles',cred.user.uid),role==='parent'?{role}:{role,grade});
+    await batch.commit();
+    unfinishedRegistration=null;
     window._displayName = displayName;
     window._username    = cleanU;
     window._grade       = grade;
     window._friends     = [];
+    await enterAccount(cred.user);
   } catch(e) {
     document.getElementById('authBtn').disabled = false;
     document.getElementById('authBtn').textContent = 'הרשמה ✅';
     err.textContent = e.code === 'auth/email-already-in-use' ? 'שם משתמש זה כבר תפוס, בחר אחר' : 'שגיאה: ' + e.message;
     err.style.display = 'block';
-  }
+  } finally { registering=false; }
 };
 
 // ── LOGIN ──
@@ -182,7 +216,7 @@ window.fbLogin = async function() {
     document.getElementById('loginBtn').disabled = true;
     document.getElementById('loginBtn').textContent = 'נכנס...';
     const clean     = username.trim().toLowerCase().replace(/[^\u05d0-\u05eaa-z0-9]/g, '');
-    const fakeEmail = clean + '@brainspark.local';
+    const fakeEmail = username.includes('@')?username.toLowerCase():clean+'@brainspark.local';
     await signInWithEmailAndPassword(auth, fakeEmail, pass);
   } catch(e) {
     document.getElementById('loginBtn').disabled = false;
@@ -290,6 +324,7 @@ window.fbChangeGrade = async function() {
   const grade = document.getElementById('setGrade').value;
   if (!grade) return;
   if (!confirm(`לעבור לכיתה ${grade}? זה ישנה את רמת השאלות!`)) return;
+  await window.familyAccounts.syncGrade(grade);
   window._grade = grade;
   window.fbSave();
   await loadGradeConfig(grade);

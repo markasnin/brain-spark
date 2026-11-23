@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signed() { return request.auth != null; }
+    function own(id) { return signed() && request.auth.uid == id; }
+    function profile(id) { return get(/databases/$(database)/documents/familyProfiles/$(id)).data; }
+    function link(id) { return get(/databases/$(database)/documents/familyLinks/$(id)).data; }
+    function member(l) { return own(l.parent) || own(l.child); }
+    function validGrade(g) { return g in ['א','ב','ג','ד','ה','ו','ז']; }
+    match /users/{userId} {
+      allow read: if signed();
+      allow write: if own(userId);
+    }
+    match /familyProfiles/{id} {
+      allow get: if own(id) || (signed() && link(request.auth.uid + '_' + id).accepted == true);
+      function validProfile(d) {
+        return (d.role == 'parent' && d.keys().hasOnly(['role'])) ||
+          (d.role == 'child' && d.keys().hasOnly(['role','grade']) && validGrade(d.grade));
+      }
+      allow create: if own(id) && validProfile(request.resource.data);
+      allow update: if own(id) && validProfile(request.resource.data) && request.resource.data.role == resource.data.role;
+    }
+    match /familyLinks/{id} {
+      allow read: if member(resource.data);
+      allow create: if own(request.resource.data.child) && request.resource.data.keys().hasOnly(['parent','child','name','accepted'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 120
+        && request.resource.data.parent != request.resource.data.child
+        && id == request.resource.data.parent + '_' + request.resource.data.child
+        && profile(request.resource.data.parent).role == 'parent' && profile(request.resource.data.child).role == 'child'
+        && request.resource.data.accepted == false;
+      allow update: if own(resource.data.parent) && resource.data.accepted == false
+        && request.resource.data.accepted == true && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['accepted']);
+      allow delete: if member(resource.data);
+      match /tasks/{taskId} {
+        function authorized() { return signed() && member(link(id)) && link(id).accepted == true; }
+        allow read: if authorized();
+        function validTask(d) {
+          return d.keys().hasOnly(['parent','child','grade','parts','total','index','correct','answers','created','completed'])
+            && own(d.parent) && d.parent == link(id).parent && d.child == link(id).child
+            && d.grade == profile(d.child).grade && d.parts is list && d.parts.size() > 0
+            && d.total is int && d.total >= d.parts.size() && d.total <= 100
+            && d.index == 0 && d.correct == 0 && d.answers == [] && d.created == request.time && d.completed == null;
+        }
+        function oneAnswer(d,old) {
+          return own(old.child) && old.index < old.total && d.index == old.index + 1
+            && d.diff(old).affectedKeys().hasOnly(['index','correct','answers','completed'])
+            && (d.correct == old.correct || d.correct == old.correct + 1)
+            && d.answers == old.answers.concat([d.correct > old.correct])
+            && (d.index == old.total ? d.completed == request.time : d.completed == null);
+        }
+        allow create: if authorized() && validTask(request.resource.data);
+        allow update: if authorized() && oneAnswer(request.resource.data,resource.data);
+      }
+    }
+  }
+}

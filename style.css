@@ -1059,3 +1059,16 @@ html[dir="rtl"] .arcade-play > span { display:inline-block; transform:scaleX(-1)
 }
 
 .study-table-example {margin-block-start:16px}
+.family-panel{width:min(100% - 24px,840px);margin:24px auto;padding:clamp(16px,3vw,32px);box-sizing:border-box;border:1px solid #66578f;border-radius:24px;background:#292441;color:#fff}
+.family-panel nav,.family-row,#familyBanner{display:flex;flex-wrap:wrap;align-items:center;gap:.65rem}
+.family-panel nav{padding-bottom:1rem;border-bottom:1px solid #5b5079}.family-panel button,#familyBanner button{cursor:pointer;color:white;background:#483b70;border:1px solid #8873ae;border-radius:12px;padding:.65rem 1rem;font:inherit}
+#familyBody{display:grid;gap:1rem;padding-block:1rem}.family-panel h1,.family-panel h2{margin:.4em 0}.family-panel label{display:grid;gap:.35em}
+.family-panel select,.family-panel input,#regRole{max-width:100%;box-sizing:border-box;font:inherit;background:#18182e;color:white;padding:.7rem;border:1px solid #897caf;border-radius:10px}
+#regRole{width:100%;margin-block:.5rem 1rem}.family-row{justify-content:space-between;background:#1d1c33;border:1px solid #51476a;padding:1rem;border-radius:16px;margin-block:.5rem}
+#familyBanner:not(:empty){margin-bottom:12px}#familyBanner button:first-child{background:#463776;border-color:#ae94eb}.family-panel .study-question{text-align:center;font-size:1.35rem}.family-panel #familyAnswer{width:10rem;justify-self:center;text-align:center}
+
+.family-panel .family-button{width:auto;min-height:44px;justify-content:center}
+.family-panel #familyBody>button{justify-self:start}.family-panel .family-row progress{width:100%;height:.55rem;accent-color:#71e3c2}.family-panel time{color:#c9c1db;font-size:.88rem}
+.family-panel .study-question{background:#353054;padding:1rem;border-radius:14px}.family-panel p{margin:0;color:#ddd6eb}
+#familyVisual{width:100%;max-width:640px;justify-self:center}#familyVisual:empty{display:none}
+@media(max-width:600px){#familyScreen{padding-inline:8px}.family-panel{width:100%}.family-panel .family-row{align-items:flex-start}.family-panel select{width:100%}}

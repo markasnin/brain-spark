@@ -32,6 +32,7 @@ function applyGradeConfig() {
 }
 
 async function selectGrade(grade) {
+  await window.familyAccounts?.syncGrade(grade);
   window._grade = grade; window.fbSave();
   await loadGradeConfig(grade);
   document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));

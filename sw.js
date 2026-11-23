@@ -1,4 +1,4 @@
-const RELEASE = '41';
+const RELEASE = '42';
 const CACHE_PREFIX = 'brainspark-v';
 const CACHE = CACHE_PREFIX + RELEASE;
 const OFFLINE_PAGE = './index.html';
@@ -25,6 +25,7 @@ const ASSETS = [
   'lessons.js',
   'ui.js',
   'firebase.js',
+  'family.js',
   'profile-fields.js',
   'minigame-fishing.js',
   'minigame-dungeon.js',

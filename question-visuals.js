@@ -121,9 +121,9 @@ function mountQuestionVisual(container, q) {
       cell.setAttribute('aria-label',String(i+1));
       cell.setAttribute('aria-pressed','false');
       cell.onclick=()=>{
-        if(qs.done)return;
+        if(container.id!=='familyVisual' && qs.done)return;
         cell.setAttribute('aria-pressed',String(cell.getAttribute('aria-pressed')!=='true'));
-        const input=document.getElementById(container.id==='examVisual'?'eInp':'ansInp');
+        const input=document.getElementById(container.id==='familyVisual'?'familyAnswer':container.id==='examVisual'?'eInp':'ansInp');
         if(input)input.value=String(grid.querySelectorAll('[aria-pressed="true"]').length);
       };
       grid.append(cell);
