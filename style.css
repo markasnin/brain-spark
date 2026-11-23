@@ -1150,3 +1150,32 @@ body:has(#q-scr.on,#familyScreen.on #familyVisual) .practice-guide-trigger{displ
 }
 .practice-guide-body{padding:clamp(6px,2vw,18px)}
 body:has(#practiceGuide[open]){overflow:hidden}
+/* Family dashboard */
+#familyScreen .family-panel{width:min(100%,1040px);padding:0;border:0;background:transparent}
+#familyScreen nav{justify-content:flex-end;padding:0 0 12px;border:0}
+.family-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:clamp(16px,3vw,28px);border:1px solid #8277ad;border-radius:20px;background:linear-gradient(110deg,#453675,#274d65)}
+.family-heading h1{font:700 clamp(1.5rem,4vw,2.3rem) Fredoka,Rubik,sans-serif}
+.family-section{min-width:0;padding:clamp(14px,2.5vw,22px);border:1px solid #605480;border-radius:18px;background:#2b2547}
+.family-section h2{margin:0 0 14px;color:#e2d3ff;font-size:1.25rem}
+.family-section>button{margin-block:10px 0;margin-inline-end:8px}
+.family-invite{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 24px;align-items:center}
+.family-invite h2{grid-column:1/-1;margin:0}
+.family-invite label{margin-block-start:12px}
+.family-invite p:last-child{margin-block-start:12px}
+.family-qr{display:block;width:clamp(132px,27vw,182px);height:auto;border-radius:10px;image-rendering:pixelated;justify-self:center}
+.family-link-form{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-block:8px}
+.family-link-form input{flex:1 1 15rem;min-width:0}
+.family-person-info{display:flex;align-items:center;flex-wrap:wrap;gap:10px;min-width:0;overflow-wrap:anywhere}
+.family-person-info .family-button{white-space:normal;text-align:start}
+.family-status,.family-report-topics span{padding:5px 9px;border-radius:8px;background:#3b335d;color:#ddd1fa;font-size:.85rem}
+.family-panel button.family-secondary{background:#26223b;color:#ddd1fa;border-color:#645681}
+.family-editor-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-block-end:8px}
+.family-editor-fields :is(select,input){width:100%;min-width:0}
+.family-report-topics{display:flex;flex:1 0 100%;flex-wrap:wrap;gap:6px}
+.family-report time{flex-basis:100%}
+@media(max-width:580px){
+  #familyScreen nav{justify-content:flex-start}
+  .family-invite{grid-template-columns:minmax(0,1fr)}
+  .family-invite .family-qr{grid-row:2}
+  .family-editor-fields{grid-template-columns:minmax(0,1fr)}
+}

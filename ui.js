@@ -141,6 +141,7 @@ function updateHome() {
 
   const dn = document.getElementById('newDisplayName'); if (dn) dn.placeholder = playerDisplayName;
   if (window._grade) selectSetGrade(window._grade);
+  if(document.getElementById('home').classList.contains('on'))window.familyAccounts?.openPendingInvite();
 }
 
 // ══ GROUPED CATEGORY GRID ══

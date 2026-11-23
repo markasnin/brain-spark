@@ -1,6 +1,16 @@
+import qrcode from './qrcode.js?v=48';
 import {doc, collection, getDoc, setDoc, deleteDoc, writeBatch, onSnapshot, query, where, runTransaction, serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const labels = {
+ scan:'סרקו במצלמת הטלפון של הילד.|Scan with your child’s phone camera.|Отсканируйте камерой телефона ребёнка.|امسح بكاميرا هاتف الطفل.|Scannez avec le téléphone de votre enfant.|Відскануйте камерою телефона дитини.',
+ copy:'העתקת קוד|Copy code|Скопировать код|نسخ الرمز|Copier le code|Копіювати код',
+ copied:'הקוד הועתק|Code copied|Код скопирован|تم نسخ الرمز|Code copié|Код скопійовано',
+ connect:'קישור למשפחה|Link your family|Связать семью|ربط العائلة|Relier la famille|Під’єднати родину',
+ qrReady:'הקוד מוכן. לחצו על בקשת קישור.|Code ready. Select Request a link.|Код готов. Нажми «Запросить связь».|الرمز جاهز. اضغط على طلب الربط.|Code prêt. Choisis Demander le lien.|Код готовий. Натисни «Запит на зв’язок».',
+ noChildren:'עדיין אין ילדים מקושרים.|No children linked yet.|Пока нет связанных детских аккаунтов.|لا توجد حسابات أطفال مرتبطة بعد.|Aucun enfant lié pour le moment.|Поки немає під’єднаних дитячих акаунтів.',
+ linked:'מקושר|Linked|Связано|مرتبط|Compte lié|Під’єднано',
+ requested:'הבקשה נשלחה|Request sent|Запрос отправлен|تم إرسال الطلب|Demande envoyée|Запит надіслано',
+ qrAlt:'קוד QR לקישור משפחתי|Family linking QR code|QR-код для связи с семьёй|رمز QR لربط العائلة|QR code de liaison familiale|QR-код для під’єднання родини',
  shared:'תנו לילד את הקוד. אחרי שישלח בקשה, אשרו אותה כאן.|Share this code with your child. When they send a request, accept it here.|Передайте код ребёнку. Когда придёт запрос, подтвердите его здесь.|شارك الرمز مع طفلك. عندما يرسل طلبًا، وافق عليه هنا.|Donnez ce code à votre enfant, puis acceptez sa demande ici.|Передайте код дитині. Коли надійде запит, підтвердьте його тут.',
  assigned:'נשלח|Assigned|Назначено|أُرسلت|Envoyé|Призначено',
  review:'צפייה בתשובות|Review answers|Посмотреть ответы|مراجعة الإجابات|Voir les réponses|Переглянути відповіді',
@@ -54,6 +64,21 @@ const linkRef=id=>doc(db(),'familyLinks',id);
 const familyTasks=(parent,child)=>collection(linkRef(pair(parent,child)),'tasks');
 const taskRef=t=>doc(familyTasks(t.parent,t.child),t.id);
 const taskListeners=new Map();
+const validCode = code => /^[\w-]{10,128}$/.test(code);
+let shownInvite = '';
+let codeDraft;
+function inviteFromUrl() {
+ const code = new URLSearchParams(location.hash.slice(1)).get('family') || '';
+ return validCode(code) ? code : '';
+}
+function openPendingInvite() {
+ const code = inviteFromUrl();
+ if (uid && role !== 'parent' && code && code !== uid && shownInvite !== code) {
+   shownInvite = code;
+   codeDraft = undefined;
+   open();
+ }
+}
 function element(tag,text){const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node;}
 function action(text,fn){
  const btn=element('button',text);btn.type='button';btn.className='practice-choice family-button';
@@ -62,6 +87,7 @@ function action(text,fn){
 }
 function reset(){
  adminPractice=false;
+ shownInvite='';codeDraft=undefined;
  for(const stop of taskListeners.values())stop();taskListeners.clear();
  subscriptions.forEach(stop=>stop());subscriptions=[];uid=null;role=null;links=[];tasks=[];selected=null;active=null;
  root.replaceChildren();banner.replaceChildren();
@@ -117,28 +143,90 @@ function refresh(){
 async function choose(value){
  await setDoc(profile(uid),value==='child' && GRADE_FILES[window._grade]?{role:value,grade:window._grade}:{role:value});await init(window._fbUser);open();
 }
-function render(){
- root.replaceChildren();root.append(element('h1',label('family')));
- if(!role){root.append(action(label('parent'),()=>choose('parent')),action(label('child'),()=>choose('child')));return;}
- if(role==='parent'){
-   root.append(element('label',label('code')));const code=element('input');code.readOnly=true;code.value=uid;code.onclick=()=>code.select();code.dir='ltr';code.setAttribute('aria-label',label('code'));root.append(code,element('p',label('shared')),element('h2',label('children')));
- }else{
-   const list=element('section');root.append(list);renderReports(list,uid);
-   const input=element('input');input.setAttribute('aria-label',label('enter'));input.placeholder=label('enter');input.dir='ltr';
-   root.append(element('label',label('enter')),input,action(label('link'),async()=>{
-     const parent=input.value.trim();if(!/^[\w-]{10,128}$/.test(parent)||parent===uid)throw Error();
+function panel(title, className=''){
+ const section=element('section');
+ section.className='family-section '+className;
+ section.append(element('h2',label(title)));
+ return section;
+}
+function familyHeading(title){
+ const header=element('header');
+ header.className='family-heading';
+ header.append(element('h1',title));
+ root.replaceChildren(header);
+ return header;
+}
+function parentInvite(){
+ const section=panel('connect','family-invite');
+ const details=element('div');
+ const code=element('input');
+ code.id='familyShareCode';code.readOnly=true;code.value=uid;code.dir='ltr';code.onclick=()=>code.select();
+ const title=element('label',label('code'));title.htmlFor=code.id;
+ const copy=action(label('copy'),async()=>{
+   try{await navigator.clipboard.writeText(code.value);showToast(label('copied'));}
+   catch{code.focus();code.select();}
+ });
+ const controls=element('div');controls.className='family-link-form';controls.append(code,copy);
+ details.append(element('p',label('scan')),title,controls,element('p',label('shared')));
+ const url=new URL(location.pathname,location.origin);
+ url.hash=new URLSearchParams({family:uid}).toString();
+ const qr=qrcode(0,'M');qr.addData(url.href);qr.make();
+ const image=element('img');image.className='family-qr';image.src=qr.createDataURL(6,24);
+ image.alt=label('qrAlt');image.setAttribute('aria-label',label('qrAlt'));
+ section.append(details,image);
+ return section;
+}
+function childInvite(){
+ const section=panel('connect');
+ const invite=inviteFromUrl();
+ const input=element('input');input.id='familyLinkCode';input.placeholder=label('enter');input.dir='ltr';
+ input.value=codeDraft ?? invite;
+ input.oninput=()=>{codeDraft=input.value;};
+ const title=element('label',label('enter'));title.htmlFor=input.id;
+ if(invite && input.value===invite)section.append(element('p',label('qrReady')));
+ const form=element('form');form.className='family-link-form';
+ const send=action(label('link'),async()=>{
+   const parent=input.value.trim();
+   if(!validCode(parent)||parent===uid)throw Error();
+   if(!links.some(link=>link.parent===parent)){
      await setDoc(linkRef(pair(parent,uid)),{parent,child:uid,name:window._displayName||window._username,accepted:false});
-   }));
+   }
+   if(invite)history.replaceState(history.state,'',location.pathname+location.search);
+   codeDraft=undefined;showToast(label('requested'));render();
+ });
+ form.onsubmit=event=>{event.preventDefault();send.click();};
+ form.append(input,send);section.append(title,form);
+ return section;
+}
+function render(){
+ const focusedCode=document.activeElement?.id==='familyLinkCode';
+ const cursor=focusedCode?document.activeElement.selectionStart:null;
+ familyHeading(label('family'));
+ if(!role){
+   const choice=panel('connect');
+   choice.append(action(label('parent'),()=>choose('parent')),action(label('child'),()=>choose('child')));
+   root.append(choice);return;
  }
+ const people=panel(role==='parent'?'children':'parent','family-people');
+ if(role==='parent' && !links.length)people.append(element('p',label('noChildren')));
  for(const l of links){
-   const card=element('section');card.className='family-row';
-   if(role==='parent'){
-     if(l.accepted)card.append(action(l.name,()=>editor(l)));
-     else card.append(element('strong',l.name),action(label('accept'),()=>window._fb.updateDoc(linkRef(l.id),{accepted:true})));
-   }else card.append(element('strong',l.accepted?label('parent'):label('pending')),element('small',l.parent));
-   card.append(action(label('remove'),async()=>{if(confirm(interfaceText(label('remove'))+'?'))await deleteDoc(linkRef(l.id));}));root.append(card);
+   const card=element('div');card.className='family-row family-person';
+   const info=element('div');info.className='family-person-info';
+   if(role==='parent' && l.accepted)info.append(action(l.name,()=>editor(l)));
+   else info.append(element('strong',role==='parent'?l.name:label('parent')));
+   const status=element('span',label(l.accepted?'linked':'pending'));
+   status.className='family-status';info.append(status);card.append(info);
+   if(role==='parent' && !l.accepted)card.append(action(label('accept'),()=>window._fb.updateDoc(linkRef(l.id),{accepted:true})));
+   const remove=action(label('remove'),async()=>{if(confirm(interfaceText(label('remove'))+'?'))await deleteDoc(linkRef(l.id));});
+   remove.classList.add('family-secondary');card.append(remove);people.append(card);
  }
-
+ if(role==='parent'){root.append(parentInvite(),people);return;}
+ const reports=element('section');reports.className='family-section';
+ const invite=childInvite();
+ root.append(...(inviteFromUrl()?[invite,reports]:[reports,invite]));
+ renderReports(reports,uid);
+ if(links.length)root.append(people);
+ if(focusedCode){const input=invite.querySelector('input');input.focus();input.setSelectionRange(cursor,cursor);}
 }
 function renderReports(host,child){
  if(!host)return;
@@ -147,11 +235,13 @@ function renderReports(host,child){
  const rows=tasks.filter(t=>t.child===child&&links.some(l=>l.accepted&&l.parent===t.parent&&l.child===child));
  if(!rows.length)host.append(element('p',label('empty')));
  for(const t of rows){
-   const card=element('section');card.className='family-row';
+   const card=element('section');card.className='family-row family-report';
    if(t.created)card.append(element('time',translated('assigned')+' · '+t.created.toDate().toLocaleString(document.documentElement.lang)));
    const progress=element('progress');progress.max=t.total;progress.value=t.index;progress.setAttribute('aria-label',label('answered'));card.append(progress);
+   const topics=element('div');topics.className='family-report-topics';
    let offset=0;
-   for(const part of t.parts){const attempts=t.answers.slice(offset,offset+part.count);offset+=part.count;card.append(element('span',interfaceText(CAT_NAMES[part.cat]||part.cat)+' × '+part.count+(attempts.length?' · '+translated('correct')+' '+attempts.filter(Boolean).length+'/'+attempts.length:'')));}
+   for(const part of t.parts){const attempts=t.answers.slice(offset,offset+part.count);offset+=part.count;topics.append(element('span',interfaceText(CAT_NAMES[part.cat]||part.cat)+' × '+part.count+(attempts.length?' · '+translated('correct')+' '+attempts.filter(Boolean).length+'/'+attempts.length:'')));}
+   card.append(topics);
    card.append(element('strong',translated('answered')+' '+t.index+'/'+t.total+' · '+translated('correct')+' '+t.correct));
    if(t.completed)card.append(element('time',translated('done')+' · '+t.completed.toDate().toLocaleString(document.documentElement.lang)));
    else if(role==='child')card.append(action(label('start'),()=>play(t)));
@@ -176,9 +266,12 @@ async function editor(link){
  if(!GRADE_FILES[grade])throw Error();
  selected=link.child;
  const catalog=Object.keys(worksheetGrades[grade]||curriculum[grade]);
- root.replaceChildren(element('h1',link.name+' · '+interfaceText('כיתה '+grade)),element('h2',label('build')));
- const cat=field(root,'category',element('select')),difficulty=field(root,'level',element('select')),skill=field(root,'skill',element('select'));
- const count=field(root,'count',element('input'));count.type='number';count.min=1;count.max=100;count.value=5;
+ const heading=familyHeading(link.name+' · '+interfaceText('כיתה '+grade));
+ heading.append(action(label('children'),open));
+ const builder=panel('build');
+ const fields=element('div');fields.className='family-editor-fields';builder.append(fields);
+ const cat=field(fields,'category',element('select')),difficulty=field(fields,'level',element('select')),skill=field(fields,'skill',element('select'));
+ const count=field(fields,'count',element('input'));count.type='number';count.min=1;count.max=100;count.value=5;
  const draft=element('section'),parts=[];
  options(cat,catalog.map(id=>[id,CAT_NAMES[id]]));
  const levels=[['easy','קל'],['medium','בינוני'],['hard','קשה']];
@@ -191,7 +284,7 @@ async function editor(link){
  cat.onchange=selectLevels;difficulty.onchange=selectSkills;selectLevels();
  function draw(){draft.replaceChildren();parts.forEach((p,i)=>{const item=element('div');item.className='family-row';item.append(element('span',p.caption+' × '+p.count),action('×',()=>{parts.splice(i,1);draw();}));draft.append(item);});}
  const id=doc(familyTasks(uid,link.child)).id;
- root.append(action(label('add'),()=>{
+ builder.append(action(label('add'),()=>{
    const n=Number(count.value);
    if(!Number.isInteger(n)||n<1||parts.reduce((sum,p)=>sum+p.count,n)>100){showToast(label('limit'));return;}
    parts.push({cat:cat.value,diff:difficulty.value,skill:skill.value,count:n,caption:[cat,difficulty,skill].map(s=>s.selectedOptions[0].text).join(' · ')});draw();
@@ -201,7 +294,7 @@ async function editor(link){
    await setDoc(taskRef({id,parent:uid,child:link.child}),{parent:uid,child:link.child,grade,parts:parts.map(({caption,...p})=>p),total,index:0,correct:0,answers:[],created:serverTimestamp(),completed:null});
    await editor(link);
  }));
- const reports=element('section');reports.id='familyReports';root.append(reports);renderReports(reports,selected);
+ const reports=element('section');reports.id='familyReports';reports.className='family-section';root.append(builder,reports);renderReports(reports,selected);
 }
 // Keep the original task seed so existing assignments can also be reviewed.
 function assignmentQuestion(task,index){
@@ -285,7 +378,10 @@ function play(t){
  });
  root.append(submit);input.onkeydown=e=>{if(e.key==='Enter')submit.click();};input.focus();
 }
-window.familyAccounts={init,open,reset,isParent:()=>role==='parent',parentHomeOnly,syncGrade:async grade=>{
+window.addEventListener('hashchange',()=>{
+ if(document.querySelector('#home.on,#familyScreen.on') && !active)openPendingInvite();
+});
+window.familyAccounts={openPendingInvite,init,open,reset,isParent:()=>role==='parent',parentHomeOnly,syncGrade:async grade=>{
  if(role!=='child')return;
  const batch=writeBatch(db());
  batch.update(profile(uid),{grade});batch.set(doc(db(),'users',uid),{grade},{merge:true});
