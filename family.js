@@ -1,4 +1,4 @@
-import qrcode from './qrcode.js?v=50';
+import qrcode from './qrcode.js?v=51';
 import {doc, collection, getDoc, setDoc, deleteDoc, writeBatch, onSnapshot, query, where, runTransaction, serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const labels = {
@@ -10,7 +10,7 @@ const labels = {
  copy:'העתקת קוד|Copy code|Скопировать код|نسخ الرمز|Copier le code|Копіювати код',
  copied:'הקוד הועתק|Code copied|Код скопирован|تم نسخ الرمز|Code copié|Код скопійовано',
  connect:'קישור למשפחה|Link your family|Связать семью|ربط العائلة|Relier la famille|Під’єднати родину',
- qrReady:'הקוד מוכן. לחצו על בקשת קישור.|Code ready. Select Request a link.|Код готов. Нажми «Запросить связь».|الرمز جاهز. اضغط على طلب الربط.|Code prêt. Choisis Demander le lien.|Код готовий. Натисни «Запит на зв’язок».',
+ qrReady:'הקוד מוכן. לחצו על שליחת בקשה.|Code ready. Select Request a link.|Код готов. Нажми «Запросить связь».|الرمز جاهز. اضغط على طلب الربط.|Code prêt. Choisis Demander le lien.|Код готовий. Натисни «Запит на зв’язок».',
  noChildren:'עדיין אין ילדים מקושרים.|No children linked yet.|Пока нет связанных детских аккаунтов.|لا توجد حسابات أطفال مرتبطة بعد.|Aucun enfant lié pour le moment.|Поки немає під’єднаних дитячих акаунтів.',
  linked:'מקושר|Linked|Связано|مرتبط|Compte lié|Під’єднано',
  requested:'הבקשה נשלחה|Request sent|Запрос отправлен|تم إرسال الطلب|Demande envoyée|Запит надіслано',
@@ -30,7 +30,7 @@ const labels = {
  child:'חשבון ילד|Child account|Детский аккаунт|حساب الطفل|Compte enfant|Дитячий обліковий запис',
  code:'הקוד שלך לקישור ילד|Your code to share with your child|Ваш код для ребёнка|رمزك لربط الطفل|Code à partager avec votre enfant|Ваш код для дитини',
  enter:'הקוד שקיבלת מההורה|Code from your parent|Код от родителя|رمز ولي الأمر|Code de ton parent|Код від батьків',
- link:'בקשת קישור|Request a link|Запросить связь|طلب الربط|Demander le lien|Запит на зв’язок',
+ link:'שליחת בקשה|Request a link|Запросить связь|طلب الربط|Demander le lien|Запит на зв’язок',
  accept:'אישור קישור|Accept link|Принять запрос|قبول الربط|Accepter le lien|Прийняти запит',
  remove:'ביטול קישור|Remove link|Удалить связь|إلغاء الربط|Supprimer le lien|Прибрати зв’язок',
  tasks:'משימות מההורים|Parent assignments|Задания от родителей|مهام من ولي الأمر|Devoirs des parents|Завдання від батьків',
@@ -220,7 +220,7 @@ async function scanParentCode() {
  try {
    stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'}}});
    if(!dialog.open){stream.getTracks().forEach(track=>track.stop());return;}
-   await import('./jsQR.js?v=50');
+   await import('./jsQR.js?v=51');
    if(!dialog.open)return;
    video.srcObject=stream;
    video.hidden=false;

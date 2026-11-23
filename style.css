@@ -1153,6 +1153,7 @@ body:has(#practiceGuide[open]){overflow:hidden}
 /* Family dashboard */
 #familyScreen .family-panel{width:min(100%,1040px);padding:0;border:0;background:transparent}
 #familyScreen nav{justify-content:flex-end;padding:0 0 12px;border:0}
+#familyScreen nav:dir(rtl){justify-content:flex-start}
 .family-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:clamp(16px,3vw,28px);border:1px solid #8277ad;border-radius:20px;background:linear-gradient(110deg,#453675,#274d65)}
 .family-heading h1{font:700 clamp(1.5rem,4vw,2.3rem) Fredoka,Rubik,sans-serif}
 .family-section{min-width:0;padding:clamp(14px,2.5vw,22px);border:1px solid #605480;border-radius:18px;background:#2b2547}
