@@ -1,4 +1,10 @@
 const skillText = [
+  ['מסלול','Skill','Навык','مهارة','Compétence','Навичка'],
+  ['הרכבת מספרים','Building numbers','Составление чисел','تكوين الأعداد','Former des nombres','Складання чисел'],
+  ['ערך ספרה','Place value','Разрядное значение','القيمة المنزلية','Valeur de position','Розрядне значення'],
+  ['השוואת מספרים','Comparing numbers','Сравнение чисел','مقارنة الأعداد','Comparer les nombres','Порівняння чисел'],
+  ['בחירת סימן השוואה','Choosing a comparison sign','Выбор знака сравнения','اختيار علامة المقارنة','Choisir un signe de comparaison','Вибір знака порівняння'],
+
   ['מה נתרגל? בחרו מסלול אחד.','Choose one skill to practice.','Выберите один навык для тренировки.','اختاروا مهارة واحدة للتدرّب عليها.','Choisis une compétence à travailler.','Оберіть одну навичку для тренування.'],
   ['מציאת המספר החסר','Find the missing number','Найди неизвестное число','إيجاد العدد المجهول','Trouver le nombre manquant','Знайди невідоме число'],
   ['מספרים עד','Numbers up to','Числа до','أعداد حتى','Nombres jusqu’à','Числа до'],
@@ -143,52 +149,48 @@ function practiceChoices(grade,cat) {
 }
 
 function buildPracticeChoices(cat) {
-  const grid=document.getElementById('practiceChoices');
+  const grid = document.getElementById('practiceChoices');
+  const mixedButton = document.getElementById('mixedPractice');
+  const choices = practiceChoices(window.GRADE_CONFIG.gradeId, cat);
+  const mixed = choices.find(choice => !choice.make);
+  mixedButton.hidden = !mixed;
+  mixedButton.onclick = mixed ? () => startCat(mixed.diff) : null;
   grid.replaceChildren();
-  const grade=window.GRADE_CONFIG.gradeId;
-  const more=document.createElement('details');
-  more.className='choice-more';
-  const summary=document.createElement('summary');
-  summary.textContent='עוד מסלולים';
-  more.append(summary);
-  const extra=document.createElement('div');
-  extra.className='practice-choices';
-  more.append(extra);
-  practiceChoices(grade,cat).forEach((choice,i)=>{
-    const sample=choice.make?.();
-    const button=document.createElement('button');
-    button.type='button';
-    button.className='practice-choice';
-    const title=document.createElement('strong');
-    if(choice.label){
-      const label=document.createElement('span');
-      label.textContent=choice.label;
-      title.append(label);
-      if(choice.limit) title.append(' '+choice.limit);
-    } else title.innerHTML=questionPrompt(sample);
-    button.append(title);
-    if(sample && choice.label){
-      const example=document.createElement('small');
-      example.innerHTML=questionPrompt(sample);
-      button.append(example);
+
+  for (const [index, choice] of choices.filter(item => item.make).entries()) {
+    const sample = choice.make();
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'practice-choice';
+
+    const heading = document.createElement('span');
+    heading.className = 'choice-heading';
+    const title = document.createElement('strong');
+    const label = document.createElement('span');
+    label.textContent = choice.label || 'מסלול';
+    title.append(label);
+    if (choice.limit || !choice.label) title.append(' ' + (choice.limit || index + 1));
+    const arrow = document.createElement('span');
+    arrow.className = 'choice-arrow';
+    arrow.setAttribute('aria-hidden', 'true');
+    heading.append(title, arrow);
+
+    const example = document.createElement('span');
+    example.className = 'choice-example';
+    example.innerHTML = questionPrompt(sample);
+    example.dir = sample.dir || 'auto';
+    button.append(heading, example);
+
+    if (sample.visual || sample.shapeHtml) {
+      const preview = document.createElement('span');
+      preview.className = 'choice-preview';
+      preview.inert = true;
+      preview.setAttribute('aria-hidden', 'true');
+      mountQuestionVisual(preview, sample);
+      preview.querySelectorAll('button,.visual-controls,.visual-feedback').forEach(el => el.remove());
+      if (preview.textContent.trim() || preview.querySelector('svg,.fraction-cell-grid')) button.append(preview);
     }
-    if(sample?.visual||sample?.shapeHtml){
-      const preview=document.createElement('div');
-      preview.className='choice-preview';
-      preview.inert=true;
-      preview.setAttribute('aria-hidden','true');
-      mountQuestionVisual(preview,sample);
-      preview.querySelectorAll('button,.visual-controls,.visual-feedback').forEach(el=>el.remove());
-      if(preview.textContent.trim()||preview.querySelector('svg,.fraction-cell-grid'))button.append(preview);
-    }
-    if(!i){
-      const badge=document.createElement('small');
-      badge.className='choice-start';
-      badge.textContent='התחילו כאן';
-      button.prepend(badge);
-    }
-    button.onclick=()=>startCat(choice.diff,choice.make);
-    (i<3?grid:extra).append(button);
-  });
-  if(extra.childElementCount) grid.append(more);
+    button.onclick = () => startCat(choice.diff, choice.make);
+    grid.append(button);
+  }
 }

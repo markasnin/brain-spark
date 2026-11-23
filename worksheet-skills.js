@@ -179,7 +179,7 @@ function worksheetProblem(grade,cat,diff,key){
     }
     case 'makeNumber': {
       const digits=worksheetShuffle([0,1,2,3,4,5,6,7,8,9]).slice(0,scale===1?3:4);
-      math=digits.join('    ');answer=Number(digits.sort((x,y)=>y-x).join(''));instruction=key;break;
+      math=digits.join(' · ');answer=Number(digits.sort((x,y)=>y-x).join(''));instruction=key;break;
     }
     case 'compareEstimate': {
       const x=scale>=4?10*a+b:10*a, y=scale>=4?b+1:b,op=scale>=4?'÷':'+';
@@ -466,7 +466,11 @@ function worksheetChoices(grade,cat){
     const level=source?Math.min(2,Number(source[2])):Math.min(index,2);
     const diff=curriculumDifficulties[level];
     const band=/^(count|names|board)(\d+)$/.exec(key);
-    const label=worksheetTitles[band?.[1]||key]?.split('|')[0];
+    const placeTitle = cat === 'place' ? {
+      c0:'ספרת המאות', c1:'פירוק המספר', c2:'סדרות', makeNumber:'הרכבת מספרים',
+      digit:'ערך ספרה', largest:'השוואת מספרים', sign:'בחירת סימן השוואה', sequence:'סדרות'
+    }[key] : undefined;
+    const label=placeTitle || worksheetTitles[band?.[1]||key]?.split('|')[0];
     let make=()=>worksheetProblem(grade,cat,diff,key);
     if(source?.[1]==='c') make=()=>curriculumQuestion(grade,cat,diff);
     if(source?.[1]==='v') make=()=>makeQuestionVariant(grade,cat,diff,Number(source[2]));
