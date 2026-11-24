@@ -1191,3 +1191,8 @@ body:has(#practiceGuide[open]){overflow:hidden}
 .family-scanner video{width:100%;max-height:50dvh;object-fit:contain;border-radius:12px;background:#171627}
 .family-scanner .family-button{margin-block-start:12px}
 .family-section>button[aria-haspopup=dialog]{margin-block:0 12px}
+.family-role-dialog select{
+  box-sizing:border-box;width:100%;min-height:44px;margin-top:6px;padding:8px;
+  border:1px solid #8474ad;border-radius:10px;background:#18182e;color:#fff;font:inherit
+}
+.family-role-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px}

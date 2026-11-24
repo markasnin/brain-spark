@@ -18,7 +18,12 @@ service cloud.firestore {
           (d.role == 'child' && d.keys().hasOnly(['role','grade']) && validGrade(d.grade));
       }
       allow create: if own(id) && validProfile(request.resource.data);
-      allow update: if own(id) && validProfile(request.resource.data) && request.resource.data.role == resource.data.role;
+      allow update: if own(id)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role','grade'])
+        && request.resource.data.role in ['parent','child']
+        && (request.resource.data.role == 'parent'
+          ? (!('grade' in request.resource.data) || validGrade(request.resource.data.grade))
+          : validGrade(request.resource.data.grade));
     }
     match /familyLinks/{id} {
       allow read: if member(resource.data);

@@ -1,7 +1,10 @@
-import qrcode from './qrcode.js?v=51';
+import qrcode from './qrcode.js?v=52';
 import {doc, collection, getDoc, setDoc, deleteDoc, writeBatch, onSnapshot, query, where, runTransaction, serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const labels = {
+ changeRole:'שינוי סוג חשבון|Change account type|Сменить тип аккаунта|تغيير نوع الحساب|Changer de type de compte|Змінити тип акаунта',
+ roleHelp:'הקישורים והמשימות יישמרו בתצוגה המתאימה.|Links and assignments stay saved in their matching view.|Связи и задания сохранятся в соответствующем разделе.|تظل الروابط والمهام محفوظة في الواجهة المناسبة.|Les liens et les devoirs restent disponibles dans la vue correspondante.|Зв’язки й завдання збережуться у відповідному розділі.',
+ gradeRequired:'בחרו כיתה כדי להמשיך.|Choose a grade to continue.|Выбери класс, чтобы продолжить.|اختر الصف للمتابعة.|Choisis une classe pour continuer.|Обери клас, щоб продовжити.',
  scanCamera:'סריקת קוד QR|Scan QR code|Сканировать QR-код|مسح رمز QR|Scanner le code QR|Сканувати QR-код',
  aimCamera:'כוונו את המצלמה לקוד ה־QR של ההורה.|Point the camera at your parent’s QR code.|Наведи камеру на QR-код родителя.|وجّه الكاميرا إلى رمز QR لولي الأمر.|Pointe la caméra vers le code QR de ton parent.|Наведи камеру на QR-код батьків.',
  cameraError:'לא ניתן לפתוח את המצלמה. אפשר להקליד את הקוד.|Camera unavailable. You can enter the code manually.|Камера недоступна. Можно ввести код вручную.|الكاميرا غير متاحة. يمكنك إدخال الرمز يدويًا.|Caméra indisponible. Tu peux saisir le code.|Камера недоступна. Можна ввести код вручну.',
@@ -72,6 +75,7 @@ const validCode = code => /^[\w-]{10,128}$/.test(code);
 let shownInvite = '';
 let codeDraft;
 let scanner;
+let roleDialog;
 function inviteFromUrl() {
  const code = new URLSearchParams(location.hash.slice(1)).get('family') || '';
  return validCode(code) ? code : '';
@@ -92,6 +96,7 @@ function action(text,fn){
 }
 function reset(){
  scanner?.close();
+ roleDialog?.close();
  adminPractice=false;
  shownInvite='';codeDraft=undefined;
  for(const stop of taskListeners.values())stop();taskListeners.clear();
@@ -148,6 +153,53 @@ function refresh(){
 }
 async function choose(value){
  await setDoc(profile(uid),value==='child' && GRADE_FILES[window._grade]?{role:value,grade:window._grade}:{role:value});await init(window._fbUser);open();
+}
+function showRoleChange() {
+ if (roleDialog || !uid || !role) return;
+ const next = role === 'parent' ? 'child' : 'parent';
+ const dialog = element('dialog');
+ const title = element('h2',label('changeRole'));
+ title.id='familyRoleTitle';
+ dialog.className='family-scanner family-role-dialog';
+ dialog.setAttribute('aria-labelledby',title.id);
+ dialog.append(title,element('p',label('roleHelp')));
+ let gradePicker;
+ if(next==='child' && !GRADE_FILES[window._grade]){
+   gradePicker=field(dialog,'gradeRequired',element('select'));
+   options(gradePicker,[['',label('gradeRequired')],...Object.keys(GRADE_FILES).map(grade=>[grade,'כיתה '+grade])]);
+ }
+ const controls=element('div');
+ controls.className='family-role-actions';
+ const saveRole=action(label(next),async()=>{
+   const grade = gradePicker?.value || window._grade;
+   if(next==='child' && !GRADE_FILES[grade]){gradePicker?.focus();return;}
+   const account=window._fbUser;
+   const batch=writeBatch(db());
+   batch.update(profile(account.uid),next==='child'?{role:next,grade}:{role:next});
+   if(next==='child' && grade!==window._grade){
+     batch.set(doc(db(),'users',account.uid),{grade},{merge:true});
+   }
+   await batch.commit();
+   if(window._fbUser?.uid!==account.uid)return;
+   if(next==='child'){
+     window._grade=grade;
+     if(window.GRADE_CONFIG?.gradeId!==grade)await loadGradeConfig(grade);
+   }
+   if(window._fbUser?.uid!==account.uid)return;
+   dialog.close();
+   await init(account);
+   if(window._fbUser?.uid===account.uid)open();
+ });
+ if(gradePicker){
+   saveRole.disabled=true;
+   gradePicker.onchange=()=>{saveRole.disabled=!gradePicker.value;};
+ }
+ controls.append(action('סגירה',()=>dialog.close()),saveRole);
+ dialog.append(controls);
+ dialog.addEventListener('close',()=>{roleDialog=undefined;dialog.remove();},{once:true});
+ roleDialog=dialog;
+ document.body.append(dialog);
+ dialog.showModal();
 }
 function panel(title, className=''){
  const section=element('section');
@@ -220,7 +272,7 @@ async function scanParentCode() {
  try {
    stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'}}});
    if(!dialog.open){stream.getTracks().forEach(track=>track.stop());return;}
-   await import('./jsQR.js?v=51');
+   await import('./jsQR.js?v=52');
    if(!dialog.open)return;
    video.srcObject=stream;
    video.hidden=false;
@@ -278,7 +330,8 @@ function childInvite(){
 function render(){
  const focusedCode=document.activeElement?.id==='familyLinkCode';
  const cursor=focusedCode?document.activeElement.selectionStart:null;
- familyHeading(label('family'));
+ const heading=familyHeading(label('family'));
+ if(role)heading.append(action(label('changeRole'),showRoleChange));
  if(!role){
    const choice=panel('connect');
    choice.append(action(label('parent'),()=>choose('parent')),action(label('child'),()=>choose('child')));
